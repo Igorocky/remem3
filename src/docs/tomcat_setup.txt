@@ -1,0 +1,22 @@
+Enable connections from localhost only
+    conf/server.xml
+        <Connector port="8080" protocol="HTTP/1.1" address="localhost"
+
+Global props
+    conf/context.xml
+        <Context>
+            ...
+            <Environment name="global.string" value="GGG" type="java.lang.String"/>
+        </Context>
+
+Local props
+    conf/Catalina/localhost/example-web-app.xml
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Context>
+
+            <Environment name="local.string" value="LLL" type="java.lang.String"/>
+        </Context>
+
+Deploying
+    Copy the war file to webapps
+    cp example-web-app/target/example-web-app.war ~/soft/tomcat/apache-tomcat-11.0.7/webapps
