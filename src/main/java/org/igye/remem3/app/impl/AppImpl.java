@@ -31,7 +31,7 @@ public class AppImpl implements App {
         propFiles.addAll(
             getPropList("property-files", Collections.emptyList()).stream()
                 .map(File::new)
-                .map(propFile -> new PropertyFileReaderImpl(this,propFile))
+                .map(propFile -> new PropertyFileReaderImpl(this, propFile))
                 .toList()
         );
         Map<String, StatefulWebController> allControllers = Stream.of(
@@ -125,14 +125,14 @@ public class AppImpl implements App {
     private BasicDataSource makeDataSource(String prefix) {
         prefix += ".";
         BasicDataSource ds = new BasicDataSource();
-        ds.setDriverClassName(getPropStr(prefix+"driverClassName"));
-        ds.setUsername(getPropStr(prefix+"username"));
-        ds.setPassword(getPropStr(prefix+"password"));
-        ds.setUrl(getPropStr(prefix+"url"));
-        ds.setMaxTotal(getPropInt(prefix+"maxTotal", 5));
-        ds.setMaxIdle(getPropInt(prefix+"maxIdle", 5));
-        ds.setInitialSize(getPropInt(prefix+"initialSize", 5));
-        ds.setValidationQuery(getPropStr(prefix+"validationQuery"));
+        ds.setDriverClassName("org.sqlite.JDBC");
+        ds.setUsername(getPropStr(prefix + "username", ""));
+        ds.setPassword(getPropStr(prefix + "password", ""));
+        ds.setUrl(getPropStr(prefix + "url"));
+        ds.setMaxTotal(getPropInt(prefix + "maxTotal", 5));
+        ds.setMaxIdle(getPropInt(prefix + "maxIdle", 5));
+        ds.setInitialSize(getPropInt(prefix + "initialSize", 5));
+        ds.setValidationQuery(getPropStr(prefix + "validationQuery", "select 1"));
         return ds;
     }
 
