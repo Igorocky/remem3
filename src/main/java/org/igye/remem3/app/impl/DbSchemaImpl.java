@@ -4,8 +4,8 @@ import lombok.Getter;
 import org.igye.remem3.app.DbSchema;
 import org.igye.remem3.utils.sqlite.Column;
 import org.igye.remem3.utils.sqlite.ForeignKey;
-import org.igye.remem3.utils.sqlite.SqliteTransaction;
 import org.igye.remem3.utils.sqlite.Table;
+import org.igye.remem3.utils.sqlite.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +15,7 @@ import static org.igye.remem3.utils.sqlite.ColumnType.*;
 import static org.igye.remem3.utils.sqlite.ForeignKeyAction.CASCADE;
 
 public class DbSchemaImpl implements DbSchema {
+    private static final String USER_VERSION = "user_version";
     @Getter
     private final Table cacheTable;
     @Getter
@@ -164,11 +165,24 @@ public class DbSchemaImpl implements DbSchema {
     }
 
     @Override
-    public void upgrade(SqliteTransaction tx, int versionFrom) {
-        if (versionFrom == 0) {
+    public void upgrade(Transaction tx) {
+        int actualSchemaVersion = getActualSchemaVersion(tx);
+        if (actualSchemaVersion == getVersion()) {
+            return;
+        }
+        if (actualSchemaVersion == 0) {
             allTables.stream()
                 .flatMap(table -> table.getSqlText().stream())
                 .forEach(tx::execute);
+            setSchemaVersion(tx, getVersion());
         }
+    }
+
+    private int getActualSchemaVersion(Transaction tx) {
+        return (int) tx.selectSingle(String.format("PRAGMA %s", USER_VERSION));
+    }
+
+    private void setSchemaVersion(Transaction tx, int version) {
+        tx.execute(String.format("PRAGMA %s=%s", USER_VERSION, version));
     }
 }

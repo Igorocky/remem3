@@ -1,14 +1,14 @@
 package org.igye.remem3.app;
 
-import org.igye.remem3.utils.sqlite.SqliteTransaction;
 import org.igye.remem3.utils.sqlite.Table;
+import org.igye.remem3.utils.sqlite.Transaction;
 
 import java.util.List;
 
 public interface DbSchema {
     int getVersion();
 
-    void upgrade(SqliteTransaction tx, int versionFrom);
+    void upgrade(Transaction tx);
 
     List<Table> getAllTables();
 

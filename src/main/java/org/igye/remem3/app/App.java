@@ -1,6 +1,6 @@
 package org.igye.remem3.app;
 
-import org.igye.remem3.utils.sqlite.SqliteRepo;
+import org.igye.remem3.utils.sqlite.Database;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.util.List;
@@ -25,7 +25,7 @@ public interface App {
 
     Optional<StatefulWebController> lookupController(String path);
 
-    SqliteRepo getSqliteRepo();
+    Database getDatabase();
 
     DbSchema getDbSchema();
 }

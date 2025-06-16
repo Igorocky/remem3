@@ -2,7 +2,7 @@ package org.igye.remem3.utils.sqlite.impl;
 
 import lombok.SneakyThrows;
 import org.igye.remem3.utils.RememExn;
-import org.igye.remem3.utils.sqlite.SqliteTransaction;
+import org.igye.remem3.utils.sqlite.Transaction;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -13,10 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SqliteTransactionImpl implements SqliteTransaction {
+public class SqliteTransaction implements Transaction {
     private final Connection connection;
 
-    public SqliteTransactionImpl(Connection connection) {
+    public SqliteTransaction(Connection connection) {
         this.connection = connection;
     }
 

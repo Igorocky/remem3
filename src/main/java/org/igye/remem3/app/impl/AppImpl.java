@@ -10,8 +10,8 @@ import org.igye.remem3.controllers.TextFormatController;
 import org.igye.remem3.utils.PropertyFileReader;
 import org.igye.remem3.utils.RememExn;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
-import org.igye.remem3.utils.sqlite.SqliteRepo;
-import org.igye.remem3.utils.sqlite.impl.SqliteRepoImpl;
+import org.igye.remem3.utils.sqlite.Database;
+import org.igye.remem3.utils.sqlite.impl.SqliteDatabase;
 import org.igye.remem3.web.StatefulWebController;
 
 import javax.naming.Context;
@@ -27,7 +27,7 @@ public class AppImpl implements App {
 
     private final Context context;
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
-    private final SqliteRepo sqliteRepo;
+    private final Database database;
     private final DbSchema dbSchema;
     private final Map<String, StatefulWebController> controllers;
 
@@ -40,11 +40,11 @@ public class AppImpl implements App {
                 .map(propFile -> new PropertyFileReaderImpl(this, propFile))
                 .toList()
         );
-        this.sqliteRepo = new SqliteRepoImpl(makeDataSource("dataSource"));
+        this.database = new SqliteDatabase(makeDataSource("dataSource"));
         dbSchema = initDbSchema();
         Map<String, StatefulWebController> allControllers = Stream.of(
             new TextFormatController(),
-            new DbAccessController(sqliteRepo)
+            new DbAccessController(database)
         ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(
             "",
@@ -122,8 +122,8 @@ public class AppImpl implements App {
     }
 
     @Override
-    public SqliteRepo getSqliteRepo() {
-        return sqliteRepo;
+    public Database getDatabase() {
+        return database;
     }
 
     @Override
@@ -146,13 +146,15 @@ public class AppImpl implements App {
         ds.setMaxIdle(getPropInt(prefix + "maxIdle", 5));
         ds.setInitialSize(getPropInt(prefix + "initialSize", 5));
         ds.setValidationQuery(getPropStr(prefix + "validationQuery", "select 1"));
+//        ds.setDefaultAutoCommit(false);
+//        ds.setAutoCommitOnReturn(false);
         return ds;
     }
 
     private DbSchema initDbSchema() {
         DbSchemaImpl dbSchema = new DbSchemaImpl();
-        sqliteRepo.transactionV(tx -> {
-            dbSchema.upgrade(tx, (int) tx.selectSingle("PRAGMA user_version"));
+        database.transactionV(tx -> {
+            dbSchema.upgrade(tx);
             List<Map<String, Object>> violations = tx.executeQuery("PRAGMA foreign_key_check");
             if (!violations.isEmpty()) {
                 throw new RememExn("There are foreign key violations in the database.");
