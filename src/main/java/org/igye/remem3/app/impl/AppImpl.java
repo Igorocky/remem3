@@ -3,10 +3,13 @@ package org.igye.remem3.app.impl;
 import lombok.SneakyThrows;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.igye.remem3.app.App;
+import org.igye.remem3.controllers.DbAccessController;
 import org.igye.remem3.controllers.IndexController;
 import org.igye.remem3.controllers.TextFormatController;
 import org.igye.remem3.utils.PropertyFileReader;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
+import org.igye.remem3.utils.sqlite.SqliteRepo;
+import org.igye.remem3.utils.sqlite.impl.SqliteRepoImpl;
 import org.igye.remem3.web.StatefulWebController;
 
 import javax.naming.Context;
@@ -22,8 +25,8 @@ public class AppImpl implements App {
 
     private final Context context;
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
+    private final SqliteRepo sqliteRepo;
     private final Map<String, StatefulWebController> controllers;
-    private final BasicDataSource dataSource;
 
     @SneakyThrows
     public AppImpl() {
@@ -34,15 +37,16 @@ public class AppImpl implements App {
                 .map(propFile -> new PropertyFileReaderImpl(this, propFile))
                 .toList()
         );
+        this.sqliteRepo = new SqliteRepoImpl(makeDataSource("dataSource"));
         Map<String, StatefulWebController> allControllers = Stream.of(
-            new TextFormatController()
-        ).collect(Collectors.toMap(TextFormatController::getPath, Function.identity()));
+            new TextFormatController(),
+            new DbAccessController(sqliteRepo)
+        ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(
             "",
             new IndexController(allControllers.values().stream().map(StatefulWebController::getPath).sorted().toList())
         );
         this.controllers = Collections.unmodifiableMap(allControllers);
-        dataSource = makeDataSource("dataSource");
     }
 
     @Override
@@ -114,8 +118,8 @@ public class AppImpl implements App {
     }
 
     @Override
-    public BasicDataSource getDataSource() {
-        return dataSource;
+    public SqliteRepo getSqliteRepo() {
+        return sqliteRepo;
     }
 
     public static App getInstance() {

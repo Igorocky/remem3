@@ -31,7 +31,7 @@ class TableTest {
             .build();
         tables.add(languageTable);
 
-        Column parentIdCol = Column.builder().name("parent_id").type(INTEGER).build();
+        Column parentIdCol = Column.builder().name("parent_id").type(INTEGER).notNull(false).build();
         Table folderTable = Table.builder()
             .name("FOLDER")
             .columns(List.of(
