@@ -31,9 +31,6 @@ public class SqliteDatabase implements Database {
                 T result = consumer.apply(tx);
                 commit = true;
                 return result;
-            } catch (Throwable th) {
-                rollback(tx);
-                throw th;
             } finally {
                 if (commit) {
                     commit(tx);

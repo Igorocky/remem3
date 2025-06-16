@@ -146,8 +146,8 @@ public class AppImpl implements App {
         ds.setMaxIdle(getPropInt(prefix + "maxIdle", 5));
         ds.setInitialSize(getPropInt(prefix + "initialSize", 5));
         ds.setValidationQuery(getPropStr(prefix + "validationQuery", "select 1"));
-//        ds.setDefaultAutoCommit(false);
-//        ds.setAutoCommitOnReturn(false);
+        ds.setDefaultAutoCommit(true);
+        ds.setAutoCommitOnReturn(true);
         return ds;
     }
 
