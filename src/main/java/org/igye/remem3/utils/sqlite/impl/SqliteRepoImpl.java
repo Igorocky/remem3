@@ -7,6 +7,7 @@ import org.igye.remem3.utils.sqlite.SqliteRepo;
 import org.igye.remem3.utils.sqlite.SqliteTransaction;
 
 import java.sql.Connection;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class SqliteRepoImpl implements SqliteRepo {
@@ -21,22 +22,35 @@ public class SqliteRepoImpl implements SqliteRepo {
     public <T> T transaction(Function<SqliteTransaction, T> consumer) {
         try (Connection connection = dataSource.getConnection()) {
             SqliteTransaction tx = new SqliteTransactionImpl(connection);
+            boolean commit = false;
             try {
                 enableForeignKeys(tx);
                 tx.execute("BEGIN DEFERRED TRANSACTION");
-                return consumer.apply(tx);
+                T result = consumer.apply(tx);
+                commit = true;
+                return result;
             } catch (Throwable th) {
                 tx.execute("ROLLBACK TRANSACTION");
                 throw th;
             } finally {
-                tx.execute("COMMIT TRANSACTION");
+                if (commit) {
+                    tx.execute("COMMIT TRANSACTION");
+                }
             }
         }
     }
 
+    @Override
+    public void transactionV(Consumer<SqliteTransaction> consumer) {
+        transaction(tx -> {
+            consumer.accept(tx);
+            return null;
+        });
+    }
+
     private void enableForeignKeys(SqliteTransaction tx) {
-        tx.execute("PRAGMA foreign_keys = ON");
-        if ((Integer) (tx.executeQuery("PRAGMA foreign_keys").getFirst().get("foreign_keys")) != 1) {
+        tx.execute("PRAGMA foreign_keys=1");
+        if ((Integer) tx.selectSingle("PRAGMA foreign_keys") != 1) {
             throw new RememExn("Cannot set foreign_keys=1.");
         }
     }

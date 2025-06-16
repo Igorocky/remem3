@@ -26,4 +26,6 @@ public interface App {
     Optional<StatefulWebController> lookupController(String path);
 
     SqliteRepo getSqliteRepo();
+
+    DbSchema getDbSchema();
 }

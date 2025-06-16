@@ -104,12 +104,12 @@ class TableTest {
                     Column.builder().name("lang1_id").type(INTEGER)
                         .foreignKey(ForeignKey.builder().table(languageTable).build())
                         .build(),
-                    Column.builder().name("read_only1").type(INTEGER).check("${thisColumn in (0,1)}").build(),
+                    Column.builder().name("read_only1").type(INTEGER).check("${thisColumn} in (0,1)").build(),
                     Column.builder().name("text1").type(TEXT).build(),
                     Column.builder().name("lang2_id").type(INTEGER)
                         .foreignKey(ForeignKey.builder().table(languageTable).build())
                         .build(),
-                    Column.builder().name("read_only2").type(INTEGER).check("${thisColumn in (0,1)}").build(),
+                    Column.builder().name("read_only2").type(INTEGER).check("${thisColumn} in (0,1)").build(),
                     Column.builder().name("text2").type(TEXT).build(),
                     Column.builder().name("notes").type(TEXT).build()
                 ))

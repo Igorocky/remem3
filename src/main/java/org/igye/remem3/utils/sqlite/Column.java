@@ -47,8 +47,8 @@ public class Column {
                 throw new RememExn("Foreign key 'on delete' must not be null.");
             }
             sb.append(" references ").append(foreignKey.getTable().getName())
-                .append(" on update ").append(foreignKey.getOnUpdate())
-                .append(" on delete ").append(foreignKey.getOnDelete());
+                .append(" on update ").append(foreignKey.getOnUpdate().getName())
+                .append(" on delete ").append(foreignKey.getOnDelete().getName());
         }
         if (StringUtils.isNotBlank(defaultValue)) {
             sb.append(" default (").append(defaultValue).append(")");

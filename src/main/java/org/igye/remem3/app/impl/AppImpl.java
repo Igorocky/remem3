@@ -3,10 +3,12 @@ package org.igye.remem3.app.impl;
 import lombok.SneakyThrows;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.igye.remem3.app.App;
+import org.igye.remem3.app.DbSchema;
 import org.igye.remem3.controllers.DbAccessController;
 import org.igye.remem3.controllers.IndexController;
 import org.igye.remem3.controllers.TextFormatController;
 import org.igye.remem3.utils.PropertyFileReader;
+import org.igye.remem3.utils.RememExn;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
 import org.igye.remem3.utils.sqlite.SqliteRepo;
 import org.igye.remem3.utils.sqlite.impl.SqliteRepoImpl;
@@ -26,6 +28,7 @@ public class AppImpl implements App {
     private final Context context;
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
     private final SqliteRepo sqliteRepo;
+    private final DbSchema dbSchema;
     private final Map<String, StatefulWebController> controllers;
 
     @SneakyThrows
@@ -38,6 +41,7 @@ public class AppImpl implements App {
                 .toList()
         );
         this.sqliteRepo = new SqliteRepoImpl(makeDataSource("dataSource"));
+        dbSchema = initDbSchema();
         Map<String, StatefulWebController> allControllers = Stream.of(
             new TextFormatController(),
             new DbAccessController(sqliteRepo)
@@ -122,6 +126,11 @@ public class AppImpl implements App {
         return sqliteRepo;
     }
 
+    @Override
+    public DbSchema getDbSchema() {
+        return dbSchema;
+    }
+
     public static App getInstance() {
         return AppHolder.app;
     }
@@ -138,6 +147,18 @@ public class AppImpl implements App {
         ds.setInitialSize(getPropInt(prefix + "initialSize", 5));
         ds.setValidationQuery(getPropStr(prefix + "validationQuery", "select 1"));
         return ds;
+    }
+
+    private DbSchema initDbSchema() {
+        DbSchemaImpl dbSchema = new DbSchemaImpl();
+        sqliteRepo.transactionV(tx -> {
+            dbSchema.upgrade(tx, (int) tx.selectSingle("PRAGMA user_version"));
+            List<Map<String, Object>> violations = tx.executeQuery("PRAGMA foreign_key_check");
+            if (!violations.isEmpty()) {
+                throw new RememExn("There are foreign key violations in the database.");
+            }
+        });
+        return dbSchema;
     }
 
     private static final class AppHolder {

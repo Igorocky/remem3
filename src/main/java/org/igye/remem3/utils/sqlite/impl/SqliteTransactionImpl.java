@@ -1,6 +1,7 @@
 package org.igye.remem3.utils.sqlite.impl;
 
 import lombok.SneakyThrows;
+import org.igye.remem3.utils.RememExn;
 import org.igye.remem3.utils.sqlite.SqliteTransaction;
 
 import java.sql.Connection;
@@ -24,6 +25,8 @@ public class SqliteTransactionImpl implements SqliteTransaction {
     public boolean execute(String command) {
         try (Statement statement = connection.createStatement()) {
             return statement.execute(command);
+        } catch (Exception ex) {
+            throw new RememExn(String.format("SQL command failed:\n%s", command), ex);
         }
     }
 
@@ -32,6 +35,30 @@ public class SqliteTransactionImpl implements SqliteTransaction {
     public List<Map<String, Object>> executeQuery(String query) {
         try (Statement statement = connection.createStatement()) {
             return extractData(statement.executeQuery(query));
+        } catch (Exception ex) {
+            throw new RememExn(String.format("SQL query failed:\n%s", query), ex);
+        }
+    }
+
+    @SneakyThrows
+    @Override
+    public Object selectSingle(String query) {
+        try (Statement statement = connection.createStatement()) {
+            ResultSet resultSet = statement.executeQuery(query);
+            if (!resultSet.next()) {
+                throw new RememExn("Expected exactly one row, but got 0.");
+            }
+            int columnCount = resultSet.getMetaData().getColumnCount();
+            if (columnCount != 1) {
+                throw new RememExn(String.format("Expected exactly one column, but got %s.", columnCount));
+            }
+            Object res = resultSet.getObject(1);
+            if (resultSet.next()) {
+                throw new RememExn("Expected exactly one row, but got at least two.");
+            }
+            return res;
+        } catch (Exception ex) {
+            throw new RememExn(String.format("SQL query failed:\n%s", query), ex);
         }
     }
 

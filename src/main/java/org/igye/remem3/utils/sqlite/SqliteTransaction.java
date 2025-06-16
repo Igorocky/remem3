@@ -7,4 +7,6 @@ public interface SqliteTransaction {
     boolean execute(String command);
 
     List<Map<String, Object>> executeQuery(String query);
+
+    Object selectSingle(String query);
 }
