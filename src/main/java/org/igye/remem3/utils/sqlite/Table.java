@@ -1,13 +1,17 @@
 package org.igye.remem3.utils.sqlite;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Builder
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Table {
     private String name;
     @Builder.Default

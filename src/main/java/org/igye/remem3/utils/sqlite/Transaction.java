@@ -13,4 +13,8 @@ public interface Transaction {
     void insert(Table table, Object data);
 
     void insertMany(Table table, List<?> data);
+
+    <T> List<T> selectAll(Table table, Class<T> clazz, List<String> columnsToOrderBy);
+
+    <T> List<T> selectAll(Table table, Class<T> clazz);
 }

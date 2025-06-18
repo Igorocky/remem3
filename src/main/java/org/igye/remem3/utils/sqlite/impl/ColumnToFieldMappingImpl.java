@@ -1,15 +1,19 @@
 package org.igye.remem3.utils.sqlite.impl;
 
 import lombok.SneakyThrows;
+import org.igye.remem3.utils.RememExn;
 import org.igye.remem3.utils.sqlite.ColumnToFieldMapping;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ColumnToFieldMappingImpl implements ColumnToFieldMapping {
     private Map<String, String> colNameToFieldName = new HashMap<>();
     private Map<Class<?>, Map<String, Field>> fields = new HashMap<>();
+    private Map<Class<?>, Constructor<?>> constructors = new HashMap<>();
 
     @Override
     public Field colNameToField(String colName, Class<?> clazz) {
@@ -22,6 +26,22 @@ public class ColumnToFieldMappingImpl implements ColumnToFieldMapping {
             return save(colName, clazz);
         }
         return field;
+    }
+
+    @Override
+    public <T> Constructor<T> getConstructor(Class<T> clazz) {
+        Constructor<?> constr = constructors.get(clazz);
+        if (constr != null) {
+            return (Constructor<T>) constr;
+        }
+        Constructor<?> argLessConstr = Arrays.stream(clazz.getDeclaredConstructors())
+            .filter(c -> c.getGenericParameterTypes().length == 0)
+            .findFirst()
+            .orElseThrow(() ->
+                new RememExn(String.format("Cannot find a default constructor for %s", clazz.getCanonicalName()))
+            );
+        constructors.put(clazz, argLessConstr);
+        return (Constructor<T>) argLessConstr;
     }
 
     @SneakyThrows

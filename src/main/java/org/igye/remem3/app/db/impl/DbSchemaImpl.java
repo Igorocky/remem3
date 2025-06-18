@@ -1,7 +1,7 @@
-package org.igye.remem3.app.impl;
+package org.igye.remem3.app.db.impl;
 
 import lombok.Getter;
-import org.igye.remem3.app.DbSchema;
+import org.igye.remem3.app.db.DbSchema;
 import org.igye.remem3.utils.sqlite.Column;
 import org.igye.remem3.utils.sqlite.ForeignKey;
 import org.igye.remem3.utils.sqlite.Table;
@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.igye.remem3.app.db.DbConstants.LANG_NAME;
 import static org.igye.remem3.utils.sqlite.ColumnType.*;
 import static org.igye.remem3.utils.sqlite.ForeignKeyAction.CASCADE;
 
@@ -51,7 +52,7 @@ public class DbSchemaImpl implements DbSchema {
         languageTable = Table.builder()
             .name("LANGUAGE")
             .columns(List.of(
-                Column.builder().name("name").type(TEXT).unique(true).build()
+                Column.builder().name(LANG_NAME).type(TEXT).unique(true).build()
             ))
             .build();
         allTables.add(languageTable);

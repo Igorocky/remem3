@@ -1,4 +1,4 @@
-package org.igye.remem3.app;
+package org.igye.remem3.app.db;
 
 import org.igye.remem3.utils.sqlite.Table;
 import org.igye.remem3.utils.sqlite.Transaction;

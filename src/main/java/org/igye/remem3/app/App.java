@@ -1,5 +1,6 @@
 package org.igye.remem3.app;
 
+import org.igye.remem3.app.db.DbSchema;
 import org.igye.remem3.utils.sqlite.Database;
 import org.igye.remem3.web.StatefulWebController;
 

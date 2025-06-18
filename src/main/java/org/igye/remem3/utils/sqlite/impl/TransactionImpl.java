@@ -1,6 +1,8 @@
 package org.igye.remem3.utils.sqlite.impl;
 
 import lombok.SneakyThrows;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.utils.RememExn;
 import org.igye.remem3.utils.sqlite.Column;
 import org.igye.remem3.utils.sqlite.ColumnToFieldMapping;
@@ -100,6 +102,38 @@ public class TransactionImpl implements Transaction {
     @Override
     public void insertMany(Table table, List<?> data) {
         data.forEach(elem -> insert(table, elem));
+    }
+
+    @SneakyThrows
+    @Override
+    public <T> List<T> selectAll(Table table, Class<T> clazz, List<String> columnsToOrderBy) {
+        List<String> colNames = new ArrayList<>(table.getColumns().size() + 1);
+        colNames.add(table.getIdColumnName());
+        table.getColumns().stream()
+            .map(Column::getName)
+            .forEach(colNames::add);
+        String commaSeparatedColNames = StringUtils.join(colNames, ", ");
+        String orderBy = CollectionUtils.isEmpty(columnsToOrderBy)
+            ? ""
+            : String.format("order by %s", StringUtils.join(columnsToOrderBy, ", "));
+        String query = String.format("select %s from %s %s", commaSeparatedColNames, table.getName(), orderBy);
+        try (Statement stmt = connection.createStatement()) {
+            ResultSet rs = stmt.executeQuery(query);
+            ArrayList<T> res = new ArrayList<>();
+            while (rs.next()) {
+                T rowObj = colToFieldMapping.getConstructor(clazz).newInstance();
+                res.add(rowObj);
+                for (int i = 0; i < colNames.size(); i++) {
+                    colToFieldMapping.colNameToField(colNames.get(i), clazz).set(rowObj, rs.getObject(i + 1));
+                }
+            }
+            return res;
+        }
+    }
+
+    @Override
+    public <T> List<T> selectAll(Table table, Class<T> clazz) {
+        return selectAll(table, clazz, null);
     }
 
     @SneakyThrows
