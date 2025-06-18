@@ -12,5 +12,5 @@ public interface Transaction {
 
     void insert(Table table, Object data);
 
-    void insert(Table table, List<Object> data);
+    void insertMany(Table table, List<?> data);
 }

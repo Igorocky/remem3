@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.igye.remem3.utils.RememExn;
+import org.igye.remem3.utils.sqlite.ColumnToFieldMapping;
 import org.igye.remem3.utils.sqlite.Database;
 import org.igye.remem3.utils.sqlite.Transaction;
 
@@ -12,25 +13,27 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Slf4j
-public class SqliteDatabase implements Database {
+public class DatabaseImpl implements Database {
     private final BasicDataSource dataSource;
+    private final ColumnToFieldMapping columnToFieldMapping;
 
-    public static SqliteDatabase getInMemoryDb() {
+    public static DatabaseImpl getInMemoryDb() {
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName("org.sqlite.JDBC");
         ds.setUrl("jdbc:sqlite::memory:");
-        return new SqliteDatabase(ds);
+        return new DatabaseImpl(ds);
     }
 
-    public SqliteDatabase(BasicDataSource dataSource) {
+    public DatabaseImpl(BasicDataSource dataSource) {
         this.dataSource = dataSource;
+        this.columnToFieldMapping = new ColumnToFieldMappingImpl();
     }
 
     @SneakyThrows
     @Override
     public <T> T transaction(Function<Transaction, T> consumer) {
         try (Connection connection = dataSource.getConnection()) {
-            Transaction tx = new SqliteTransaction(connection);
+            Transaction tx = new TransactionImpl(connection, columnToFieldMapping);
             boolean commit = false;
             try {
                 enableForeignKeys(tx);

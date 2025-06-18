@@ -11,7 +11,7 @@ import org.igye.remem3.utils.PropertyFileReader;
 import org.igye.remem3.utils.RememExn;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
 import org.igye.remem3.utils.sqlite.Database;
-import org.igye.remem3.utils.sqlite.impl.SqliteDatabase;
+import org.igye.remem3.utils.sqlite.impl.DatabaseImpl;
 import org.igye.remem3.web.StatefulWebController;
 
 import javax.naming.Context;
@@ -40,7 +40,7 @@ public class AppImpl implements App {
                 .map(propFile -> new PropertyFileReaderImpl(this, propFile))
                 .toList()
         );
-        this.database = new SqliteDatabase(makeDataSource("dataSource"));
+        this.database = new DatabaseImpl(makeDataSource("dataSource"));
         dbSchema = initDbSchema();
         Map<String, StatefulWebController> allControllers = Stream.of(
             new TextFormatController(),

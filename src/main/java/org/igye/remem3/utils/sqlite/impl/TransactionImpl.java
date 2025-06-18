@@ -3,6 +3,7 @@ package org.igye.remem3.utils.sqlite.impl;
 import lombok.SneakyThrows;
 import org.igye.remem3.utils.RememExn;
 import org.igye.remem3.utils.sqlite.Column;
+import org.igye.remem3.utils.sqlite.ColumnToFieldMapping;
 import org.igye.remem3.utils.sqlite.Table;
 import org.igye.remem3.utils.sqlite.Transaction;
 
@@ -15,11 +16,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SqliteTransaction implements Transaction {
+public class TransactionImpl implements Transaction {
     private final Connection connection;
+    private final ColumnToFieldMapping colToFieldMapping;
 
-    public SqliteTransaction(Connection connection) {
+    public TransactionImpl(Connection connection, ColumnToFieldMapping colToFieldMapping) {
         this.connection = connection;
+        this.colToFieldMapping = colToFieldMapping;
     }
 
     @Override
@@ -71,16 +74,6 @@ public class SqliteTransaction implements Transaction {
             .map(Column::getName)
             .toList();
         Class<?> dataClass = data.getClass();
-        List<Field> fields = colNames.stream()
-            .map(this::colNameToFieldName)
-            .map(fieldName -> {
-                try {
-                    return dataClass.getDeclaredField(fieldName);
-                } catch (NoSuchFieldException ex) {
-                    throw new RememExn(ex);
-                }
-            })
-            .toList();
         String placeholders = Stream.iterate("?", _ -> "?")
             .limit(colNames.size())
             .collect(Collectors.joining(","));
@@ -89,11 +82,12 @@ public class SqliteTransaction implements Transaction {
             table.getName(), colNames, placeholders, table.getIdColumnName()
         );
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            for (int i = 0; i < fields.size(); i++) {
-                stmt.setObject(i + 1, fields.get(i).get(data));
+            for (int i = 0; i < colNames.size(); i++) {
+                Object value = colToFieldMapping.colNameToField(colNames.get(i), dataClass).get(data);
+                stmt.setObject(i + 1, value);
             }
             ResultSet rs = stmt.executeQuery();
-            Field idField = dataClass.getDeclaredField(table.getIdColumnName());
+            Field idField = colToFieldMapping.colNameToField(table.getIdColumnName(), dataClass);
             if (rs.next()) {
                 idField.set(data, rs.getLong(1));
             } else {
@@ -104,32 +98,8 @@ public class SqliteTransaction implements Transaction {
 
     @SneakyThrows
     @Override
-    public void insert(Table table, List<Object> data) {
+    public void insertMany(Table table, List<?> data) {
         data.forEach(elem -> insert(table, elem));
-    }
-
-    private String colNameToFieldName(String colName) {
-        StringBuilder sb = new StringBuilder();
-        boolean prefix = true;
-        boolean startOfWord = false;
-        for (char ch : colName.toCharArray()) {
-            if (ch == '_') {
-                if (prefix) {
-                    sb.append(ch);
-                } else {
-                    startOfWord = true;
-                }
-            } else {
-                prefix = false;
-                if (startOfWord) {
-                    startOfWord = false;
-                    sb.append(Character.toUpperCase(ch));
-                } else {
-                    sb.append(ch);
-                }
-            }
-        }
-        return sb.toString();
     }
 
     @SneakyThrows
