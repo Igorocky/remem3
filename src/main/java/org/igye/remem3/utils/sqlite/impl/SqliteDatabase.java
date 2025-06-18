@@ -15,6 +15,13 @@ import java.util.function.Function;
 public class SqliteDatabase implements Database {
     private final BasicDataSource dataSource;
 
+    public static SqliteDatabase getInMemoryDb() {
+        BasicDataSource ds = new BasicDataSource();
+        ds.setDriverClassName("org.sqlite.JDBC");
+        ds.setUrl("jdbc:sqlite::memory:");
+        return new SqliteDatabase(ds);
+    }
+
     public SqliteDatabase(BasicDataSource dataSource) {
         this.dataSource = dataSource;
     }

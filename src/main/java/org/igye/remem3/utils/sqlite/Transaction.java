@@ -9,4 +9,8 @@ public interface Transaction {
     List<Map<String, Object>> executeQuery(String query);
 
     Object selectSingle(String query);
+
+    void insert(Table table, Object data);
+
+    void insert(Table table, List<Object> data);
 }
