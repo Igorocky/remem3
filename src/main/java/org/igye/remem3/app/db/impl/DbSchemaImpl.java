@@ -11,11 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.igye.remem3.app.db.DbConstants.LANG_NAME;
 import static org.igye.remem3.utils.sqlite.ColumnType.*;
 import static org.igye.remem3.utils.sqlite.ForeignKeyAction.CASCADE;
 
 public class DbSchemaImpl implements DbSchema {
+    public static final String LANG_NAME = "name";
     private static final String USER_VERSION = "user_version";
     @Getter
     private final Table cacheTable;
@@ -124,6 +124,7 @@ public class DbSchemaImpl implements DbSchema {
             .columns(List.of(
                 Column.builder().name("card_id").type(INTEGER)
                     .foreignKey(ForeignKey.builder().table(cardTable).onDelete(CASCADE).build())
+                    .unique(true)
                     .build(),
                 Column.builder().name("lang1_id").type(INTEGER)
                     .foreignKey(ForeignKey.builder().table(languageTable).build())
@@ -146,6 +147,7 @@ public class DbSchemaImpl implements DbSchema {
             .columns(List.of(
                 Column.builder().name("card_id").type(INTEGER)
                     .foreignKey(ForeignKey.builder().table(cardTable).onDelete(CASCADE).build())
+                    .unique(true)
                     .build(),
                 Column.builder().name("lang_id").type(INTEGER)
                     .foreignKey(ForeignKey.builder().table(languageTable).build())

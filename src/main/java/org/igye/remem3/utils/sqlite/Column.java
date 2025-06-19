@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.igye.remem3.utils.RememExn;
+import org.igye.remem3.utils.Exn;
 
 @Builder
 @Getter
@@ -21,10 +21,10 @@ public class Column {
 
     public String getSqlText() {
         if (StringUtils.isBlank(name)) {
-            throw new RememExn("Column name must not be blank.");
+            throw new Exn("Column name must not be blank.");
         }
         if (type == null) {
-            throw new RememExn("Column type must not be null.");
+            throw new Exn("Column type must not be null.");
         }
         StringBuilder sb = new StringBuilder(name).append(" ").append(type);
         if (notNull) {
@@ -35,16 +35,16 @@ public class Column {
         }
         if (foreignKey != null) {
             if (foreignKey.getTable() == null) {
-                throw new RememExn("Foreign key table must not be null.");
+                throw new Exn("Foreign key table must not be null.");
             }
             if (StringUtils.isBlank(foreignKey.getTable().getName())) {
-                throw new RememExn("Foreign key table name must not be blank.");
+                throw new Exn("Foreign key table name must not be blank.");
             }
             if (foreignKey.getOnUpdate() == null) {
-                throw new RememExn("Foreign key 'on update' must not be null.");
+                throw new Exn("Foreign key 'on update' must not be null.");
             }
             if (foreignKey.getOnDelete() == null) {
-                throw new RememExn("Foreign key 'on delete' must not be null.");
+                throw new Exn("Foreign key 'on delete' must not be null.");
             }
             sb.append(" references ").append(foreignKey.getTable().getName())
                 .append(" on update ").append(foreignKey.getOnUpdate().getName())

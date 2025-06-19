@@ -1,7 +1,7 @@
 package org.igye.remem3.utils.sqlite.impl;
 
 import lombok.SneakyThrows;
-import org.igye.remem3.utils.RememExn;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.sqlite.ColumnToFieldMapping;
 
 import java.lang.reflect.Constructor;
@@ -38,7 +38,7 @@ public class ColumnToFieldMappingImpl implements ColumnToFieldMapping {
             .filter(c -> c.getGenericParameterTypes().length == 0)
             .findFirst()
             .orElseThrow(() ->
-                new RememExn(String.format("Cannot find a default constructor for %s", clazz.getCanonicalName()))
+                new Exn(String.format("Cannot find a default constructor for %s", clazz.getCanonicalName()))
             );
         constructors.put(clazz, argLessConstr);
         return (Constructor<T>) argLessConstr;
@@ -47,9 +47,15 @@ public class ColumnToFieldMappingImpl implements ColumnToFieldMapping {
     @SneakyThrows
     private Field save(String colName, Class<?> clazz) {
         String fieldName = colNameToFieldName.computeIfAbsent(colName, this::colNameToFieldName);
-        Field field = clazz.getDeclaredField(fieldName);
-        fields.computeIfAbsent(clazz, _ -> new HashMap<>()).put(colName, field);
-        return field;
+        try {
+            Field field = clazz.getDeclaredField(fieldName);
+            fields.computeIfAbsent(clazz, _ -> new HashMap<>()).put(colName, field);
+            return field;
+        } catch (NoSuchFieldException e) {
+            throw new Exn(String.format(
+                "Class %s doesn't have the field '%s'.", clazz.getCanonicalName(), fieldName
+            ));
+        }
     }
 
     private String colNameToFieldName(String colName) {

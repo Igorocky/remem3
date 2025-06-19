@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class LangEnt {
+public class CardTypeEnt {
     public Long id;
-    public String name;
+    public String code;
+    public String tableName;
 }

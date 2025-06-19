@@ -8,8 +8,8 @@ import org.igye.remem3.app.db.impl.DbSchemaImpl;
 import org.igye.remem3.controllers.DbAccessController;
 import org.igye.remem3.controllers.IndexController;
 import org.igye.remem3.controllers.TextFormatController;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.PropertyFileReader;
-import org.igye.remem3.utils.RememExn;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
 import org.igye.remem3.utils.sqlite.Database;
 import org.igye.remem3.utils.sqlite.impl.DatabaseImpl;
@@ -156,9 +156,9 @@ public class AppImpl implements App {
         DbSchemaImpl dbSchema = new DbSchemaImpl();
         database.transactionV(tx -> {
             dbSchema.upgrade(tx);
-            List<Map<String, Object>> violations = tx.executeQuery("PRAGMA foreign_key_check");
+            List<Map<String, Object>> violations = tx.select("PRAGMA foreign_key_check");
             if (!violations.isEmpty()) {
-                throw new RememExn("There are foreign key violations in the database.");
+                throw new Exn("There are foreign key violations in the database.");
             }
         });
         return dbSchema;

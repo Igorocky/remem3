@@ -1,6 +1,8 @@
 package org.igye.remem3.utils.sqlite;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,14 +11,13 @@ import java.util.Map;
 
 @Builder
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
 public class Table {
     private String name;
     @Builder.Default
     private String idColumnName = "id";
     private List<Column> columns;
     private boolean trackHistory;
+    private Table histTable;
 
     @Getter(AccessLevel.NONE)
     @Builder.Default
@@ -52,7 +53,8 @@ public class Table {
                 cols.add(Column.builder().name(col.getName()).type(col.getType()).notNull(false).build());
             }
             String histTableName = "_hist_" + name;
-            res.addAll(Table.builder().name(histTableName).idColumnName("_hist_id").columns(cols).build().getSqlText());
+            this.histTable = Table.builder().name(histTableName).idColumnName("_hist_id").columns(cols).build();
+            res.addAll(histTable.getSqlText());
             String unprefixedColNames = getPrefixedColumns("");
             String newColNames = getPrefixedColumns("new.");
             res.add(

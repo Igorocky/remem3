@@ -44,7 +44,7 @@ public class DbAccessController extends HtmlBuilder implements StatefulWebContro
     @Override
     public String renderState(Void state) {
         database.transaction(tx -> {
-            List<Map<String, Object>> res = tx.executeQuery("select 10");
+            List<Map<String, Object>> res = tx.select("select 10");
             return null;
         });
         return simplePageWithTitle(

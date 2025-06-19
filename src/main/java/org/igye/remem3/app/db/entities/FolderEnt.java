@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class LangEnt {
+public class FolderEnt {
     public Long id;
+    public Long parentId;
     public String name;
 }

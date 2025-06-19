@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.impl.AppImpl;
-import org.igye.remem3.utils.RememExn;
+import org.igye.remem3.utils.Exn;
 
 import java.util.Optional;
 
@@ -30,7 +30,7 @@ public class ApiDispatcherServlet extends HttpServlet {
     private void process(HttpServletRequest req, HttpServletResponse resp) {
         String path = Optional.ofNullable(req.getPathInfo()).map(s -> s.substring(1)).orElse("");
         StatefulWebController controller = app.lookupController(path)
-            .orElseThrow(() -> new RememExn(String.format(
+            .orElseThrow(() -> new Exn(String.format(
                 "Cannot find a controller for the path '%s'.", path
             )));
         Object state = controller.loadState(req);

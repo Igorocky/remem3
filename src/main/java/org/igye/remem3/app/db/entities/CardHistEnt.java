@@ -9,7 +9,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class LangEnt {
+public class CardHistEnt {
+    public Long _time;
+    public Long _act;
+    public Long _histId;
     public Long id;
-    public String name;
+    public Long folderId;
+    public Long cardTypeId;
+    public Long crtTime;
 }
