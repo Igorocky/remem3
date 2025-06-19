@@ -1,8 +1,10 @@
 package org.igye.remem3.utils.sqlite.impl;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.igye.remem3.app.db.DbSchema;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.sqlite.ColumnToFieldMapping;
 import org.igye.remem3.utils.sqlite.Database;
@@ -19,18 +21,31 @@ import java.util.function.Function;
 @Slf4j
 public class DatabaseImpl implements Database {
     private final BasicDataSource dataSource;
+    @Getter
+    private final DbSchema dbSchema;
     private final ColumnToFieldMapping columnToFieldMapping;
 
-    public static DatabaseImpl getInMemoryDb() {
+    public static DatabaseImpl getInMemoryDb(DbSchema dbSchema) {
         BasicDataSource ds = new BasicDataSource();
         ds.setDriverClassName("org.sqlite.JDBC");
         ds.setUrl("jdbc:sqlite::memory:");
-        return new DatabaseImpl(ds);
+        return new DatabaseImpl(ds, dbSchema);
     }
 
-    public DatabaseImpl(BasicDataSource dataSource) {
+    public DatabaseImpl(BasicDataSource dataSource, DbSchema dbSchema) {
         this.dataSource = dataSource;
+        this.dbSchema = dbSchema;
         this.columnToFieldMapping = new ColumnToFieldMappingImpl();
+
+        transactionV(tx -> {
+            if (dbSchema != null) {
+                dbSchema.upgrade(tx);
+            }
+            List<Map<String, Object>> violations = tx.select("PRAGMA foreign_key_check");
+            if (!violations.isEmpty()) {
+                throw new Exn("There are foreign key violations in the database.");
+            }
+        });
     }
 
     @SneakyThrows

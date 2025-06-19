@@ -3,12 +3,10 @@ package org.igye.remem3.app.impl;
 import lombok.SneakyThrows;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.igye.remem3.app.App;
-import org.igye.remem3.app.db.DbSchema;
 import org.igye.remem3.app.db.impl.DbSchemaImpl;
 import org.igye.remem3.controllers.DbAccessController;
 import org.igye.remem3.controllers.IndexController;
 import org.igye.remem3.controllers.TextFormatController;
-import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.PropertyFileReader;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
 import org.igye.remem3.utils.sqlite.Database;
@@ -19,7 +17,13 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,7 +33,6 @@ public class AppImpl implements App {
     private final Context context;
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
     private final Database database;
-    private final DbSchema dbSchema;
     private final Map<String, StatefulWebController> controllers;
 
     @SneakyThrows
@@ -41,8 +44,7 @@ public class AppImpl implements App {
                 .map(propFile -> new PropertyFileReaderImpl(this, propFile))
                 .toList()
         );
-        this.database = new DatabaseImpl(makeDataSource("dataSource"));
-        dbSchema = initDbSchema();
+        this.database = new DatabaseImpl(makeDataSource("dataSource"), new DbSchemaImpl());
         Map<String, StatefulWebController> allControllers = Stream.of(
             new TextFormatController(),
             new DbAccessController(database)
@@ -127,11 +129,6 @@ public class AppImpl implements App {
         return database;
     }
 
-    @Override
-    public DbSchema getDbSchema() {
-        return dbSchema;
-    }
-
     public static App getInstance() {
         return AppHolder.app;
     }
@@ -150,18 +147,6 @@ public class AppImpl implements App {
         ds.setDefaultAutoCommit(true);
         ds.setAutoCommitOnReturn(true);
         return ds;
-    }
-
-    private DbSchema initDbSchema() {
-        DbSchemaImpl dbSchema = new DbSchemaImpl();
-        database.transactionV(tx -> {
-            dbSchema.upgrade(tx);
-            List<Map<String, Object>> violations = tx.select("PRAGMA foreign_key_check");
-            if (!violations.isEmpty()) {
-                throw new Exn("There are foreign key violations in the database.");
-            }
-        });
-        return dbSchema;
     }
 
     private static final class AppHolder {
