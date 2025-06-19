@@ -33,7 +33,7 @@ class TransactionImplTest {
     }
 
     @Test
-    void selectAll() {
+    void select() {
         //given
         Database db = DatabaseImpl.getInMemoryDb();
         DbSchema sc = new DbSchemaImpl();
@@ -49,7 +49,7 @@ class TransactionImplTest {
 
         //when
         List<LangEnt> langs = db.transaction(tx ->
-            tx.selectAll(sc.getLanguageTable(), LangEnt.class, List.of(DbConstants.LANG_NAME))
+            tx.select(LangEnt.class, sc.getLanguageTable(), null, List.of(DbConstants.LANG_NAME), null)
         );
 
         //then

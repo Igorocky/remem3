@@ -14,7 +14,9 @@ public interface Transaction {
 
     void insertMany(Table table, List<?> data);
 
-    <T> List<T> selectAll(Table table, Class<T> clazz, List<String> columnsToOrderBy);
+    <T> List<T> select(Class<T> clazz, String query, Map<String, Object> params);
 
-    <T> List<T> selectAll(Table table, Class<T> clazz);
+    <T> List<T> select(Class<T> clazz, Table table);
+
+    <T> List<T> select(Class<T> clazz, Table table, String where, List<String> orderBy, Map<String, Object> params);
 }

@@ -1,12 +1,11 @@
 package org.igye.remem3.utils.sqlite;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Builder
 @Getter
@@ -18,6 +17,10 @@ public class Table {
     private String idColumnName = "id";
     private List<Column> columns;
     private boolean trackHistory;
+
+    @Getter(AccessLevel.NONE)
+    @Builder.Default
+    private Map<String, String> prefixedColumns = new HashMap<>();
 
     public List<String> getSqlText() {
         StringBuilder sb = new StringBuilder("create table ").append(name).append(" (\n");
@@ -50,8 +53,8 @@ public class Table {
             }
             String histTableName = "_hist_" + name;
             res.addAll(Table.builder().name(histTableName).idColumnName("_hist_id").columns(cols).build().getSqlText());
-            String unprefixedColNames = getListOfPrefixedColNames("");
-            String newColNames = getListOfPrefixedColNames("new.");
+            String unprefixedColNames = getPrefixedColumns("");
+            String newColNames = getPrefixedColumns("new.");
             res.add(
                 String.format(
                     """
@@ -88,18 +91,24 @@ public class Table {
                     name,
                     histTableName,
                     unprefixedColNames,
-                    getListOfPrefixedColNames("old.")
+                    getPrefixedColumns("old.")
                 )
             );
         }
         return res;
     }
 
-    private String getListOfPrefixedColNames(String prefix) {
+    public String getPrefixedColumns(String prefix) {
+        String res = prefixedColumns.get(prefix);
+        if (res != null) {
+            return res;
+        }
         StringBuilder sb = new StringBuilder(prefix).append(idColumnName);
         for (Column col : columns) {
             sb.append(", ").append(prefix).append(col.getName());
         }
-        return sb.toString();
+        res = sb.toString();
+        prefixedColumns.put(prefix, res);
+        return res;
     }
 }
