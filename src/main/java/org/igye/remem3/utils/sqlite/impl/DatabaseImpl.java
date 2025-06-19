@@ -134,6 +134,16 @@ public class DatabaseImpl implements Database {
         transactionV(tx -> tx.updateMany(table, data));
     }
 
+    @Override
+    public void delete(Table table, Collection<Long> ids) {
+        transactionV(tx -> tx.delete(table, ids));
+    }
+
+    @Override
+    public void delete(Table table, long id) {
+        transactionV(tx -> tx.delete(table, id));
+    }
+
     private void enableForeignKeys(Transaction tx) {
         tx.execute("PRAGMA foreign_keys=1");
         if ((Integer) tx.selectSingle("PRAGMA foreign_keys") != 1) {

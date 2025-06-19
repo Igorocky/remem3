@@ -36,21 +36,13 @@ public class Table {
         res.add(sb.toString());
         if (trackHistory) {
             ArrayList<Column> cols = new ArrayList<>();
-            cols.add(Column.builder().name("_time").type(ColumnType.INTEGER).defaultValue("unixepoch()").build());
-            cols.add(Column.builder().name("_act").type(ColumnType.INTEGER).check("${thisColumn} in (0,1,2)").build());
             cols.add(
-                Column.builder()
-                    .name(this.idColumnName)
-                    .type(ColumnType.INTEGER)
-                    .foreignKey(
-                        ForeignKey.builder()
-                            .table(this)
-                            .onUpdate(ForeignKeyAction.RESTRICT)
-                            .onDelete(ForeignKeyAction.NO_ACTION)
-                            .build()
-                    )
+                Column.builder().name("_time").type(ColumnType.INTEGER)
+                    .defaultValue("unixepoch('subsec') * 1000")
                     .build()
             );
+            cols.add(Column.builder().name("_act").type(ColumnType.INTEGER).check("${thisColumn} in (0,1,2)").build());
+            cols.add(Column.builder().name(this.idColumnName).type(ColumnType.INTEGER).build());
             for (Column col : columns) {
                 cols.add(Column.builder().name(col.getName()).type(col.getType()).notNull(false).build());
             }

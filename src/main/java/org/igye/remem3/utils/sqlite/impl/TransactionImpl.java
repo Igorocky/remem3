@@ -190,23 +190,14 @@ public class TransactionImpl implements Transaction {
 
     @Override
     public <T> List<T> selectById(Class<T> clazz, Table table, Collection<Long> ids) {
-        List<List<Long>> parts = ListUtils.partition(new ArrayList<>(ids), IN_BATCH_SIZE);
-        String idsCondition = parts.stream()
-            .map(part -> part.stream().map(_ -> "?").collect(Collectors.joining(",")))
-            .map(placeholders -> String.format("%s in (%s)", table.getIdColumnName(), placeholders))
-            .collect(Collectors.joining(" or "));
+        Pair<List<List<Long>>, String> partsAndCondition = partitionIds(ids, table.getIdColumnName());
+        List<List<Long>> parts = partsAndCondition.getLeft();
+        String idsCondition = partsAndCondition.getRight();
         String query = String.format(
             "select %s from %s where %s", table.getPrefixedColumns(""), table.getName(), idsCondition
         );
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            for (int p = 0; p < parts.size(); p++) {
-                List<Long> part = parts.get(p);
-                int partFirstIdx = p * IN_BATCH_SIZE + 1;
-                for (int i = 0; i < part.size(); i++) {
-                    Long id = part.get(i);
-                    stmt.setLong(partFirstIdx + i, id);
-                }
-            }
+            setIdsForParts(stmt, parts);
             try (ResultSet rs = stmt.executeQuery()) {
                 return collectData(rs, clazz);
             }
@@ -252,6 +243,25 @@ public class TransactionImpl implements Transaction {
             }
             stmt.executeBatch();
         }
+    }
+
+    @Override
+    public void delete(Table table, Collection<Long> ids) {
+        Pair<List<List<Long>>, String> partsAndCondition = partitionIds(ids, table.getIdColumnName());
+        List<List<Long>> parts = partsAndCondition.getLeft();
+        String idsCondition = partsAndCondition.getRight();
+        String query = String.format("delete from %s where %s", table.getName(), idsCondition);
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            setIdsForParts(stmt, parts);
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            throw new Exn(String.format("SQL query failed:\n%s", query), ex);
+        }
+    }
+
+    @Override
+    public void delete(Table table, long id) {
+        delete(table, Collections.singletonList(id));
     }
 
     private Pair<String, List<Object>> addQuestionMarkPlaceholders(String query, Map<String, Object> params) {
@@ -357,5 +367,26 @@ public class TransactionImpl implements Transaction {
     @SneakyThrows
     private <T> T makeNewInstance(Class<T> clazz) {
         return colToFieldMapping.getConstructor(clazz).newInstance();
+    }
+
+    private Pair<List<List<Long>>, String> partitionIds(Collection<Long> ids, String idColName) {
+        List<List<Long>> parts = ListUtils.partition(new ArrayList<>(ids), IN_BATCH_SIZE);
+        String idsCondition = parts.stream()
+            .map(part -> part.stream().map(_ -> "?").collect(Collectors.joining(",")))
+            .map(placeholders -> String.format("%s in (%s)", idColName, placeholders))
+            .collect(Collectors.joining(" or "));
+        return Pair.of(parts, idsCondition);
+    }
+
+    @SneakyThrows
+    private void setIdsForParts(PreparedStatement stmt, List<List<Long>> parts) {
+        for (int p = 0; p < parts.size(); p++) {
+            List<Long> part = parts.get(p);
+            int partFirstIdx = p * IN_BATCH_SIZE + 1;
+            for (int i = 0; i < part.size(); i++) {
+                Long id = part.get(i);
+                stmt.setLong(partFirstIdx + i, id);
+            }
+        }
     }
 }

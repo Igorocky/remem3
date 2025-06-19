@@ -36,4 +36,8 @@ public interface Database {
     <T> void update(Table table, T data);
 
     <T> void updateMany(Table table, List<T> data);
+
+    void delete(Table table, Collection<Long> ids);
+
+    void delete(Table table, long id);
 }

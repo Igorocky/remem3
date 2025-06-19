@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.igye.remem3.utils.sqlite.ColumnType.*;
+import static org.igye.remem3.utils.sqlite.ColumnType.INTEGER;
+import static org.igye.remem3.utils.sqlite.ColumnType.REAL;
+import static org.igye.remem3.utils.sqlite.ColumnType.TEXT;
 import static org.igye.remem3.utils.sqlite.ForeignKeyAction.CASCADE;
 
 public class DbSchemaImpl implements DbSchema {
@@ -97,7 +99,7 @@ public class DbSchemaImpl implements DbSchema {
                 Column.builder().name("card_type_id").type(INTEGER)
                     .foreignKey(ForeignKey.builder().table(cardTypeTable).build())
                     .build(),
-                Column.builder().name("crt_time").type(INTEGER).defaultValue("unixepoch()").build()
+                Column.builder().name("crt_time").type(INTEGER).defaultValue("unixepoch('subsec') * 1000").build()
             ))
             .trackHistory(true)
             .build();
@@ -106,7 +108,7 @@ public class DbSchemaImpl implements DbSchema {
         taskHistTable = Table.builder()
             .name("TASK_HIST")
             .columns(List.of(
-                Column.builder().name("time").type(INTEGER).defaultValue("unixepoch()").build(),
+                Column.builder().name("time").type(INTEGER).defaultValue("unixepoch('subsec') * 1000").build(),
                 Column.builder().name("card_id").type(INTEGER)
                     .foreignKey(ForeignKey.builder().table(cardTable).build())
                     .build(),

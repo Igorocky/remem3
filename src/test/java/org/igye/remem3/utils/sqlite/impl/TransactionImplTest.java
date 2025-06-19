@@ -122,7 +122,7 @@ class TransactionImplTest {
         //when
         //update the first column
         //waiting to change the timestamp in history
-        Thread.sleep(1005);
+        Thread.sleep(10);
         card.folderId = folder2.id;
         db.update(sc.getCardTable(), card);
 
@@ -143,15 +143,15 @@ class TransactionImplTest {
         assertEquals(folder1.id, cardHistRec0.folderId);
         assertEquals(cardType1.id, cardHistRec0.cardTypeId);
         assertEquals(card.crtTime, cardHistRec0.crtTime);
-        CardHistEnt cardHistRec2 = cardHist.get(1);
-        assertEquals(1, cardHistRec2._act);
-        Long histTime1 = cardHistRec2._time;
+        CardHistEnt cardHistRec1 = cardHist.get(1);
+        assertEquals(1, cardHistRec1._act);
+        Long histTime1 = cardHistRec1._time;
         assertCurrentTime(histTime1);
         assertTrue(histTime0 < histTime1);
-        assertEquals(card.id, cardHistRec2.id);
-        assertEquals(folder2.id, cardHistRec2.folderId);
-        assertEquals(cardType1.id, cardHistRec2.cardTypeId);
-        assertEquals(card.crtTime, cardHistRec2.crtTime);
+        assertEquals(card.id, cardHistRec1.id);
+        assertEquals(folder2.id, cardHistRec1.folderId);
+        assertEquals(cardType1.id, cardHistRec1.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec1.crtTime);
 
         //when
         //invoke update() without real change in data, no changes in the history table are expected
@@ -164,7 +164,7 @@ class TransactionImplTest {
         //when
         //update the second column
         //waiting to change the timestamp in history
-        Thread.sleep(1005);
+        Thread.sleep(10);
         card.cardTypeId = cardType2.id;
         db.update(sc.getCardTable(), card);
 
@@ -185,14 +185,14 @@ class TransactionImplTest {
         assertEquals(folder1.id, cardHistRec0.folderId);
         assertEquals(cardType1.id, cardHistRec0.cardTypeId);
         assertEquals(card.crtTime, cardHistRec0.crtTime);
-        cardHistRec2 = cardHist.get(1);
-        assertEquals(1, cardHistRec2._act);
-        assertEquals(histTime1, cardHistRec2._time);
-        assertEquals(card.id, cardHistRec2.id);
-        assertEquals(folder2.id, cardHistRec2.folderId);
-        assertEquals(cardType1.id, cardHistRec2.cardTypeId);
-        assertEquals(card.crtTime, cardHistRec2.crtTime);
-        cardHistRec2 = cardHist.get(2);
+        cardHistRec1 = cardHist.get(1);
+        assertEquals(1, cardHistRec1._act);
+        assertEquals(histTime1, cardHistRec1._time);
+        assertEquals(card.id, cardHistRec1.id);
+        assertEquals(folder2.id, cardHistRec1.folderId);
+        assertEquals(cardType1.id, cardHistRec1.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec1.crtTime);
+        CardHistEnt cardHistRec2 = cardHist.get(2);
         assertEquals(1, cardHistRec2._act);
         Long histTime2 = cardHistRec2._time;
         assertCurrentTime(histTime2);
@@ -202,7 +202,48 @@ class TransactionImplTest {
         assertEquals(cardType2.id, cardHistRec2.cardTypeId);
         assertEquals(card.crtTime, cardHistRec2.crtTime);
 
-        throw new Exn("Not implemented");
+        //when
+        //delete the card
+        //waiting to change the timestamp in history
+        Thread.sleep(10);
+        db.delete(sc.getCardTable(), card.id);
+
+        //then
+        assertEquals(0, countRows(db, sc.getCardTable()));
+        assertEquals(4, countRows(db, sc.getCardTable().getHistTable()));
+        cardHist = db.select(
+            CardHistEnt.class, sc.getCardTable().getHistTable(), null, List.of(HIST_ID), null
+        );
+        cardHistRec0 = cardHist.get(0);
+        assertEquals(0, cardHistRec0._act);
+        assertEquals(histTime0, cardHistRec0._time);
+        assertEquals(card.id, cardHistRec0.id);
+        assertEquals(folder1.id, cardHistRec0.folderId);
+        assertEquals(cardType1.id, cardHistRec0.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec0.crtTime);
+        cardHistRec1 = cardHist.get(1);
+        assertEquals(1, cardHistRec1._act);
+        assertEquals(histTime1, cardHistRec1._time);
+        assertEquals(card.id, cardHistRec1.id);
+        assertEquals(folder2.id, cardHistRec1.folderId);
+        assertEquals(cardType1.id, cardHistRec1.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec1.crtTime);
+        cardHistRec2 = cardHist.get(2);
+        assertEquals(1, cardHistRec2._act);
+        assertEquals(histTime2, cardHistRec2._time);
+        assertEquals(card.id, cardHistRec2.id);
+        assertEquals(folder2.id, cardHistRec2.folderId);
+        assertEquals(cardType2.id, cardHistRec2.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec2.crtTime);
+        CardHistEnt cardHistRec3 = cardHist.get(3);
+        assertEquals(2, cardHistRec3._act);
+        Long histTime3 = cardHistRec3._time;
+        assertCurrentTime(histTime3);
+        assertTrue(histTime2 < histTime3);
+        assertEquals(card.id, cardHistRec3.id);
+        assertEquals(folder2.id, cardHistRec3.folderId);
+        assertEquals(cardType2.id, cardHistRec3.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec3.crtTime);
     }
 
     @Test
@@ -350,9 +391,9 @@ class TransactionImplTest {
         return (int) db.selectSingle("select count(1) from " + table.getName());
     }
 
-    private void assertCurrentTime(Long seconds) {
-        long curSec = Instant.now().getEpochSecond();
-        assertTrue(curSec - 2 <= seconds && seconds <= curSec + 2);
+    private void assertCurrentTime(Long millis) {
+        long curMillis = Instant.now().toEpochMilli();
+        assertTrue(curMillis - 50 <= millis && millis <= curMillis + 50);
     }
 
     @Builder
