@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Builder
 @Getter
 public class Table {
+    public static final String HIST_ID = "_hist_id";
     private String name;
     @Builder.Default
     private String idColumnName = "id";
@@ -53,16 +55,16 @@ public class Table {
                 cols.add(Column.builder().name(col.getName()).type(col.getType()).notNull(false).build());
             }
             String histTableName = "_hist_" + name;
-            this.histTable = Table.builder().name(histTableName).idColumnName("_hist_id").columns(cols).build();
+            this.histTable = Table.builder().name(histTableName).idColumnName(HIST_ID).columns(cols).build();
             res.addAll(histTable.getSqlText());
             String unprefixedColNames = getPrefixedColumns("");
             String newColNames = getPrefixedColumns("new.");
             res.add(
                 String.format(
                     """
-                        create trigger %s after insert on %s FOR EACH ROW BEGIN
-                            insert into %s (_act, %s) values (0, %s);
-                        end""",
+                        CREATE TRIGGER %s AFTER INSERT ON %s FOR EACH ROW BEGIN
+                            INSERT INTO %s (_act, %s) VALUES (0, %s);
+                        END""",
                     "_trg_ins_" + name,
                     name,
                     histTableName,
@@ -70,14 +72,26 @@ public class Table {
                     newColNames
                 )
             );
+            String changeCondition = this.columns.stream().map(Column::getName).map(colName ->
+                String.format(
+                    """
+                        old.%s is null and new.%s is not null
+                        or old.%s is not null and new.%s is null
+                        or old.%s is not null and new.%s is not null and old.%s <> new.%s""",
+                    colName, colName, colName, colName, colName, colName, colName, colName
+                )
+            ).collect(Collectors.joining(" or "));
             res.add(
                 String.format(
                     """
-                        create trigger %s after update on %s FOR EACH ROW BEGIN
+                        CREATE TRIGGER %s AFTER UPDATE ON %s FOR EACH ROW
+                        WHEN %s
+                        BEGIN
                             insert into %s (_act, %s) values (1, %s);
-                        end""",
+                        END""",
                     "_trg_upd_" + name,
                     name,
+                    changeCondition,
                     histTableName,
                     unprefixedColNames,
                     newColNames
@@ -86,9 +100,9 @@ public class Table {
             res.add(
                 String.format(
                     """
-                        create trigger %s after delete on %s FOR EACH ROW BEGIN
+                        CREATE TRIGGER %s AFTER DELETE ON %s FOR EACH ROW BEGIN
                             insert into %s (_act, %s) values (2, %s);
-                        end""",
+                        END""",
                     "_trg_del_" + name,
                     name,
                     histTableName,

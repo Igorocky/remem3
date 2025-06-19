@@ -234,7 +234,7 @@ public class TransactionImpl implements Transaction {
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             for (T obj : data) {
                 for (int i = 0; i < colNames.size(); i++) {
-                    Object value = getColValue(colNames.get(i), dataClass);
+                    Object value = getColValue(colNames.get(i), obj);
                     stmt.setObject(i + 1, value);
                 }
                 Object idValue = getColValue(table.getIdColumnName(), obj);

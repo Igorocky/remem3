@@ -1,10 +1,8 @@
 package org.igye.remem3.utils.sqlite.impl;
 
+import lombok.SneakyThrows;
 import org.igye.remem3.app.db.DbSchema;
-import org.igye.remem3.app.db.entities.CardEnt;
-import org.igye.remem3.app.db.entities.CardTypeEnt;
-import org.igye.remem3.app.db.entities.FolderEnt;
-import org.igye.remem3.app.db.entities.LangEnt;
+import org.igye.remem3.app.db.entities.*;
 import org.igye.remem3.app.db.impl.DbSchemaImpl;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.sqlite.Database;
@@ -15,6 +13,7 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.igye.remem3.app.db.impl.DbSchemaImpl.LANG_NAME;
+import static org.igye.remem3.utils.sqlite.Table.HIST_ID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TransactionImplTest {
@@ -65,6 +64,7 @@ class TransactionImplTest {
         assertEquals(3, langs.get(2).id);
     }
 
+    @SneakyThrows
     @Test
     void test_history() {
         //given
@@ -81,18 +81,114 @@ class TransactionImplTest {
         db.insert(sc.getCardTypeTable(), cardType2);
         assertEquals(0, countRows(db, sc.getCardTable()));
         assertEquals(0, countRows(db, sc.getCardTable().getHistTable()));
+        CardEnt card = CardEnt.builder().folderId(folder1.id).cardTypeId(cardType1.id).build();
 
         //when
-        CardEnt card = CardEnt.builder().folderId(folder1.id).cardTypeId(cardType1.id).build();
+        //first insert
         db.insert(sc.getCardTable(), card);
 
         //then
         assertEquals(1, countRows(db, sc.getCardTable()));
         assertEquals(1, countRows(db, sc.getCardTable().getHistTable()));
         CardEnt cardInDb = db.selectSingleById(CardEnt.class, sc.getCardTable(), card.id);
-
+        assertEquals(card, cardInDb);
         assertEquals(folder1.id, cardInDb.folderId);
         assertEquals(cardType1.id, cardInDb.cardTypeId);
+        List<CardHistEnt> cardHist = db.select(
+            CardHistEnt.class, sc.getCardTable().getHistTable(), null, List.of(HIST_ID), null
+        );
+        CardHistEnt cardHistRec0 = cardHist.get(0);
+        assertEquals(0, cardHistRec0._act);
+        Long histTime0 = cardHistRec0._time;
+        assertCurrentTime(histTime0);
+        assertEquals(card.id, cardHistRec0.id);
+        assertEquals(folder1.id, cardHistRec0.folderId);
+        assertEquals(cardType1.id, cardHistRec0.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec0.crtTime);
+
+        //when
+        //update the first column
+        //waiting to change the timestamp in history
+        Thread.sleep(1005);
+        card.folderId = folder2.id;
+        db.update(sc.getCardTable(), card);
+
+        //then
+        assertEquals(1, countRows(db, sc.getCardTable()));
+        assertEquals(2, countRows(db, sc.getCardTable().getHistTable()));
+        cardInDb = db.selectSingleById(CardEnt.class, sc.getCardTable(), card.id);
+        assertEquals(card, cardInDb);
+        assertEquals(folder2.id, cardInDb.folderId);
+        assertEquals(cardType1.id, cardInDb.cardTypeId);
+        cardHist = db.select(
+            CardHistEnt.class, sc.getCardTable().getHistTable(), null, List.of(HIST_ID), null
+        );
+        cardHistRec0 = cardHist.get(0);
+        assertEquals(0, cardHistRec0._act);
+        assertEquals(histTime0, cardHistRec0._time);
+        assertEquals(card.id, cardHistRec0.id);
+        assertEquals(folder1.id, cardHistRec0.folderId);
+        assertEquals(cardType1.id, cardHistRec0.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec0.crtTime);
+        CardHistEnt cardHistRec2 = cardHist.get(1);
+        assertEquals(1, cardHistRec2._act);
+        Long histTime1 = cardHistRec2._time;
+        assertCurrentTime(histTime1);
+        assertTrue(histTime0 < histTime1);
+        assertEquals(card.id, cardHistRec2.id);
+        assertEquals(folder2.id, cardHistRec2.folderId);
+        assertEquals(cardType1.id, cardHistRec2.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec2.crtTime);
+
+        //when
+        //invoke update() without real change in data, no changes in the history table are expected
+        db.update(sc.getCardTable(), card);
+
+        //then
+        assertEquals(1, countRows(db, sc.getCardTable()));
+        assertEquals(2, countRows(db, sc.getCardTable().getHistTable()));
+
+        //when
+        //update the second column
+        //waiting to change the timestamp in history
+        Thread.sleep(1005);
+        card.cardTypeId = cardType2.id;
+        db.update(sc.getCardTable(), card);
+
+        //then
+        assertEquals(1, countRows(db, sc.getCardTable()));
+        assertEquals(3, countRows(db, sc.getCardTable().getHistTable()));
+        cardInDb = db.selectSingleById(CardEnt.class, sc.getCardTable(), card.id);
+        assertEquals(card, cardInDb);
+        assertEquals(folder2.id, cardInDb.folderId);
+        assertEquals(cardType2.id, cardInDb.cardTypeId);
+        cardHist = db.select(
+            CardHistEnt.class, sc.getCardTable().getHistTable(), null, List.of(HIST_ID), null
+        );
+        cardHistRec0 = cardHist.get(0);
+        assertEquals(0, cardHistRec0._act);
+        assertEquals(histTime0, cardHistRec0._time);
+        assertEquals(card.id, cardHistRec0.id);
+        assertEquals(folder1.id, cardHistRec0.folderId);
+        assertEquals(cardType1.id, cardHistRec0.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec0.crtTime);
+        cardHistRec2 = cardHist.get(1);
+        assertEquals(1, cardHistRec2._act);
+        assertEquals(histTime1, cardHistRec2._time);
+        assertEquals(card.id, cardHistRec2.id);
+        assertEquals(folder2.id, cardHistRec2.folderId);
+        assertEquals(cardType1.id, cardHistRec2.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec2.crtTime);
+        cardHistRec2 = cardHist.get(2);
+        assertEquals(1, cardHistRec2._act);
+        Long histTime2 = cardHistRec2._time;
+        assertCurrentTime(histTime2);
+        assertTrue(histTime1 < histTime2);
+        assertEquals(card.id, cardHistRec2.id);
+        assertEquals(folder2.id, cardHistRec2.folderId);
+        assertEquals(cardType2.id, cardHistRec2.cardTypeId);
+        assertEquals(card.crtTime, cardHistRec2.crtTime);
+
         throw new Exn("Not implemented");
     }
 
