@@ -14,8 +14,18 @@ import org.igye.remem3.utils.sqlite.Table;
 import org.igye.remem3.utils.sqlite.Transaction;
 
 import java.lang.reflect.Field;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -230,7 +240,6 @@ public class TransactionImpl implements Transaction {
         String query = String.format(
             "update %s set %s where %s = ?", table.getName(), listOfCols, table.getIdColumnName()
         );
-        Class<?> dataClass = data.getFirst().getClass();
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             for (T obj : data) {
                 for (int i = 0; i < colNames.size(); i++) {

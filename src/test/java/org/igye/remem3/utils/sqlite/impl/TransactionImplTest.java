@@ -1,10 +1,19 @@
 package org.igye.remem3.utils.sqlite.impl;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.igye.remem3.app.db.DbSchema;
-import org.igye.remem3.app.db.entities.*;
+import org.igye.remem3.app.db.entities.CardEnt;
+import org.igye.remem3.app.db.entities.CardHistEnt;
+import org.igye.remem3.app.db.entities.CardTypeEnt;
+import org.igye.remem3.app.db.entities.FolderEnt;
+import org.igye.remem3.app.db.entities.LangEnt;
 import org.igye.remem3.app.db.impl.DbSchemaImpl;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.sqlite.Column;
 import org.igye.remem3.utils.sqlite.Database;
 import org.igye.remem3.utils.sqlite.Table;
 import org.junit.jupiter.api.Test;
@@ -13,8 +22,12 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.igye.remem3.app.db.impl.DbSchemaImpl.LANG_NAME;
+import static org.igye.remem3.utils.sqlite.ColumnType.TEXT;
 import static org.igye.remem3.utils.sqlite.Table.HIST_ID;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransactionImplTest {
     @Test
@@ -193,6 +206,80 @@ class TransactionImplTest {
     }
 
     @Test
+    void history_is_written_when_value_changes_from_non_null_to_null() {
+        //given
+        Database db = DatabaseImpl.getInMemoryDb();
+        Table testTable = Table.builder()
+            .name("test_tbl")
+            .columns(List.of(
+                Column.builder().name("C1").type(TEXT).notNull(false).build(),
+                Column.builder().name("C2").type(TEXT).notNull(false).build()
+            ))
+            .trackHistory(true)
+            .build();
+        db.transactionV(tx -> testTable.getSqlText().forEach(tx::execute));
+        TestTableEnt row = TestTableEnt.builder().c1("A").c2("B").build();
+        db.insert(testTable, row);
+        assertEquals(1, countRows(db, testTable.getHistTable()));
+
+        //when
+        row.c1 = null;
+        db.update(testTable, row);
+
+        //then
+        assertEquals(2, countRows(db, testTable.getHistTable()));
+    }
+
+    @Test
+    void history_is_written_when_value_changes_from_null_to_non_null() {
+        //given
+        Database db = DatabaseImpl.getInMemoryDb();
+        Table testTable = Table.builder()
+            .name("test_tbl")
+            .columns(List.of(
+                Column.builder().name("C1").type(TEXT).notNull(false).build(),
+                Column.builder().name("C2").type(TEXT).notNull(false).build()
+            ))
+            .trackHistory(true)
+            .build();
+        db.transactionV(tx -> testTable.getSqlText().forEach(tx::execute));
+        TestTableEnt row = TestTableEnt.builder().c1("A").c2(null).build();
+        db.insert(testTable, row);
+        assertEquals(1, countRows(db, testTable.getHistTable()));
+
+        //when
+        row.c2 = "";
+        db.update(testTable, row);
+
+        //then
+        assertEquals(2, countRows(db, testTable.getHistTable()));
+    }
+
+    @Test
+    void history_is_not_written_when_value_doesnt_change() {
+        //given
+        Database db = DatabaseImpl.getInMemoryDb();
+        Table testTable = Table.builder()
+            .name("test_tbl")
+            .columns(List.of(
+                Column.builder().name("C1").type(TEXT).notNull(false).build(),
+                Column.builder().name("C2").type(TEXT).notNull(false).build()
+            ))
+            .trackHistory(true)
+            .build();
+        db.transactionV(tx -> testTable.getSqlText().forEach(tx::execute));
+        TestTableEnt row = TestTableEnt.builder().c1("A").c2(null).build();
+        db.insert(testTable, row);
+        assertEquals(1, countRows(db, testTable.getHistTable()));
+
+        //when
+        db.update(testTable, row);
+
+        //then
+        assertEquals(1, countRows(db, testTable.getHistTable()));
+    }
+
+    @Test
     void insert_checks_foreign_key_constraints() {
         //given
         Database db = DatabaseImpl.getInMemoryDb();
@@ -267,4 +354,15 @@ class TransactionImplTest {
         long curSec = Instant.now().getEpochSecond();
         assertTrue(curSec - 2 <= seconds && seconds <= curSec + 2);
     }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @EqualsAndHashCode
+    private static class TestTableEnt {
+        public Long id;
+        public String c1;
+        public String c2;
+    }
+
 }

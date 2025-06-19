@@ -59,6 +59,7 @@ public class ColumnToFieldMappingImpl implements ColumnToFieldMapping {
     }
 
     private String colNameToFieldName(String colName) {
+        colName = colName.toLowerCase();
         StringBuilder sb = new StringBuilder();
         boolean prefix = true;
         boolean startOfWord = false;
