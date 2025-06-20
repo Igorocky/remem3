@@ -1,7 +1,7 @@
 package org.igye.remem3.app.db.impl;
 
 import lombok.Getter;
-import org.igye.remem3.app.db.DbSchema;
+import org.igye.remem3.app.db.RememDbSchema;
 import org.igye.remem3.utils.sqlite.Column;
 import org.igye.remem3.utils.sqlite.ForeignKey;
 import org.igye.remem3.utils.sqlite.Table;
@@ -16,7 +16,7 @@ import static org.igye.remem3.utils.sqlite.ColumnType.REAL;
 import static org.igye.remem3.utils.sqlite.ColumnType.TEXT;
 import static org.igye.remem3.utils.sqlite.ForeignKeyAction.CASCADE;
 
-public class DbSchemaImpl implements DbSchema {
+public class RememDbSchemaImpl implements RememDbSchema {
     public static final String LANG_NAME = "name";
     private static final String USER_VERSION = "user_version";
     @Getter
@@ -37,10 +37,9 @@ public class DbSchemaImpl implements DbSchema {
     private final Table cardFillTable;
     @Getter
     private final Table taskHistTable;
-    @Getter
     private final List<Table> allTables;
 
-    public DbSchemaImpl() {
+    public RememDbSchemaImpl() {
         List<Table> allTables = new ArrayList<>();
         cacheTable = Table.builder()
             .name("CACHE")
@@ -165,11 +164,6 @@ public class DbSchemaImpl implements DbSchema {
     }
 
     @Override
-    public int getVersion() {
-        return 1;
-    }
-
-    @Override
     public void upgrade(Transaction tx) {
         int actualSchemaVersion = getActualSchemaVersion(tx);
         if (actualSchemaVersion == getVersion()) {
@@ -181,6 +175,10 @@ public class DbSchemaImpl implements DbSchema {
                 .forEach(tx::execute);
             setSchemaVersion(tx, getVersion());
         }
+    }
+
+    private int getVersion() {
+        return 1;
     }
 
     private int getActualSchemaVersion(Transaction tx) {

@@ -10,6 +10,7 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Func;
 import org.igye.remem3.utils.sqlite.Column;
 import org.igye.remem3.utils.sqlite.ColumnToFieldMapping;
+import org.igye.remem3.utils.sqlite.EntityToTableMapping;
 import org.igye.remem3.utils.sqlite.Table;
 import org.igye.remem3.utils.sqlite.Transaction;
 
@@ -36,10 +37,16 @@ public class TransactionImpl implements Transaction {
     private static final int IN_BATCH_SIZE = 1000;
     private final Connection connection;
     private final ColumnToFieldMapping colToFieldMapping;
+    private final EntityToTableMapping entityToTableMapping;
 
-    public TransactionImpl(Connection connection, ColumnToFieldMapping colToFieldMapping) {
+    public TransactionImpl(
+        Connection connection,
+        ColumnToFieldMapping colToFieldMapping,
+        EntityToTableMapping entityToTableMapping
+    ) {
         this.connection = connection;
         this.colToFieldMapping = colToFieldMapping;
+        this.entityToTableMapping = entityToTableMapping;
     }
 
     @Override
@@ -92,10 +99,23 @@ public class TransactionImpl implements Transaction {
         }
     }
 
+    @Override
+    public void insert(Object data) {
+        insert(entityToTableMapping.getTableForEntity(data.getClass()), data);
+    }
+
     @SneakyThrows
     @Override
-    public void insertMany(Table table, List<?> data) {
+    public <T> void insertMany(Table table, List<T> data) {
         data.forEach(elem -> insert(table, elem));
+    }
+
+    @Override
+    public <T> void insertMany(List<T> data) {
+        if (CollectionUtils.isEmpty(data)) {
+            return;
+        }
+        insertMany(entityToTableMapping.getTableForEntity(data.getFirst().getClass()), data);
     }
 
     @SneakyThrows
@@ -142,7 +162,7 @@ public class TransactionImpl implements Transaction {
     public <T> List<T> select(Class<T> clazz, String query, Map<String, Object> params) {
         return prepareStatement(query, params, stmt -> {
             try (ResultSet rs = stmt.executeQuery()) {
-                ArrayList<T> res = new ArrayList<>();
+                List<T> res = new ArrayList<>();
                 List<String> colNames = null;
                 while (rs.next()) {
                     if (colNames == null) {
@@ -169,6 +189,11 @@ public class TransactionImpl implements Transaction {
     }
 
     @Override
+    public <T> List<T> select(Class<T> clazz) {
+        return select(clazz, entityToTableMapping.getTableForEntity(clazz));
+    }
+
+    @Override
     public <T> List<T> select(
         Class<T> clazz,
         Table table,
@@ -186,6 +211,11 @@ public class TransactionImpl implements Transaction {
             sb.append(" order by ").append(StringUtils.join(orderBy, ", "));
         }
         return select(clazz, sb.toString(), params);
+    }
+
+    @Override
+    public <T> List<T> select(Class<T> clazz, String where, List<String> orderBy, Map<String, Object> params) {
+        return select(clazz, entityToTableMapping.getTableForEntity(clazz), where, orderBy, params);
     }
 
     @Override
@@ -207,6 +237,11 @@ public class TransactionImpl implements Transaction {
     }
 
     @Override
+    public <T> List<T> selectById(Class<T> clazz, Collection<Long> ids) {
+        return selectById(clazz, entityToTableMapping.getTableForEntity(clazz), ids);
+    }
+
+    @Override
     public <T> T selectSingleById(Class<T> clazz, Table table, long id) {
         List<T> res = selectById(clazz, table, Collections.singletonList(id));
         if (res.size() != 1) {
@@ -216,8 +251,18 @@ public class TransactionImpl implements Transaction {
     }
 
     @Override
+    public <T> T selectSingleById(Class<T> clazz, long id) {
+        return selectSingleById(clazz, entityToTableMapping.getTableForEntity(clazz), id);
+    }
+
+    @Override
     public <T> void update(Table table, T data) {
         updateMany(table, Collections.singletonList(data));
+    }
+
+    @Override
+    public <T> void update(T data) {
+        update(entityToTableMapping.getTableForEntity(data.getClass()), data);
     }
 
     @SneakyThrows
@@ -246,6 +291,14 @@ public class TransactionImpl implements Transaction {
     }
 
     @Override
+    public <T> void updateMany(List<T> data) {
+        if (CollectionUtils.isEmpty(data)) {
+            return;
+        }
+        updateMany(entityToTableMapping.getTableForEntity(data.getFirst().getClass()), data);
+    }
+
+    @Override
     public void delete(Table table, Collection<Long> ids) {
         Pair<List<List<Long>>, String> partsAndCondition = partitionIds(ids, table.getIdColumnName());
         List<List<Long>> parts = partsAndCondition.getLeft();
@@ -260,8 +313,18 @@ public class TransactionImpl implements Transaction {
     }
 
     @Override
+    public void delete(Class<?> clazz, Collection<Long> ids) {
+        delete(entityToTableMapping.getTableForEntity(clazz), ids);
+    }
+
+    @Override
     public void delete(Table table, long id) {
         delete(table, Collections.singletonList(id));
+    }
+
+    @Override
+    public void delete(Class<?> clazz, long id) {
+        delete(entityToTableMapping.getTableForEntity(clazz), id);
     }
 
     private Pair<String, List<Object>> addQuestionMarkPlaceholders(String query, Map<String, Object> params) {

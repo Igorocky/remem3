@@ -3,9 +3,18 @@ package org.igye.remem3.app.impl;
 import lombok.SneakyThrows;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.igye.remem3.app.App;
-import org.igye.remem3.app.db.impl.DbSchemaImpl;
+import org.igye.remem3.app.db.RememDbSchema;
+import org.igye.remem3.app.db.entities.CardEnt;
+import org.igye.remem3.app.db.entities.CardHistEnt;
+import org.igye.remem3.app.db.entities.CardTypeEnt;
+import org.igye.remem3.app.db.entities.FolderEnt;
+import org.igye.remem3.app.db.entities.LangEnt;
+import org.igye.remem3.app.db.impl.RememDbSchemaImpl;
+import org.igye.remem3.app.manager.language.LangManager;
+import org.igye.remem3.app.manager.language.impl.LangManagerImpl;
 import org.igye.remem3.controllers.DbAccessController;
 import org.igye.remem3.controllers.IndexController;
+import org.igye.remem3.controllers.LanguageController;
 import org.igye.remem3.controllers.TextFormatController;
 import org.igye.remem3.utils.PropertyFileReader;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
@@ -32,7 +41,9 @@ public class AppImpl implements App {
 
     private final Context context;
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
+    private final RememDbSchema dbSchema;
     private final Database database;
+    private final LangManager langManager;
     private final Map<String, StatefulWebController> controllers;
 
     @SneakyThrows
@@ -44,9 +55,17 @@ public class AppImpl implements App {
                 .map(propFile -> new PropertyFileReaderImpl(this, propFile))
                 .toList()
         );
-        this.database = new DatabaseImpl(makeDataSource("dataSource"), new DbSchemaImpl());
+        this.dbSchema = new RememDbSchemaImpl();
+        this.database = new DatabaseImpl(makeDataSource("dataSource"), dbSchema);
+        database.registerTableForEntity(LangEnt.class, dbSchema.getLanguageTable());
+        database.registerTableForEntity(FolderEnt.class, dbSchema.getFolderTable());
+        database.registerTableForEntity(CardTypeEnt.class, dbSchema.getCardTypeTable());
+        database.registerTableForEntity(CardEnt.class, dbSchema.getCardTable());
+        database.registerTableForEntity(CardHistEnt.class, dbSchema.getCardTable().getHistTable());
+        langManager = new LangManagerImpl(database, dbSchema);
         Map<String, StatefulWebController> allControllers = Stream.of(
             new TextFormatController(),
+            new LanguageController(langManager),
             new DbAccessController(database)
         ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(

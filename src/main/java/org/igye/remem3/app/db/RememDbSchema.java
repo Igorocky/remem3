@@ -1,16 +1,9 @@
 package org.igye.remem3.app.db;
 
+import org.igye.remem3.utils.sqlite.DbSchema;
 import org.igye.remem3.utils.sqlite.Table;
-import org.igye.remem3.utils.sqlite.Transaction;
 
-import java.util.List;
-
-public interface DbSchema {
-    int getVersion();
-
-    void upgrade(Transaction tx);
-
-    List<Table> getAllTables();
+public interface RememDbSchema extends DbSchema {
 
     Table getCacheTable();
 

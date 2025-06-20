@@ -1,13 +1,13 @@
 package org.igye.remem3.utils.sqlite.impl;
 
-import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.igye.remem3.app.db.DbSchema;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.sqlite.ColumnToFieldMapping;
 import org.igye.remem3.utils.sqlite.Database;
+import org.igye.remem3.utils.sqlite.DbSchema;
+import org.igye.remem3.utils.sqlite.EntityToTableMapping;
 import org.igye.remem3.utils.sqlite.Table;
 import org.igye.remem3.utils.sqlite.Transaction;
 
@@ -21,9 +21,8 @@ import java.util.function.Function;
 @Slf4j
 public class DatabaseImpl implements Database {
     private final BasicDataSource dataSource;
-    @Getter
-    private final DbSchema dbSchema;
     private final ColumnToFieldMapping columnToFieldMapping;
+    private final EntityToTableMapping entityToTableMapping;
 
     public static DatabaseImpl getInMemoryDb(DbSchema dbSchema) {
         BasicDataSource ds = new BasicDataSource();
@@ -34,8 +33,8 @@ public class DatabaseImpl implements Database {
 
     public DatabaseImpl(BasicDataSource dataSource, DbSchema dbSchema) {
         this.dataSource = dataSource;
-        this.dbSchema = dbSchema;
         this.columnToFieldMapping = new ColumnToFieldMappingImpl();
+        this.entityToTableMapping = new EntityToTableMappingImpl();
 
         transactionV(tx -> {
             if (dbSchema != null) {
@@ -52,7 +51,7 @@ public class DatabaseImpl implements Database {
     @Override
     public <T> T transaction(Function<Transaction, T> consumer) {
         try (Connection connection = dataSource.getConnection()) {
-            Transaction tx = new TransactionImpl(connection, columnToFieldMapping);
+            Transaction tx = new TransactionImpl(connection, columnToFieldMapping, entityToTableMapping);
             boolean commit = false;
             try {
                 enableForeignKeys(tx);
@@ -79,6 +78,11 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
+    public void registerTableForEntity(Class<?> clazz, Table table) {
+        entityToTableMapping.registerTableForEntity(clazz, table);
+    }
+
+    @Override
     public boolean execute(String command) {
         return transaction(tx -> tx.execute(command));
     }
@@ -89,8 +93,18 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
-    public void insertMany(Table table, List<?> data) {
+    public void insert(Object data) {
+        transactionV(tx -> tx.insert(data));
+    }
+
+    @Override
+    public <T> void insertMany(Table table, List<T> data) {
         transactionV(tx -> tx.insertMany(table, data));
+    }
+
+    @Override
+    public <T> void insertMany(List<T> data) {
+        transactionV(tx -> tx.insertMany(data));
     }
 
     @Override
@@ -119,6 +133,11 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
+    public <T> List<T> select(Class<T> clazz) {
+        return transaction(tx -> tx.select(clazz));
+    }
+
+    @Override
     public <T> List<T> select(
         Class<T> clazz,
         Table table,
@@ -130,8 +149,18 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
+    public <T> List<T> select(Class<T> clazz, String where, List<String> orderBy, Map<String, Object> params) {
+        return transaction(tx -> tx.select(clazz, where, orderBy, params));
+    }
+
+    @Override
     public <T> List<T> selectById(Class<T> clazz, Table table, Collection<Long> ids) {
         return transaction(tx -> tx.selectById(clazz, table, ids));
+    }
+
+    @Override
+    public <T> List<T> selectById(Class<T> clazz, Collection<Long> ids) {
+        return transaction(tx -> tx.selectById(clazz, ids));
     }
 
     @Override
@@ -140,8 +169,18 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
+    public <T> T selectSingleById(Class<T> clazz, long id) {
+        return transaction(tx -> tx.selectSingleById(clazz, id));
+    }
+
+    @Override
     public <T> void update(Table table, T data) {
         transactionV(tx -> tx.update(table, data));
+    }
+
+    @Override
+    public <T> void update(T data) {
+        transactionV(tx -> tx.update(data));
     }
 
     @Override
@@ -150,13 +189,28 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
+    public <T> void updateMany(List<T> data) {
+        transactionV(tx -> tx.updateMany(data));
+    }
+
+    @Override
     public void delete(Table table, Collection<Long> ids) {
         transactionV(tx -> tx.delete(table, ids));
     }
 
     @Override
+    public void delete(Class<?> clazz, Collection<Long> ids) {
+        transactionV(tx -> tx.delete(clazz, ids));
+    }
+
+    @Override
     public void delete(Table table, long id) {
         transactionV(tx -> tx.delete(table, id));
+    }
+
+    @Override
+    public void delete(Class<?> clazz, long id) {
+        transactionV(tx -> tx.delete(clazz, id));
     }
 
     private void enableForeignKeys(Transaction tx) {
