@@ -6,10 +6,10 @@ import org.igye.remem3.app.manager.language.LangManager;
 import org.igye.remem3.app.manager.language.LangState;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
+import org.igye.remem3.utils.web.impl.RequestParamsImpl;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -42,18 +42,34 @@ public class LangController extends HtmlBuilder
 
     @Override
     public Optional<Supplier<LangState>> decodeAction(HttpServletRequest req, LangState state) {
-        Map<String, String[]> params = req.getParameterMap();
-        if (params.containsKey(ACT_SAVE_NEW_LANG)) {
+        RequestParamsImpl params = new RequestParamsImpl(req);
+        String stateId = params.getParam(PAR_STATE_ID);
+        if (params.hasParam(ACT_SAVE_NEW_LANG)) {
             return Optional.of(() -> langManager.saveNewLang(
-                req.getParameter(PAR_STATE_ID),
-                req.getParameter(PAR_NEW_LANG_NAME)
+                stateId,
+                params.getParam(PAR_NEW_LANG_NAME)
             ));
+        }
+        if (params.hasSubmitIdParam(ACT_START_EDITING_LANG)) {
+            return Optional.of(() -> langManager.startEditing(
+                stateId,
+                params.getSubmitIdParamLong(ACT_START_EDITING_LANG)
+            ));
+        }
+        if (params.hasParam(ACT_SAVE_EDITED_LANG)) {
+            return Optional.of(() -> langManager.completeEditing(
+                stateId,
+                params.getParam(PAR_EDITED_LANG_NAME)
+            ));
+        }
+        if (params.hasParam(ACT_DISCARD_EDITED_LANG)) {
+            return Optional.of(() -> langManager.cancelEditing(stateId));
         }
         return Optional.empty();
     }
 
     @Override
-    public LangState updateState(LangState state, Supplier<LangState> action) {
+    public synchronized LangState updateState(LangState state, Supplier<LangState> action) {
         return action.get();
     }
 
@@ -79,20 +95,20 @@ public class LangController extends HtmlBuilder
                 langs.stream().map(lang -> {
                     if (lang.id.equals(editLangId)) {
                         return List.of(
-                            inpText(PAR_EDITED_LANG_NAME, lang.name, ACT_SAVE_EDITED_LANG),
+                            inpText(PAR_EDITED_LANG_NAME, lang.name, ACT_SAVE_EDITED_LANG, true),
                             inpSubmit(ACT_SAVE_EDITED_LANG, "Save"),
                             inpSubmit(ACT_DISCARD_EDITED_LANG, "Cancel")
                         );
                     } else {
                         return List.of(
                             text(lang.name),
-                            inpSubmit(ACT_START_EDITING_LANG, "Edit")
+                            inpSubmit(submitIdParam(ACT_START_EDITING_LANG, lang.id), "Edit")
                         );
                     }
                 }).toList()
             ),
             editLangId != null ? null : table(List.of(List.of(
-                inpText(PAR_NEW_LANG_NAME, "", ACT_SAVE_NEW_LANG),
+                inpText(PAR_NEW_LANG_NAME, "", ACT_SAVE_NEW_LANG, true),
                 inpSubmit(ACT_SAVE_NEW_LANG, "Add new language")
             )))
         );

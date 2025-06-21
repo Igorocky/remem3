@@ -102,16 +102,20 @@ public class HtmlBuilder {
         return h("input", Map.of("type", "hidden", "name", name, "value", value));
     }
 
-    protected HtmlTag inpText(String name, String value, String onEnterBtnId) {
+    protected HtmlTag inpText(String name, String value, String onEnterBtnId, boolean autofocus) {
         String btnId = StringUtils.isBlank(onEnterBtnId) ? "null" : String.format("\"%s\"", onEnterBtnId);
         return h("input", Map.of(
             "type", "text",
             "name", name,
             "value", value,
             "autocomplete", "off",
-            "onkeydown",
-            String.format("preventDefaultOnEnterAction(event,%s)", btnId)
+            "onkeydown", String.format("preventDefaultOnEnterAction(event,%s)", btnId),
+            "autofocus", String.valueOf(autofocus)
         ));
+    }
+
+    protected HtmlTag inpText(String name, String value, String onEnterBtnId) {
+        return inpText(name, value, onEnterBtnId, false);
     }
 
     protected HtmlTag inpSubmit(String name, String value) {
@@ -128,6 +132,10 @@ public class HtmlBuilder {
                 ))
                 .toList()
         );
+    }
+
+    protected String submitIdParam(String paramName, long id) {
+        return paramName + ":" + id;
     }
 
     private <T> List<T> childrenArrayToList(T[] arr) {

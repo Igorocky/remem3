@@ -62,7 +62,7 @@ public class AppImpl implements App {
         database.registerTableForEntity(CardTypeEnt.class, dbSchema.getCardTypeTable());
         database.registerTableForEntity(CardEnt.class, dbSchema.getCardTable());
         database.registerTableForEntity(CardHistEnt.class, dbSchema.getCardTable().getHistTable());
-        langManager = new LangManagerImpl(database, dbSchema);
+        langManager = new LangManagerImpl(database);
         Map<String, StatefulWebController> allControllers = Stream.of(
             new TextFormatController(),
             new LangController(langManager),
