@@ -16,4 +16,6 @@ public interface StatefulWebController<S, A> {
     void saveState(S state);
 
     String renderState(S state);
+
+    void setContextPath(String contextPath);
 }

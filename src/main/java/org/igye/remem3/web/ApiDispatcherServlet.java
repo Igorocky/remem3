@@ -33,6 +33,7 @@ public class ApiDispatcherServlet extends HttpServlet {
             .orElseThrow(() -> new Exn(String.format(
                 "Cannot find a controller for the path '%s'.", path
             )));
+        controller.setContextPath(req.getContextPath());
         Object state = controller.loadState(req);
         Object newState = ((Optional<Object>) controller.decodeAction(req, state))
             .map(act -> controller.updateState(state, act))

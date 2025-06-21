@@ -80,7 +80,7 @@ public class LangController extends HtmlBuilder
         List<HtmlTag> rows = new ArrayList<>(langs.stream().map(lang -> {
             List<HtmlElem> cells = new ArrayList<>();
             if (lang.id.equals(editLangId)) {
-                cells.add(inpText(PAR_EDITED_LANG_NAME, lang.name));
+                cells.add(inpText(PAR_EDITED_LANG_NAME, lang.name, ACT_SAVE_EDITED_LANG));
                 cells.add(inpSubmit(ACT_SAVE_EDITED_LANG, "Save"));
                 cells.add(inpSubmit(ACT_DISCARD_EDITED_LANG, "Cancel"));
             } else {
@@ -91,7 +91,7 @@ public class LangController extends HtmlBuilder
         }).toList());
         if (editLangId == null) {
             rows.add(h("tr", Stream.of(
-                inpText(PAR_NEW_LANG_NAME, ""),
+                inpText(PAR_NEW_LANG_NAME, "", ACT_SAVE_NEW_LANG),
                 inpSubmit(ACT_SAVE_NEW_LANG, "Add new language")
             ).map(cell -> h("td", cell)).toList()));
         }

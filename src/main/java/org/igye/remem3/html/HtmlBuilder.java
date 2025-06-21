@@ -1,5 +1,7 @@
 package org.igye.remem3.html;
 
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
 import java.util.ArrayList;
@@ -7,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 public class HtmlBuilder {
+    @Setter
+    private String contextPath;
+
     protected HtmlText text(String text) {
         return new HtmlText(esc(text));
     }
@@ -50,7 +55,8 @@ public class HtmlBuilder {
     protected HtmlTag simplePageWithTitle(String title, List<? extends HtmlElem> children) {
         return h("html",
             h("head",
-                h("title", text(title))
+                h("title", text(title)),
+                h("script", Map.of("type", "text/javascript", "src", contextPath + "/remem-utils.js"), text(""))
             ),
             h("body", children)
         );
@@ -96,12 +102,16 @@ public class HtmlBuilder {
         return h("input", Map.of("type", "hidden", "name", name, "value", value));
     }
 
-    protected HtmlTag inpText(String name, String value) {
-        return h("input", Map.of("type", "text", "name", name, "value", value));
+    protected HtmlTag inpText(String name, String value, String onEnterBtnId) {
+        String btnId = StringUtils.isBlank(onEnterBtnId) ? "null" : String.format("\"%s\"", onEnterBtnId);
+        return h("input", Map.of("type", "text", "name", name, "value", value,
+            "onkeydown",
+            String.format("preventDefaultOnEnterAction(event,%s)", btnId)
+        ));
     }
 
     protected HtmlTag inpSubmit(String name, String value) {
-        return h("input", Map.of("type", "submit", "name", name, "value", value));
+        return h("input", Map.of("type", "submit", "id", name, "name", name, "value", value));
     }
 
     private <T> List<T> childrenArrayToList(T[] arr) {
