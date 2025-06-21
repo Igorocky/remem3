@@ -134,7 +134,7 @@ public class HtmlBuilder {
         );
     }
 
-    protected String submitIdParam(String paramName, long id) {
+    protected String appendId(String paramName, long id) {
         return paramName + ":" + id;
     }
 

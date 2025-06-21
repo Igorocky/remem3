@@ -72,6 +72,32 @@ public class LangManagerImpl implements LangManager {
         return getState();
     }
 
+    @Override
+    public LangState startDeleting(String stateId, Long langId) {
+        checkStateId(stateId);
+        updateState(st -> st.withDeleteLangId(langId));
+        return getState();
+    }
+
+    @Override
+    public LangState completeDeleting(String stateId) {
+        checkStateId(stateId);
+        try {
+            db.delete(LangEnt.class, getState().getDeleteLangId());
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+        } finally {
+            loadStateFromDb();
+        }
+        return getState();
+    }
+
+    @Override
+    public LangState cancelDeleting(String stateId) {
+        loadStateFromDb();
+        return getState();
+    }
+
     private void loadStateFromDb() {
         state = LangState.builder()
             .allLangs(db.select(LangEnt.class, null, List.of(LANG_NAME), null))

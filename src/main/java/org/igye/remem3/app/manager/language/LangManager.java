@@ -10,4 +10,10 @@ public interface LangManager {
     LangState completeEditing(String stateId, String newLangName);
 
     LangState cancelEditing(String stateId);
+
+    LangState startDeleting(String stateId, Long langId);
+
+    LangState completeDeleting(String stateId);
+
+    LangState cancelDeleting(String stateId);
 }

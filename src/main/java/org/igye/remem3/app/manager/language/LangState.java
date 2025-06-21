@@ -16,4 +16,5 @@ public class LangState {
     private String id = UUID.randomUUID().toString();
     private List<LangEnt> allLangs;
     private Long editLangId;
+    private Long deleteLangId;
 }

@@ -23,6 +23,9 @@ public class LangController extends HtmlBuilder
     private static final String ACT_DISCARD_EDITED_LANG = "ACT_DISCARD_EDITED_LANG";
     private static final String PAR_NEW_LANG_NAME = "PAR_NEW_LANG_NAME";
     private static final String ACT_SAVE_NEW_LANG = "ACT_SAVE_NEW_LANG";
+    private static final String ACT_START_DELETING_LANG = "ACT_START_DELETING_LANG";
+    private static final String ACT_CONFIRM_DELETING_LANG = "ACT_CONFIRM_DELETING_LANG";
+    private static final String ACT_CANCEL_DELETING_LANG = "ACT_CANCEL_DELETING_LANG";
 
     private final LangManager langManager;
 
@@ -65,6 +68,18 @@ public class LangController extends HtmlBuilder
         if (params.hasParam(ACT_DISCARD_EDITED_LANG)) {
             return Optional.of(() -> langManager.cancelEditing(stateId));
         }
+        if (params.hasSubmitIdParam(ACT_START_DELETING_LANG)) {
+            return Optional.of(() -> langManager.startDeleting(
+                stateId,
+                params.getSubmitIdParamLong(ACT_START_DELETING_LANG)
+            ));
+        }
+        if (params.hasParam(ACT_CONFIRM_DELETING_LANG)) {
+            return Optional.of(() -> langManager.completeDeleting(stateId));
+        }
+        if (params.hasParam(ACT_CANCEL_DELETING_LANG)) {
+            return Optional.of(() -> langManager.cancelDeleting(stateId));
+        }
         return Optional.empty();
     }
 
@@ -84,12 +99,12 @@ public class LangController extends HtmlBuilder
             form(
                 inpHidden(PAR_STATE_ID, state.getId()),
                 h4(text("Languages")),
-                rndLangs(state.getAllLangs(), state.getEditLangId())
+                rndLangs(state.getAllLangs(), state.getEditLangId(), state.getDeleteLangId())
             )
         ).toString();
     }
 
-    private HtmlElem rndLangs(List<LangEnt> langs, Long editLangId) {
+    private HtmlElem rndLangs(List<LangEnt> langs, Long editLangId, Long deleteLangId) {
         return frag(
             table(
                 langs.stream().map(lang -> {
@@ -99,10 +114,17 @@ public class LangController extends HtmlBuilder
                             inpSubmit(ACT_SAVE_EDITED_LANG, "Save"),
                             inpSubmit(ACT_DISCARD_EDITED_LANG, "Cancel")
                         );
+                    } else if (lang.id.equals(deleteLangId)) {
+                        return List.of(
+                            text(lang.name),
+                            inpSubmit(ACT_CONFIRM_DELETING_LANG, "DELETE"),
+                            inpSubmit(ACT_CANCEL_DELETING_LANG, "Cancel")
+                        );
                     } else {
                         return List.of(
                             text(lang.name),
-                            inpSubmit(submitIdParam(ACT_START_EDITING_LANG, lang.id), "Edit")
+                            inpSubmit(appendId(ACT_START_EDITING_LANG, lang.id), "Edit"),
+                            inpSubmit(appendId(ACT_START_DELETING_LANG, lang.id), "Delete")
                         );
                     }
                 }).toList()
