@@ -6,15 +6,12 @@ import org.igye.remem3.app.manager.language.LangManager;
 import org.igye.remem3.app.manager.language.LangState;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
-import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.web.StatefulWebController;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 public class LangController extends HtmlBuilder
     implements StatefulWebController<LangState, Supplier<LangState>> {
@@ -77,24 +74,27 @@ public class LangController extends HtmlBuilder
     }
 
     private HtmlElem rndLangs(List<LangEnt> langs, Long editLangId) {
-        List<HtmlTag> rows = new ArrayList<>(langs.stream().map(lang -> {
-            List<HtmlElem> cells = new ArrayList<>();
-            if (lang.id.equals(editLangId)) {
-                cells.add(inpText(PAR_EDITED_LANG_NAME, lang.name, ACT_SAVE_EDITED_LANG));
-                cells.add(inpSubmit(ACT_SAVE_EDITED_LANG, "Save"));
-                cells.add(inpSubmit(ACT_DISCARD_EDITED_LANG, "Cancel"));
-            } else {
-                cells.add(text(lang.name));
-                cells.add(inpSubmit(ACT_START_EDITING_LANG, "Edit"));
-            }
-            return h("tr", cells.stream().map(cell -> h("td", cell)).toList());
-        }).toList());
-        if (editLangId == null) {
-            rows.add(h("tr", Stream.of(
+        return frag(
+            table(
+                langs.stream().map(lang -> {
+                    if (lang.id.equals(editLangId)) {
+                        return List.of(
+                            inpText(PAR_EDITED_LANG_NAME, lang.name, ACT_SAVE_EDITED_LANG),
+                            inpSubmit(ACT_SAVE_EDITED_LANG, "Save"),
+                            inpSubmit(ACT_DISCARD_EDITED_LANG, "Cancel")
+                        );
+                    } else {
+                        return List.of(
+                            text(lang.name),
+                            inpSubmit(ACT_START_EDITING_LANG, "Edit")
+                        );
+                    }
+                }).toList()
+            ),
+            editLangId != null ? null : table(List.of(List.of(
                 inpText(PAR_NEW_LANG_NAME, "", ACT_SAVE_NEW_LANG),
                 inpSubmit(ACT_SAVE_NEW_LANG, "Add new language")
-            ).map(cell -> h("td", cell)).toList()));
-        }
-        return h("table", rows);
+            )))
+        );
     }
 }

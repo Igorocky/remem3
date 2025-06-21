@@ -53,7 +53,9 @@ public class RememDbSchemaImpl implements RememDbSchema {
         languageTable = Table.builder()
             .name("LANGUAGE")
             .columns(List.of(
-                Column.builder().name(LANG_NAME).type(TEXT).unique(true).build()
+                Column.builder().name(LANG_NAME).type(TEXT)
+                    .unique(true).check("trim(${thisColumn}) <> ''")
+                    .build()
             ))
             .build();
         allTables.add(languageTable);

@@ -104,7 +104,11 @@ public class HtmlBuilder {
 
     protected HtmlTag inpText(String name, String value, String onEnterBtnId) {
         String btnId = StringUtils.isBlank(onEnterBtnId) ? "null" : String.format("\"%s\"", onEnterBtnId);
-        return h("input", Map.of("type", "text", "name", name, "value", value,
+        return h("input", Map.of(
+            "type", "text",
+            "name", name,
+            "value", value,
+            "autocomplete", "off",
             "onkeydown",
             String.format("preventDefaultOnEnterAction(event,%s)", btnId)
         ));
@@ -112,6 +116,18 @@ public class HtmlBuilder {
 
     protected HtmlTag inpSubmit(String name, String value) {
         return h("input", Map.of("type", "submit", "id", name, "name", name, "value", value));
+    }
+
+    protected HtmlTag table(List<List<? extends HtmlElem>> tableData) {
+        return h("table",
+            tableData.stream()
+                .map(rowData -> h("tr",
+                    rowData.stream()
+                        .map(cellData -> h("td", cellData))
+                        .toList()
+                ))
+                .toList()
+        );
     }
 
     private <T> List<T> childrenArrayToList(T[] arr) {
