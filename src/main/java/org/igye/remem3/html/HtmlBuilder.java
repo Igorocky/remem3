@@ -43,23 +43,65 @@ public class HtmlBuilder {
         return new HtmlFragment(childrenArrayToList(children));
     }
 
-    protected HtmlFragment frag(List<HtmlElem> children) {
+    protected HtmlFragment frag(List<? extends HtmlElem> children) {
         return new HtmlFragment(children);
     }
 
-    protected HtmlTag simplePageWithTitle(String title, HtmlElem... content) {
-        return simplePageWithTitle(title, childrenArrayToList(content));
-    }
-
-    protected HtmlTag simplePageWithTitle(String title, List<? extends HtmlElem> content) {
+    protected HtmlTag simplePageWithTitle(String title, List<? extends HtmlElem> children) {
         return h("html",
             h("head",
                 h("title", text(title))
             ),
-            h("body",
-                content
-            )
+            h("body", children)
         );
+    }
+
+    protected HtmlTag simplePageWithTitle(String title, HtmlElem... children) {
+        return simplePageWithTitle(title, childrenArrayToList(children));
+    }
+
+    protected HtmlTag h1(HtmlElem content) {
+        return h("h1", content);
+    }
+
+    protected HtmlTag h2(HtmlElem content) {
+        return h("h2", content);
+    }
+
+    protected HtmlTag h3(HtmlElem content) {
+        return h("h3", content);
+    }
+
+    protected HtmlTag h4(HtmlElem content) {
+        return h("h4", content);
+    }
+
+    protected HtmlTag h5(HtmlElem content) {
+        return h("h5", content);
+    }
+
+    protected HtmlTag h6(HtmlElem content) {
+        return h("h6", content);
+    }
+
+    protected HtmlTag form(List<? extends HtmlElem> children) {
+        return h("form", Map.of("method", "post"), children);
+    }
+
+    protected HtmlTag form(HtmlElem... children) {
+        return form(childrenArrayToList(children));
+    }
+
+    protected HtmlTag inpHidden(String name, String value) {
+        return h("input", Map.of("type", "hidden", "name", name, "value", value));
+    }
+
+    protected HtmlTag inpText(String name, String value) {
+        return h("input", Map.of("type", "text", "name", name, "value", value));
+    }
+
+    protected HtmlTag inpSubmit(String name, String value) {
+        return h("input", Map.of("type", "submit", "name", name, "value", value));
     }
 
     private <T> List<T> childrenArrayToList(T[] arr) {

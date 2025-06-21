@@ -67,16 +67,10 @@ public class LangController extends HtmlBuilder
 
     @Override
     public String renderState(LangState state) {
-        return simplePageWithTitle(
-            "Languages",
-            h("form", Map.of("method", "post"),
-                h("input", Map.of(
-                    "type", "hidden",
-                    "name", PAR_STATE_ID,
-                    "value", state.getId()
-                )),
-                h("h4", text("Languages")),
-                h("br"),
+        return simplePageWithTitle("Languages",
+            form(
+                inpHidden(PAR_STATE_ID, state.getId()),
+                h4(text("Languages")),
                 rndLangs(state.getAllLangs(), state.getEditLangId())
             )
         ).toString();
@@ -86,43 +80,19 @@ public class LangController extends HtmlBuilder
         List<HtmlTag> rows = new ArrayList<>(langs.stream().map(lang -> {
             List<HtmlElem> cells = new ArrayList<>();
             if (lang.id.equals(editLangId)) {
-                cells.add(h("input", Map.of(
-                    "type", "text",
-                    "name", PAR_EDITED_LANG_NAME,
-                    "value", lang.name
-                )));
-                cells.add(h("input", Map.of(
-                    "type", "submit",
-                    "name", ACT_SAVE_EDITED_LANG,
-                    "value", "Save"
-                )));
-                cells.add(h("input", Map.of(
-                    "type", "submit",
-                    "name", ACT_DISCARD_EDITED_LANG,
-                    "value", "Cancel"
-                )));
+                cells.add(inpText(PAR_EDITED_LANG_NAME, lang.name));
+                cells.add(inpSubmit(ACT_SAVE_EDITED_LANG, "Save"));
+                cells.add(inpSubmit(ACT_DISCARD_EDITED_LANG, "Cancel"));
             } else {
                 cells.add(text(lang.name));
-                cells.add(h("input", Map.of(
-                    "type", "submit",
-                    "name", ACT_START_EDITING_LANG,
-                    "value", "Edit"
-                )));
+                cells.add(inpSubmit(ACT_START_EDITING_LANG, "Edit"));
             }
             return h("tr", cells.stream().map(cell -> h("td", cell)).toList());
         }).toList());
         if (editLangId == null) {
             rows.add(h("tr", Stream.of(
-                h("input", Map.of(
-                    "type", "text",
-                    "name", PAR_NEW_LANG_NAME,
-                    "value", ""
-                )),
-                h("input", Map.of(
-                    "type", "submit",
-                    "name", ACT_SAVE_NEW_LANG,
-                    "value", "Add new language"
-                ))
+                inpText(PAR_NEW_LANG_NAME, ""),
+                inpSubmit(ACT_SAVE_NEW_LANG, "Add new language")
             ).map(cell -> h("td", cell)).toList()));
         }
         return h("table", rows);

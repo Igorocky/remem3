@@ -7,9 +7,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class HtmlFragment implements HtmlElem {
-    private final List<HtmlElem> children;
+    private final List<? extends HtmlElem> children;
 
-    public HtmlFragment(List<HtmlElem> children) {
+    public HtmlFragment(List<? extends HtmlElem> children) {
         this.children = children;
     }
 
