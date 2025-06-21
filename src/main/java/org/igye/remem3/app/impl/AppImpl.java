@@ -14,7 +14,7 @@ import org.igye.remem3.app.manager.language.LangManager;
 import org.igye.remem3.app.manager.language.impl.LangManagerImpl;
 import org.igye.remem3.controllers.DbAccessController;
 import org.igye.remem3.controllers.IndexController;
-import org.igye.remem3.controllers.LanguageController;
+import org.igye.remem3.controllers.LangController;
 import org.igye.remem3.controllers.TextFormatController;
 import org.igye.remem3.utils.PropertyFileReader;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
@@ -65,7 +65,7 @@ public class AppImpl implements App {
         langManager = new LangManagerImpl(database, dbSchema);
         Map<String, StatefulWebController> allControllers = Stream.of(
             new TextFormatController(),
-            new LanguageController(langManager),
+            new LangController(langManager),
             new DbAccessController(database)
         ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(

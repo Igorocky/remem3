@@ -5,10 +5,13 @@ import lombok.Data;
 import org.igye.remem3.app.db.entities.LangEnt;
 
 import java.util.List;
+import java.util.UUID;
 
 @Builder
 @Data
 public class LangState {
+    @Builder.Default
+    private String id = UUID.randomUUID().toString();
     private List<LangEnt> allLangs;
     private Long editLangId;
 }
