@@ -44,7 +44,7 @@ public class RememDbSchemaImpl implements RememDbSchema {
         cacheTable = Table.builder()
             .name("CACHE")
             .columns(List.of(
-                Column.builder().name("key").type(TEXT).unique(true).build(),
+                Column.builder().name("key").type(TEXT).unique(true).check("trim(${thisColumn}) <> ''").build(),
                 Column.builder().name("value").type(TEXT).build()
             ))
             .build();
@@ -65,7 +65,7 @@ public class RememDbSchemaImpl implements RememDbSchema {
             .name("FOLDER")
             .columns(List.of(
                 parentIdCol,
-                Column.builder().name("name").type(TEXT).build()
+                Column.builder().name("name").type(TEXT).check("trim(${thisColumn}) <> ''").build()
             ))
             .build();
         parentIdCol.setForeignKey(ForeignKey.builder().table(folderTable).build());
