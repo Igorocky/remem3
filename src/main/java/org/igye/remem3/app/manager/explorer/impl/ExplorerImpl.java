@@ -31,14 +31,41 @@ public class ExplorerImpl implements Explorer {
         return state;
     }
 
+    @Override
+    public ExplorerState startCreatingNewDir(String stateId) {
+        checkStateId(stateId);
+        updateState(st -> st.withNewFolderDialog(true));
+        return getState();
+    }
+
+    @Override
+    public ExplorerState cancelCreatingNewDir(String stateId) {
+        checkStateId(stateId);
+        updateState(st -> st.withNewFolderDialog(false));
+        return getState();
+    }
+
+    @Override
+    public ExplorerState createNewDir(String stateId, String newDirName) {
+        checkStateId(stateId);
+        FolderEnt newFolder = FolderEnt.builder().parentId(getCurrDirId()).name(newDirName).build();
+        db.insert(newFolder);
+        loadStateFromDb();
+        return getState();
+    }
+
     private void loadStateFromDb() {
         allDirs = db.select(FolderEnt.class).stream().collect(Collectors.toMap(dir -> dir.id, Function.identity()));
-        Long currDirId = (state == null || state.getPath().isEmpty()) ? null : state.getPath().getLast().id;
+        Long currDirId = getCurrDirId();
         state = ExplorerState.builder()
             .path(getPathForDir(currDirId))
             .childDirs(getChildDirs(currDirId))
             .childCards(new ArrayList<>())
             .build();
+    }
+
+    private Long getCurrDirId() {
+        return (state == null || state.getPath().isEmpty()) ? null : state.getPath().getLast().id;
     }
 
     private List<FolderEnt> getPathForDir(Long id) {

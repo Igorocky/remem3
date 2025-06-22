@@ -10,9 +10,12 @@ import org.igye.remem3.app.db.entities.CardTypeEnt;
 import org.igye.remem3.app.db.entities.FolderEnt;
 import org.igye.remem3.app.db.entities.LangEnt;
 import org.igye.remem3.app.db.impl.RememDbSchemaImpl;
+import org.igye.remem3.app.manager.explorer.Explorer;
+import org.igye.remem3.app.manager.explorer.impl.ExplorerImpl;
 import org.igye.remem3.app.manager.language.LangManager;
 import org.igye.remem3.app.manager.language.impl.LangManagerImpl;
 import org.igye.remem3.controllers.DbAccessController;
+import org.igye.remem3.controllers.ExplorerController;
 import org.igye.remem3.controllers.IndexController;
 import org.igye.remem3.controllers.LangController;
 import org.igye.remem3.controllers.TextFormatController;
@@ -43,7 +46,6 @@ public class AppImpl implements App {
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
     private final RememDbSchema dbSchema;
     private final Database database;
-    private final LangManager langManager;
     private final Map<String, StatefulWebController> controllers;
 
     @SneakyThrows
@@ -62,10 +64,12 @@ public class AppImpl implements App {
         database.registerTableForEntity(CardTypeEnt.class, dbSchema.getCardTypeTable());
         database.registerTableForEntity(CardEnt.class, dbSchema.getCardTable());
         database.registerTableForEntity(CardHistEnt.class, dbSchema.getCardTable().getHistTable());
-        langManager = new LangManagerImpl(database);
+        LangManager langManager = new LangManagerImpl(database);
+        Explorer explorer = new ExplorerImpl(database);
         Map<String, StatefulWebController> allControllers = Stream.of(
             new TextFormatController(),
             new LangController(langManager),
+            new ExplorerController(explorer),
             new DbAccessController(database)
         ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(

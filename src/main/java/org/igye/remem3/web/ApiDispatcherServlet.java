@@ -39,6 +39,6 @@ public class ApiDispatcherServlet extends HttpServlet {
             .map(act -> controller.updateState(state, act))
             .orElse(state);
         controller.saveState(newState);
-        resp.getWriter().write(controller.renderState(newState));
+        resp.getWriter().write("<!DOCTYPE html>\n" + controller.renderState(newState));
     }
 }

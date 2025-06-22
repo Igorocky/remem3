@@ -66,28 +66,72 @@ public class HtmlBuilder {
         return simplePageWithTitle(title, childrenArrayToList(children));
     }
 
-    protected HtmlTag h1(HtmlElem content) {
-        return h("h1", content);
+    protected HtmlTag h1(List<? extends HtmlElem> content) {
+        return header("h1", content);
     }
 
-    protected HtmlTag h2(HtmlElem content) {
-        return h("h2", content);
+    protected HtmlTag h1(HtmlElem... content) {
+        return h1(childrenArrayToList(content));
     }
 
-    protected HtmlTag h3(HtmlElem content) {
-        return h("h3", content);
+    protected HtmlTag h2(List<? extends HtmlElem> content) {
+        return header("h2", content);
     }
 
-    protected HtmlTag h4(HtmlElem content) {
-        return h("h4", content);
+    protected HtmlTag h2(HtmlElem... content) {
+        return h2(childrenArrayToList(content));
     }
 
-    protected HtmlTag h5(HtmlElem content) {
-        return h("h5", content);
+    protected HtmlTag h3(List<? extends HtmlElem> content) {
+        return header("h3", content);
     }
 
-    protected HtmlTag h6(HtmlElem content) {
-        return h("h6", content);
+    protected HtmlTag h3(HtmlElem... content) {
+        return h3(childrenArrayToList(content));
+    }
+
+    protected HtmlTag h4(List<? extends HtmlElem> content) {
+        return header("h4", content);
+    }
+
+    protected HtmlTag h4(HtmlElem... content) {
+        return h4(childrenArrayToList(content));
+    }
+
+    protected HtmlTag h5(List<? extends HtmlElem> content) {
+        return header("h5", content);
+    }
+
+    protected HtmlTag h5(HtmlElem... content) {
+        return h5(childrenArrayToList(content));
+    }
+
+    protected HtmlTag h6(List<? extends HtmlElem> content) {
+        return header("h6", content);
+    }
+
+    protected HtmlTag h6(HtmlElem... content) {
+        return h6(childrenArrayToList(content));
+    }
+
+    protected HtmlTag table(List<List<? extends HtmlElem>> tableData) {
+        return h("table",
+            tableData.stream()
+                .map(rowData -> h("tr",
+                    rowData.stream()
+                        .map(cellData -> h("td", cellData))
+                        .toList()
+                ))
+                .toList()
+        );
+    }
+
+    protected HtmlTag uList(List<? extends HtmlElem> items) {
+        return htmlList("ul", items);
+    }
+
+    protected HtmlTag oList(List<? extends HtmlElem> items) {
+        return htmlList("ol", items);
     }
 
     protected HtmlTag form(List<? extends HtmlElem> children) {
@@ -122,18 +166,6 @@ public class HtmlBuilder {
         return h("input", Map.of("type", "submit", "id", name, "name", name, "value", value));
     }
 
-    protected HtmlTag table(List<List<? extends HtmlElem>> tableData) {
-        return h("table",
-            tableData.stream()
-                .map(rowData -> h("tr",
-                    rowData.stream()
-                        .map(cellData -> h("td", cellData))
-                        .toList()
-                ))
-                .toList()
-        );
-    }
-
     protected String appendId(String paramName, long id) {
         return paramName + ":" + id;
     }
@@ -149,5 +181,18 @@ public class HtmlBuilder {
             }
         }
         return res;
+    }
+
+    private HtmlTag htmlList(String listTag, List<? extends HtmlElem> items) {
+        return h(listTag,
+            items.stream().map(item -> h("li", item)).toList()
+        );
+    }
+
+    private HtmlTag header(String tag, List<? extends HtmlElem> children) {
+        List<HtmlElem> ch = new ArrayList<>(children);
+        //adding empty text for the header to be always with the closing tag
+        ch.add(text(""));
+        return h(tag, ch);
     }
 }
