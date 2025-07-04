@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.dto.Card;
+import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
 import org.igye.remem3.app.dto.fillgaps.Gap;
 import org.igye.remem3.app.dto.fillgaps.Text;
@@ -12,8 +13,9 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
 import java.io.File;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,9 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class CardsImpl implements Cards {
     private static final Pattern GAP_PATTERN = Pattern.compile("\\[\\[([^\\[\\]]+)\\]\\]");
+    private static final Pattern HIST_PATTERN = Pattern.compile(
+        "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
+    );
 
     private final Utils utils;
 
@@ -44,7 +49,29 @@ public class CardsImpl implements Cards {
             .lang(lang.trim())
             .text(parseText(props.computeIfAbsent("###text", _ -> "")))
             .notes(props.computeIfAbsent("###notes", _ -> ""))
-            .history(Collections.emptyList())
+            .history(parseHistory(props.computeIfAbsent("###hist", _ -> "")))
+            .build();
+    }
+
+    protected List<HistRec> parseHistory(String str) {
+        return Arrays.stream(str.split("[\n\r]+"))
+            .map(String::trim)
+            .filter(StringUtils::isNotBlank)
+            .map(this::parseHistoryRec)
+            .toList();
+    }
+
+    protected HistRec parseHistoryRec(String str) {
+        Matcher matcher = HIST_PATTERN.matcher(str);
+        if (!matcher.matches()) {
+            throw new Exn(String.format("Cannot parse a history record: %s", str));
+        }
+        String notes = matcher.group(5);
+        return HistRec.builder()
+            .time(Instant.parse(matcher.group(1)))
+            .taskType(matcher.group(2))
+            .mark(Double.parseDouble(matcher.group(3)))
+            .notes(StringUtils.isNotBlank(notes) ? notes.trim() : "")
             .build();
     }
 
