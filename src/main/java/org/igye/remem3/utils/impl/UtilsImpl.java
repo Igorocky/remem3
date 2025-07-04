@@ -1,0 +1,23 @@
+package org.igye.remem3.utils.impl;
+
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
+import org.igye.remem3.utils.Utils;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+public class UtilsImpl implements Utils {
+    @SneakyThrows
+    @Override
+    public String readFileToString(File file) {
+        return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+    }
+
+    @SneakyThrows
+    @Override
+    public List<String> readLines(File file) {
+        return FileUtils.readLines(file, StandardCharsets.UTF_8);
+    }
+}
