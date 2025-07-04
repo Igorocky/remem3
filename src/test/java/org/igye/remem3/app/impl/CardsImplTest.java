@@ -15,7 +15,7 @@ import java.util.List;
 class CardsImplTest {
     @Test
     void parseText() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl());
+        CardsImpl cards = new CardsImpl(new UtilsImpl(), RememSettingsImpl.builder().build());
         Assertions.assertEquals(
             List.of(Text.builder().text("abc def ghi").build()),
             cards.parseText("abc def ghi")
@@ -68,7 +68,7 @@ class CardsImplTest {
 
     @Test
     void parseHistoryRec() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl());
+        CardsImpl cards = new CardsImpl(new UtilsImpl(), RememSettingsImpl.builder().build());
         Assertions.assertEquals(
             HistRec.builder()
                 .time(Instant.parse("2025-07-04T14:14:08Z"))
@@ -100,7 +100,7 @@ class CardsImplTest {
 
     @Test
     void parseHistory() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl());
+        CardsImpl cards = new CardsImpl(new UtilsImpl(), RememSettingsImpl.builder().build());
         Assertions.assertEquals(
             List.of(
                 HistRec.builder()
@@ -146,7 +146,7 @@ class CardsImplTest {
 
     @Test
     void parseFillGapsCard_full() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl());
+        CardsImpl cards = new CardsImpl(new UtilsImpl(), RememSettingsImpl.builder().build());
         CardFillGaps card = CardFillGaps.builder()
             .file(new File(""))
             .lang("Lang1")
@@ -186,10 +186,10 @@ class CardsImplTest {
 
     @Test
     void parseFillGapsCard_empty() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl());
+        CardsImpl cards = new CardsImpl(new UtilsImpl(), RememSettingsImpl.builder().build());
         CardFillGaps card = CardFillGaps.builder()
             .file(new File(""))
-            .lang("Lang1")
+            .lang("")
             .text(List.of())
             .notes("")
             .history(List.of())
@@ -198,6 +198,66 @@ class CardsImplTest {
         Assertions.assertEquals(
             card,
             cards.parseFillGapsCard(cards.fillGapsCardToString(card), new File(""))
+        );
+    }
+
+    @Test
+    void validateCard_CardFillGaps() {
+        CardsImpl cards = new CardsImpl(
+            new UtilsImpl(),
+            RememSettingsImpl.builder().languages(List.of("EN")).build()
+        );
+
+        CardFillGaps card = CardFillGaps.builder()
+            .file(null)
+            .lang(null)
+            .text(null)
+            .notes(null)
+            .history(null)
+            .build();
+
+        Assertions.assertEquals(
+            List.of("Language is not set.", "Text is empty."),
+            cards.validateCard(card)
+        );
+
+        card = CardFillGaps.builder()
+            .file(new File("aaaa"))
+            .lang("IT")
+            .text(List.of())
+            .notes("")
+            .history(List.of())
+            .build();
+
+        Assertions.assertEquals(
+            List.of("Language 'IT' is not registered.", "Text is empty."),
+            cards.validateCard(card)
+        );
+
+        card = CardFillGaps.builder()
+            .file(new File("aaaa"))
+            .lang("EN")
+            .text(List.of(Text.builder().text(" ").build()))
+            .notes("123")
+            .history(List.of(HistRec.builder().build()))
+            .build();
+
+        Assertions.assertEquals(
+            List.of("Text is empty."),
+            cards.validateCard(card)
+        );
+
+        card = CardFillGaps.builder()
+            .file(new File("aaaa"))
+            .lang("EN")
+            .text(List.of(Text.builder().text(".").build()))
+            .notes("123")
+            .history(List.of(HistRec.builder().build()))
+            .build();
+
+        Assertions.assertEquals(
+            List.of(),
+            cards.validateCard(card)
         );
     }
 }

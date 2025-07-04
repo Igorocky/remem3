@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.RememSettings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
@@ -36,6 +37,7 @@ public class CardsImpl implements Cards {
     private static final String ATTR_NAME_HIST = "###hist";
 
     private final Utils utils;
+    private final RememSettings rememSettings;
 
     @Override
     public Card loadCard(File file) {
@@ -56,8 +58,38 @@ public class CardsImpl implements Cards {
     }
 
     @Override
+    public List<String> validateCard(Card card) {
+        if (card instanceof CardFillGaps fillGapsCard) {
+            return validateFillGapsCard(fillGapsCard);
+        } else {
+            throw new Exn("Unsupported type of card " + card.getClass().getCanonicalName());
+        }
+    }
+
+    @Override
     public void appendHistRecToFile(File file, HistRec histRec) {
         throw new Exn("Not implemented.");
+    }
+
+    private List<String> validateFillGapsCard(CardFillGaps card) {
+        ArrayList<String> res = new ArrayList<>();
+        String lang = card.getLang();
+        if (StringUtils.isBlank(lang)) {
+            res.add("Language is not set.");
+        } else if (!rememSettings.getLanguages().contains(lang)) {
+            res.add(String.format("Language '%s' is not registered.", lang));
+        }
+        List<TextPart> text = card.getText();
+        if (CollectionUtils.isEmpty(text)) {
+            res.add("Text is empty.");
+        } else {
+            StringBuilder sb = new StringBuilder();
+            appendText(sb, text);
+            if (StringUtils.isBlank(sb.toString())) {
+                res.add("Text is empty.");
+            }
+        }
+        return res;
     }
 
     protected String fillGapsCardToString(CardFillGaps card) {
@@ -125,13 +157,13 @@ public class CardsImpl implements Cards {
         Map<String, String> props = parseProps(str);
         String lang = props.get(ATTR_NAME_LANG);
         if (StringUtils.isBlank(lang)) {
-            throw new Exn(String.format("lang is not set for %s", file.getAbsolutePath()));
+            lang = "";
         }
         return CardFillGaps.builder()
             .file(file)
             .lang(lang.trim())
             .text(parseText(props.computeIfAbsent(ATTR_NAME_TEXT, _ -> "")))
-            .notes(props.computeIfAbsent(ATTR_NAME_NOTES, _ -> ""))
+            .notes(props.computeIfAbsent(ATTR_NAME_NOTES, _ -> "").trim())
             .history(parseHistory(props.computeIfAbsent(ATTR_NAME_HIST, _ -> "")))
             .build();
     }

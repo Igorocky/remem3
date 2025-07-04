@@ -3,6 +3,7 @@ package org.igye.remem3.app.impl;
 import lombok.SneakyThrows;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.igye.remem3.app.App;
+import org.igye.remem3.app.RememSettings;
 import org.igye.remem3.app.db.RememDbSchema;
 import org.igye.remem3.app.db.entities.CardEnt;
 import org.igye.remem3.app.db.entities.CardHistEnt;
@@ -44,6 +45,7 @@ public class AppImpl implements App {
 
     private final Context context;
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
+    private final RememSettings rememSettings;
     private final RememDbSchema dbSchema;
     private final Database database;
     private final Map<String, StatefulWebController> controllers;
@@ -57,6 +59,11 @@ public class AppImpl implements App {
                 .map(propFile -> new PropertyFileReaderImpl(this, propFile))
                 .toList()
         );
+
+        rememSettings = RememSettingsImpl.builder()
+            .languages(Collections.unmodifiableList(getPropList("languages", List.of())))
+            .build();
+
         this.dbSchema = new RememDbSchemaImpl();
         this.database = new DatabaseImpl(makeDataSource("dataSource"), dbSchema);
         database.registerTableForEntity(LangEnt.class, dbSchema.getLanguageTable());
@@ -64,6 +71,7 @@ public class AppImpl implements App {
         database.registerTableForEntity(CardTypeEnt.class, dbSchema.getCardTypeTable());
         database.registerTableForEntity(CardEnt.class, dbSchema.getCardTable());
         database.registerTableForEntity(CardHistEnt.class, dbSchema.getCardTable().getHistTable());
+
         LangManager langManager = new LangManagerImpl(database);
         Explorer explorer = new ExplorerImpl(database);
         Map<String, StatefulWebController> allControllers = Stream.of(
