@@ -6,18 +6,17 @@ import org.igye.remem3.utils.Utils;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 public class UtilsImpl implements Utils {
     @SneakyThrows
     @Override
-    public String readFileToString(File file) {
+    public String readStringFromFile(File file) {
         return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
     }
 
     @SneakyThrows
     @Override
-    public List<String> readLines(File file) {
-        return FileUtils.readLines(file, StandardCharsets.UTF_8);
+    public void writeStringToFile(String str, File file) {
+        FileUtils.writeStringToFile(file, str, StandardCharsets.UTF_8);
     }
 }

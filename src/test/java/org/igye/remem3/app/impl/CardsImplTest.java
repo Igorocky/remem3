@@ -1,12 +1,14 @@
 package org.igye.remem3.app.impl;
 
 import org.igye.remem3.app.dto.HistRec;
+import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
 import org.igye.remem3.app.dto.fillgaps.Gap;
 import org.igye.remem3.app.dto.fillgaps.Text;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.time.Instant;
 import java.util.List;
 
@@ -139,6 +141,63 @@ class CardsImplTest {
             cards.parseHistory(
                 "\r\n\n2025-07-03T14:14:08Z task1 0.0 notes\r\n\n2025-07-04T14:14:08Z task1 1.0 notes\r\n\r\n"
             )
+        );
+    }
+
+    @Test
+    void parseFillGapsCard_full() {
+        CardsImpl cards = new CardsImpl(new UtilsImpl());
+        CardFillGaps card = CardFillGaps.builder()
+            .file(new File(""))
+            .lang("Lang1")
+            .text(
+                List.of(
+                    Text.builder().text("abc").build(),
+                    Gap.builder().answer("def").hint("").notes("").build(),
+                    Text.builder().text("ghi").build(),
+                    Gap.builder().answer("jkl").hint("123").notes("456").build(),
+                    Text.builder().text("mno").build()
+                )
+            )
+            .notes("notes3")
+            .history(
+                List.of(
+                    HistRec.builder()
+                        .time(Instant.parse("2025-07-03T14:14:08Z"))
+                        .taskType("task1")
+                        .mark(0.0)
+                        .notes("notes")
+                        .build(),
+                    HistRec.builder()
+                        .time(Instant.parse("2025-07-04T14:14:08Z"))
+                        .taskType("task1")
+                        .mark(1.0)
+                        .notes("notes")
+                        .build()
+                )
+            )
+            .build();
+
+        Assertions.assertEquals(
+            card,
+            cards.parseFillGapsCard(cards.fillGapsCardToString(card), new File(""))
+        );
+    }
+
+    @Test
+    void parseFillGapsCard_empty() {
+        CardsImpl cards = new CardsImpl(new UtilsImpl());
+        CardFillGaps card = CardFillGaps.builder()
+            .file(new File(""))
+            .lang("Lang1")
+            .text(List.of())
+            .notes("")
+            .history(List.of())
+            .build();
+
+        Assertions.assertEquals(
+            card,
+            cards.parseFillGapsCard(cards.fillGapsCardToString(card), new File(""))
         );
     }
 }

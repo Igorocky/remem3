@@ -1,6 +1,7 @@
 package org.igye.remem3.app.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.dto.Card;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,28 +30,109 @@ public class CardsImpl implements Cards {
     private static final Pattern HIST_PATTERN = Pattern.compile(
         "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
     );
+    private static final String ATTR_NAME_LANG = "###lang";
+    private static final String ATTR_NAME_TEXT = "###text";
+    private static final String ATTR_NAME_NOTES = "###notes";
+    private static final String ATTR_NAME_HIST = "###hist";
 
     private final Utils utils;
 
     @Override
-    public Card load(File file) {
+    public Card loadCard(File file) {
         if (file.getName().endsWith(".fg.card")) {
             return loadFillGapsCard(file);
         }
         throw new Exn("Unsupported type of card " + file.getAbsolutePath());
     }
 
+    @Override
+    public void saveCard(File file, Card card) {
+        file.getParentFile().mkdirs();
+        if (card instanceof CardFillGaps fillGapsCard) {
+            utils.writeStringToFile(fillGapsCardToString(fillGapsCard), file);
+        } else {
+            throw new Exn("Unsupported type of card " + card.getClass().getCanonicalName());
+        }
+    }
+
+    @Override
+    public void appendHistRecToFile(File file, HistRec histRec) {
+        throw new Exn("Not implemented.");
+    }
+
+    protected String fillGapsCardToString(CardFillGaps card) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ATTR_NAME_LANG).append("\n").append(card.getLang());
+        sb.append("\n\n").append(ATTR_NAME_TEXT).append("\n");
+        appendText(sb, card.getText());
+        sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
+        sb.append("\n\n").append(ATTR_NAME_HIST);
+        appendHistory(sb, card.getHistory());
+        return sb.toString();
+    }
+
+    private void appendText(StringBuilder sb, List<TextPart> text) {
+        if (CollectionUtils.isEmpty(text)) {
+            return;
+        }
+        sb.append(textPartToStr(text.getFirst()));
+        for (int i = 1; i < text.size(); i++) {
+            sb.append(" ").append(textPartToStr(text.get(i)));
+        }
+    }
+
+    private String textPartToStr(TextPart textPart) {
+        if (textPart instanceof Text text) {
+            return text.getText();
+        } else if (textPart instanceof Gap gap) {
+            StringBuilder sb = new StringBuilder("[[").append(gap.getAnswer());
+            String hint = gap.getHint();
+            boolean hintAdded = false;
+            if (StringUtils.isNotBlank(hint)) {
+                sb.append("|").append(hint);
+                hintAdded = true;
+            }
+            String notes = gap.getNotes();
+            if (StringUtils.isNotBlank(notes)) {
+                if (!hintAdded) {
+                    sb.append("|");
+                }
+                sb.append("|").append(notes);
+            }
+            sb.append("]]");
+            return sb.toString();
+        } else {
+            throw new Exn("Unsupported type of TextPart " + textPart.getClass().getCanonicalName());
+        }
+    }
+
+    private void appendHistory(StringBuilder sb, List<HistRec> history) {
+        history.forEach(histRec ->
+            sb
+                .append("\n")
+                .append(histRec.getTime().toString())
+                .append(" ").append(histRec.getTaskType())
+                .append(" ").append(histRec.getMark())
+                .append(" ").append(histRec.getNotes())
+        );
+    }
+
     private Card loadFillGapsCard(File file) {
-        Map<String, String> props = readProps(file);
-        String lang = props.get("###lang");
+        return parseFillGapsCard(utils.readStringFromFile(file), file);
+    }
+
+    protected Card parseFillGapsCard(String str, File file) {
+        Map<String, String> props = parseProps(str);
+        String lang = props.get(ATTR_NAME_LANG);
         if (StringUtils.isBlank(lang)) {
             throw new Exn(String.format("lang is not set for %s", file.getAbsolutePath()));
         }
         return CardFillGaps.builder()
+            .file(file)
             .lang(lang.trim())
-            .text(parseText(props.computeIfAbsent("###text", _ -> "")))
-            .notes(props.computeIfAbsent("###notes", _ -> ""))
-            .history(parseHistory(props.computeIfAbsent("###hist", _ -> "")))
+            .text(parseText(props.computeIfAbsent(ATTR_NAME_TEXT, _ -> "")))
+            .notes(props.computeIfAbsent(ATTR_NAME_NOTES, _ -> ""))
+            .history(parseHistory(props.computeIfAbsent(ATTR_NAME_HIST, _ -> "")))
             .build();
     }
 
@@ -77,7 +160,7 @@ public class CardsImpl implements Cards {
 
     protected List<TextPart> parseText(String str) {
         if (StringUtils.isBlank(str)) {
-            throw new Exn("Text cannot be empty");
+            return Collections.emptyList();
         }
         Matcher matcher = GAP_PATTERN.matcher(str);
         int lastIdx = 0;
@@ -116,11 +199,15 @@ public class CardsImpl implements Cards {
         return gapParts[i].trim();
     }
 
-    private Map<String, String> readProps(File file) {
+    private Map<String, String> parseProps(String str) {
         HashMap<String, String> res = new HashMap<>();
         List<String> buf = null;
         String key = null;
-        for (String line : utils.readLines(file)) {
+        List<String> lines = Arrays.stream(str.split("[\\n\\r]+"))
+            .filter(StringUtils::isNotBlank)
+            .map(String::trim)
+            .toList();
+        for (String line : lines) {
             if (line.startsWith("###")) {
                 if (key != null) {
                     res.put(key, StringUtils.join(buf, "\n"));
