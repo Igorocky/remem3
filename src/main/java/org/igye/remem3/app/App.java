@@ -1,5 +1,6 @@
 package org.igye.remem3.app;
 
+import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.sqlite.Database;
 import org.igye.remem3.web.StatefulWebController;
 
@@ -7,23 +8,27 @@ import java.util.List;
 import java.util.Optional;
 
 public interface App {
-    String getPropStr(String propName);
+    void reloadProperties();
 
     String getPropStr(String propName, String defaultValue);
 
-    Long getPropLong(String propName);
+    String getPropStr(String propName);
 
     Long getPropLong(String propName, Long defaultValue);
 
-    Integer getPropInt(String propName);
+    Long getPropLong(String propName);
 
     Integer getPropInt(String propName, Integer defaultValue);
 
-    List<String> getPropList(String propName);
+    Integer getPropInt(String propName);
 
     List<String> getPropList(String propName, List<String> defaultValue);
+
+    List<String> getPropList(String propName);
 
     Optional<StatefulWebController> lookupController(String path);
 
     Database getDatabase();
+
+    Utils getUtils();
 }

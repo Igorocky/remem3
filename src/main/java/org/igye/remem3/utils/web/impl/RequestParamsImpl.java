@@ -1,27 +1,27 @@
 package org.igye.remem3.utils.web.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.web.RequestParams;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RequestParamsImpl implements RequestParams {
     private final Map<String, String[]> params;
-    private final Map<String, String> submitIdParams;
+    private final Map<String, List<String>> keyValueParams;
 
     public RequestParamsImpl(HttpServletRequest req) {
         params = new HashMap<>();
-        submitIdParams = new HashMap<>();
+        keyValueParams = new HashMap<>();
         req.getParameterMap().forEach((param, value) -> {
             params.put(param, value);
             if (param.contains(":")) {
-                String[] nameAndId = param.split(":");
-                String prevVal = submitIdParams.put(nameAndId[0], nameAndId[1]);
-                if (prevVal != null) {
-                    throw new Exn(String.format("Cannot reassign value for id param %s", nameAndId[0]));
-                }
+                String[] keyValue = param.split(":");
+                keyValueParams.computeIfAbsent(keyValue[0], _ -> new ArrayList<>()).add(keyValue[1]);
             }
         });
     }
@@ -33,30 +33,46 @@ public class RequestParamsImpl implements RequestParams {
     }
 
     @Override
-    public String getParam(String paramName) {
+    public String[] getParams(String paramName) {
         String[] values = params.get(paramName);
         if (values == null || values.length == 0) {
-            return null;
+            throw new Exn(String.format("Param '%s' is not present.", paramName));
         }
-        return values[0];
+        return values;
     }
 
     @Override
-    public boolean hasSubmitIdParam(String paramName) {
-        return submitIdParams.containsKey(paramName);
+    public String getParam(String paramName) {
+        return getParams(paramName)[0];
     }
 
     @Override
-    public String getSubmitIdParam(String paramName) {
-        return submitIdParams.get(paramName);
+    public boolean hasKeyValueParam(String key) {
+        List<String> values = keyValueParams.get(key);
+        return CollectionUtils.isNotEmpty(values);
     }
 
     @Override
-    public Long getSubmitIdParamLong(String paramName) {
-        String strVal = getSubmitIdParam(paramName);
-        if (strVal == null) {
-            return null;
+    public List<String> getKeyValueParams(String key) {
+        List<String> values = keyValueParams.get(key);
+        if (CollectionUtils.isEmpty(values)) {
+            throw new Exn(String.format("Key-value param '%s' is not present.", key));
         }
-        return Long.parseLong(strVal);
+        return values;
+    }
+
+    @Override
+    public String getKeyValueParam(String key) {
+        return getKeyValueParams(key).getFirst();
+    }
+
+    @Override
+    public List<Long> getKeyValueParamsLong(String key) {
+        return getKeyValueParams(key).stream().map(Long::parseLong).toList();
+    }
+
+    @Override
+    public Long getKeyValueParamLong(String key) {
+        return Long.parseLong(getKeyValueParam(key));
     }
 }

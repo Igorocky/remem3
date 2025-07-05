@@ -9,7 +9,9 @@ import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 
 import java.io.File;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Builder
 @Getter
@@ -17,9 +19,16 @@ import java.util.List;
 @EqualsAndHashCode
 @With
 public class CardFillGaps implements Card {
-    private File file;
-    private String lang;
-    private List<TextPart> text;
-    private String notes;
-    private List<HistRec> history;
+    @Builder.Default
+    private Optional<File> file = Optional.empty();
+    @Builder.Default
+    private Optional<Instant> createdAt = Optional.empty();
+    @Builder.Default
+    private String lang = "";
+    @Builder.Default
+    private List<TextPart> text = List.of();
+    @Builder.Default
+    private String notes = "";
+    @Builder.Default
+    private List<HistRec> history = List.of();
 }

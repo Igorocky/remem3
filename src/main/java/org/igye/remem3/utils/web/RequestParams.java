@@ -1,13 +1,21 @@
 package org.igye.remem3.utils.web;
 
+import java.util.List;
+
 public interface RequestParams {
     boolean hasParam(String paramName);
 
+    String[] getParams(String paramName);
+
     String getParam(String paramName);
 
-    boolean hasSubmitIdParam(String paramName);
+    boolean hasKeyValueParam(String key);
 
-    String getSubmitIdParam(String paramName);
+    List<String> getKeyValueParams(String key);
 
-    Long getSubmitIdParamLong(String paramName);
+    String getKeyValueParam(String key);
+
+    List<Long> getKeyValueParamsLong(String key);
+
+    Long getKeyValueParamLong(String key);
 }

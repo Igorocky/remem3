@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +36,7 @@ public class CardsImpl implements Cards {
     private static final String ATTR_NAME_TEXT = "###text";
     private static final String ATTR_NAME_NOTES = "###notes";
     private static final String ATTR_NAME_HIST = "###hist";
+    private static final String ATTR_NAME_CREATED_AT = "###created_at";
 
     private final Utils utils;
     private final RememSettings rememSettings;
@@ -98,6 +100,9 @@ public class CardsImpl implements Cards {
         sb.append("\n\n").append(ATTR_NAME_TEXT).append("\n");
         appendText(sb, card.getText());
         sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
+        sb.append("\n\n").append(ATTR_NAME_CREATED_AT).append("\n").append(
+            card.getCreatedAt().map(Instant::toString).orElse("")
+        );
         sb.append("\n\n").append(ATTR_NAME_HIST);
         appendHistory(sb, card.getHistory());
         return sb.toString();
@@ -150,10 +155,10 @@ public class CardsImpl implements Cards {
     }
 
     private Card loadFillGapsCard(File file) {
-        return parseFillGapsCard(utils.readStringFromFile(file), file);
+        return parseFillGapsCard(utils.readStringFromFile(file), Optional.of(file));
     }
 
-    protected Card parseFillGapsCard(String str, File file) {
+    protected Card parseFillGapsCard(String str, Optional<File> file) {
         Map<String, String> props = parseProps(str);
         String lang = props.get(ATTR_NAME_LANG);
         if (StringUtils.isBlank(lang)) {
@@ -161,6 +166,11 @@ public class CardsImpl implements Cards {
         }
         return CardFillGaps.builder()
             .file(file)
+            .createdAt(
+                Optional.ofNullable(props.get(ATTR_NAME_CREATED_AT))
+                    .filter(StringUtils::isNotBlank)
+                    .map(Instant::parse)
+            )
             .lang(lang.trim())
             .text(parseText(props.computeIfAbsent(ATTR_NAME_TEXT, _ -> "")))
             .notes(props.computeIfAbsent(ATTR_NAME_NOTES, _ -> "").trim())

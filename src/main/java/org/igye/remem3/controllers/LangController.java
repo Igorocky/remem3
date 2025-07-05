@@ -53,10 +53,10 @@ public class LangController extends HtmlBuilder
                 params.getParam(PAR_NEW_LANG_NAME)
             ));
         }
-        if (params.hasSubmitIdParam(ACT_START_EDITING_LANG)) {
+        if (params.hasKeyValueParam(ACT_START_EDITING_LANG)) {
             return Optional.of(() -> langManager.startEditing(
                 stateId,
-                params.getSubmitIdParamLong(ACT_START_EDITING_LANG)
+                params.getKeyValueParamLong(ACT_START_EDITING_LANG)
             ));
         }
         if (params.hasParam(ACT_SAVE_EDITED_LANG)) {
@@ -68,10 +68,10 @@ public class LangController extends HtmlBuilder
         if (params.hasParam(ACT_DISCARD_EDITED_LANG)) {
             return Optional.of(() -> langManager.cancelEditing(stateId));
         }
-        if (params.hasSubmitIdParam(ACT_START_DELETING_LANG)) {
+        if (params.hasKeyValueParam(ACT_START_DELETING_LANG)) {
             return Optional.of(() -> langManager.startDeleting(
                 stateId,
-                params.getSubmitIdParamLong(ACT_START_DELETING_LANG)
+                params.getKeyValueParamLong(ACT_START_DELETING_LANG)
             ));
         }
         if (params.hasParam(ACT_CONFIRM_DELETING_LANG)) {

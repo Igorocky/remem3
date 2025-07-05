@@ -1,9 +1,9 @@
 package org.igye.remem3.app.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.igye.remem3.app.App;
-import org.igye.remem3.app.RememSettings;
 import org.igye.remem3.app.db.RememDbSchema;
 import org.igye.remem3.app.db.entities.CardEnt;
 import org.igye.remem3.app.db.entities.CardHistEnt;
@@ -20,8 +20,12 @@ import org.igye.remem3.controllers.ExplorerController;
 import org.igye.remem3.controllers.IndexController;
 import org.igye.remem3.controllers.LangController;
 import org.igye.remem3.controllers.TextFormatController;
+import org.igye.remem3.controllers.newcard.NewCardController;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.PropertyFileReader;
+import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.impl.PropertyFileReaderImpl;
+import org.igye.remem3.utils.impl.UtilsImpl;
 import org.igye.remem3.utils.sqlite.Database;
 import org.igye.remem3.utils.sqlite.impl.DatabaseImpl;
 import org.igye.remem3.web.StatefulWebController;
@@ -43,26 +47,22 @@ import java.util.stream.Stream;
 
 public class AppImpl implements App {
 
+    private Utils utils;
     private final Context context;
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
-    private final RememSettings rememSettings;
     private final RememDbSchema dbSchema;
     private final Database database;
     private final Map<String, StatefulWebController> controllers;
 
+    public static App getInstance() {
+        return AppHolder.app;
+    }
+
     @SneakyThrows
     public AppImpl() {
+        this.utils = new UtilsImpl(new ObjectMapper());
         this.context = InitialContext.doLookup("java:comp/env");
-        propFiles.addAll(
-            getPropList("property-files", Collections.emptyList()).stream()
-                .map(File::new)
-                .map(propFile -> new PropertyFileReaderImpl(this, propFile))
-                .toList()
-        );
-
-        rememSettings = RememSettingsImpl.builder()
-            .languages(Collections.unmodifiableList(getPropList("languages", List.of())))
-            .build();
+        reloadProperties();
 
         this.dbSchema = new RememDbSchemaImpl();
         this.database = new DatabaseImpl(makeDataSource("dataSource"), dbSchema);
@@ -78,6 +78,7 @@ public class AppImpl implements App {
             new TextFormatController(),
             new LangController(langManager),
             new ExplorerController(explorer),
+            new NewCardController(),
             new DbAccessController(database)
         ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(
@@ -88,34 +89,34 @@ public class AppImpl implements App {
     }
 
     @Override
-    public String getPropStr(String propName) {
-        return getPropStr(propName, null);
+    public void reloadProperties() {
+        propFiles.clear();
+        propFiles.addAll(
+            getPropList("property-files", Collections.emptyList()).stream()
+                .map(File::new)
+                .map(propFile -> new PropertyFileReaderImpl(this, propFile))
+                .toList()
+        );
     }
 
     @Override
     public String getPropStr(String propName, String defaultValue) {
-        try {
-            return String.valueOf(context.lookup(propName));
-        } catch (NamingException e) {
-            String envPropVal = System.getenv(propName);
-            if (envPropVal != null) {
-                return envPropVal;
-            }
-            return propFiles.stream()
-                .map(props -> props.getPropValue(propName))
-                .filter(Objects::nonNull)
-                .findFirst().orElse(defaultValue);
-        }
+        String prop = getProp(propName);
+        return prop != null ? prop : defaultValue;
     }
 
     @Override
-    public Long getPropLong(String propName) {
-        return getPropLong(propName, null);
+    public String getPropStr(String propName) {
+        String prop = getProp(propName);
+        if (prop == null) {
+            throwPropIsNotSet(propName);
+        }
+        return prop;
     }
 
     @Override
     public Long getPropLong(String propName, Long defaultValue) {
-        String propStr = getPropStr(propName);
+        String propStr = getProp(propName);
         if (propStr == null) {
             return defaultValue;
         }
@@ -123,13 +124,17 @@ public class AppImpl implements App {
     }
 
     @Override
-    public Integer getPropInt(String propName) {
-        return getPropInt(propName, null);
+    public Long getPropLong(String propName) {
+        String propStr = getProp(propName);
+        if (propStr == null) {
+            throwPropIsNotSet(propName);
+        }
+        return Long.parseLong(propStr);
     }
 
     @Override
     public Integer getPropInt(String propName, Integer defaultValue) {
-        String propStr = getPropStr(propName);
+        String propStr = getProp(propName);
         if (propStr == null) {
             return defaultValue;
         }
@@ -137,15 +142,28 @@ public class AppImpl implements App {
     }
 
     @Override
-    public List<String> getPropList(String propName) {
-        return getPropList(propName, null);
+    public Integer getPropInt(String propName) {
+        String propStr = getProp(propName);
+        if (propStr == null) {
+            throwPropIsNotSet(propName);
+        }
+        return Integer.parseInt(propStr);
     }
 
     @Override
     public List<String> getPropList(String propName, List<String> defaultValue) {
-        String propStr = getPropStr(propName);
+        String propStr = getProp(propName);
         if (propStr == null) {
             return defaultValue;
+        }
+        return Arrays.stream(propStr.split(",")).toList();
+    }
+
+    @Override
+    public List<String> getPropList(String propName) {
+        String propStr = getProp(propName);
+        if (propStr == null) {
+            throwPropIsNotSet(propName);
         }
         return Arrays.stream(propStr.split(",")).toList();
     }
@@ -160,8 +178,29 @@ public class AppImpl implements App {
         return database;
     }
 
-    public static App getInstance() {
-        return AppHolder.app;
+    @Override
+    public Utils getUtils() {
+        return this.utils;
+    }
+
+    private String getProp(String propName) {
+        try {
+            Object valueFromContext = context.lookup(propName);
+            if (valueFromContext == null) {
+                throw new NamingException();
+            }
+            return String.valueOf(valueFromContext);
+        } catch (NamingException e) {
+            String envPropVal = System.getenv(propName);
+            if (envPropVal != null) {
+                return envPropVal;
+            }
+            return propFiles.stream()
+                .map(props -> props.getPropValue(propName))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+        }
     }
 
     private BasicDataSource makeDataSource(String prefix) {
@@ -178,6 +217,10 @@ public class AppImpl implements App {
         ds.setDefaultAutoCommit(true);
         ds.setAutoCommitOnReturn(true);
         return ds;
+    }
+
+    private static void throwPropIsNotSet(String propName) {
+        throw new Exn(String.format("Property '%s' is not set.", propName));
     }
 
     private static final class AppHolder {
