@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.Cards;
-import org.igye.remem3.app.RememSettings;
+import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
@@ -39,7 +39,7 @@ public class CardsImpl implements Cards {
     private static final String ATTR_NAME_CREATED_AT = "###created_at";
 
     private final Utils utils;
-    private final RememSettings rememSettings;
+    private final Settings settings;
 
     @Override
     public Card loadCard(File file) {
@@ -78,7 +78,7 @@ public class CardsImpl implements Cards {
         String lang = card.getLang();
         if (StringUtils.isBlank(lang)) {
             res.add("Language is not set.");
-        } else if (!rememSettings.getLanguages().contains(lang)) {
+        } else if (!settings.getLanguages().contains(lang)) {
             res.add(String.format("Language '%s' is not registered.", lang));
         }
         List<TextPart> text = card.getText();

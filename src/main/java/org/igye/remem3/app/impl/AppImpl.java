@@ -45,7 +45,7 @@ public class AppImpl implements App {
         reloadProperties();
 
         Map<String, StatefulWebController> allControllers = Stream.of(
-            new NewCardController()
+            new NewCardController(this, utils)
         ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(
             "",

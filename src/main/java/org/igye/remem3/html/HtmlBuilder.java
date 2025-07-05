@@ -114,7 +114,15 @@ public class HtmlBuilder {
         return h6(childrenArrayToList(content));
     }
 
-    protected HtmlTag table(List<List<? extends HtmlElem>> tableData) {
+    protected HtmlTag pre(List<? extends HtmlElem> content) {
+        return h("pre", content);
+    }
+
+    protected HtmlTag pre(HtmlElem... content) {
+        return pre(childrenArrayToList(content));
+    }
+
+    protected HtmlTag table(List<? extends List<? extends HtmlElem>> tableData) {
         return h("table",
             tableData.stream()
                 .map(rowData -> h("tr",
