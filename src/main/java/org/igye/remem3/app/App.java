@@ -1,7 +1,6 @@
 package org.igye.remem3.app;
 
 import org.igye.remem3.utils.Utils;
-import org.igye.remem3.utils.sqlite.Database;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.util.List;
@@ -27,8 +26,6 @@ public interface App {
     List<String> getPropList(String propName);
 
     Optional<StatefulWebController> lookupController(String path);
-
-    Database getDatabase();
 
     Utils getUtils();
 }
