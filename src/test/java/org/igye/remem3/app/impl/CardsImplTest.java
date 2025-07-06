@@ -245,5 +245,29 @@ class CardsImplTest {
             List.of(),
             cards.validateCard(card)
         );
+
+        card = CardFillGaps.builder()
+            .lang("EN")
+            .text(cards.parseText("aaa [[]] bbb"))
+            .notes("123")
+            .history(List.of(HistRec.builder().build()))
+            .build();
+
+        Assertions.assertEquals(
+            List.of("A gap cannot be empty."),
+            cards.validateCard(card)
+        );
+
+        card = CardFillGaps.builder()
+            .lang("EN")
+            .text(cards.parseText("aaa [[   ]] bbb"))
+            .notes("123")
+            .history(List.of(HistRec.builder().build()))
+            .build();
+
+        Assertions.assertEquals(
+            List.of("A gap cannot be empty."),
+            cards.validateCard(card)
+        );
     }
 }

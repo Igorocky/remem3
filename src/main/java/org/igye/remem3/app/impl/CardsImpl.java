@@ -11,6 +11,8 @@ import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
 import org.igye.remem3.app.dto.fillgaps.Gap;
 import org.igye.remem3.app.dto.fillgaps.Text;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
+import org.igye.remem3.controllers.newcard.CardDto;
+import org.igye.remem3.controllers.newcard.CardFillGapsDto;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
@@ -28,7 +30,7 @@ import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 public class CardsImpl implements Cards {
-    private static final Pattern GAP_PATTERN = Pattern.compile("\\[\\[([^\\[\\]]+)\\]\\]");
+    private static final Pattern GAP_PATTERN = Pattern.compile("\\[\\[([^\\[\\]]*)\\]\\]");
     private static final Pattern HIST_PATTERN = Pattern.compile(
         "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
     );
@@ -37,13 +39,14 @@ public class CardsImpl implements Cards {
     private static final String ATTR_NAME_NOTES = "###notes";
     private static final String ATTR_NAME_HIST = "###hist";
     private static final String ATTR_NAME_CREATED_AT = "###created_at";
+    public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg.card";
 
     private final Utils utils;
     private final Settings settings;
 
     @Override
     public Card loadCard(File file) {
-        if (file.getName().endsWith(".fg.card")) {
+        if (file.getName().endsWith(CARD_FILL_GAPS_FILE_EXTENSION)) {
             return loadFillGapsCard(file);
         }
         throw new Exn("Unsupported type of card " + file.getAbsolutePath());
@@ -73,6 +76,21 @@ public class CardsImpl implements Cards {
         throw new Exn("Not implemented.");
     }
 
+    @Override
+    public Card makeCard(CardDto cardDto) {
+        if (cardDto instanceof CardFillGapsDto dto) {
+            return CardFillGaps.builder()
+                .createdAt(Optional.of(Instant.now()))
+                .lang(dto.getLang())
+                .text(parseText(dto.getText()))
+                .notes(dto.getNotes())
+                .history(List.of())
+                .build();
+        } else {
+            throw new Exn(String.format("Unexpected type of card %s", cardDto.getClass().getCanonicalName()));
+        }
+    }
+
     private List<String> validateFillGapsCard(CardFillGaps card) {
         ArrayList<String> res = new ArrayList<>();
         String lang = card.getLang();
@@ -91,6 +109,13 @@ public class CardsImpl implements Cards {
                 res.add("Text is empty.");
             }
         }
+        res.addAll(
+            text.stream()
+                .filter(part -> part instanceof Gap)
+                .filter(gap -> StringUtils.isBlank(((Gap) gap).getAnswer()))
+                .map(_ -> "A gap cannot be empty.")
+                .toList()
+        );
         return res;
     }
 
@@ -213,9 +238,6 @@ public class CardsImpl implements Cards {
             }
             String gapText = matcher.group(1);
             String[] gapParts = gapText.split("\\|");
-            if (gapParts.length == 0) {
-                throw new Exn(String.format("gapParts.length == 0 for %s", gapText));
-            }
             if (gapParts.length > 3) {
                 throw new Exn(String.format("gapParts.length > 3 for %s", gapText));
             }

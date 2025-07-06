@@ -6,8 +6,12 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
+import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.dto.Card;
+import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
 import org.igye.remem3.app.impl.CacheImpl;
+import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
@@ -17,10 +21,13 @@ import org.igye.remem3.utils.web.RequestParams;
 import org.igye.remem3.utils.web.impl.RequestParamsImpl;
 import org.igye.remem3.web.StatefulWebController;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 
+import static org.igye.remem3.app.impl.CardsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
 import static org.igye.remem3.app.impl.SettingsImpl.PROP_DIRECTORIES_WITH_CARDS;
 import static org.igye.remem3.app.impl.SettingsImpl.PROP_LANGUAGES;
 
@@ -34,6 +41,7 @@ public class NewCardController extends HtmlBuilder
     private static final String PAR_CARD_FILL_GAPS_LANG = "PAR_CARD_FILL_GAPS_LANG";
     private static final String PAR_CARD_FILL_GAPS_TEXT = "PAR_CARD_FILL_GAPS_TEXT";
     private static final String PAR_CARD_FILL_GAPS_NOTES = "PAR_CARD_FILL_GAPS_NOTES";
+    private static final String ACT_CREATE_CARD = "ACT_CREATE_CARD";
 
     private final App app;
     private final Utils utils;
@@ -69,6 +77,9 @@ public class NewCardController extends HtmlBuilder
             return Optional.empty();
         }
         RequestParams params = new RequestParamsImpl(req);
+        if (params.hasParam(ACT_CREATE_CARD)) {
+            return Optional.of(() -> actCreateCard(state));
+        }
         return Optional.empty();
     }
 
@@ -94,9 +105,53 @@ public class NewCardController extends HtmlBuilder
                 rndDirSelector(st),
                 rndCardType(st),
                 rndCard(st),
-                inpSubmit("ACT_CREATE_CARD", "Save")
+                inpSubmit(ACT_CREATE_CARD, "Save")
             )
         ).toString();
+    }
+
+    private NewCardState actCreateCard(NewCardState st) {
+        try {
+            String dirStr = st.getDir();
+            File dir = new File(dirStr);
+            if (!dir.exists()) {
+                dir.mkdirs();
+                if (!dir.exists()) {
+                    return st.withErrors(List.of(String.format("Cannot create a directory: %s", dirStr)));
+                }
+            } else if (!dir.isDirectory()) {
+                return st.withErrors(List.of(String.format("Not a directory: %s", dirStr)));
+            }
+            Cards cards = new CardsImpl(utils, st.getSettings());
+            Card card = cards.makeCard(st.getCardParams());
+            List<String> errors = cards.validateCard(card);
+            if (CollectionUtils.isNotEmpty(errors)) {
+                return st.withErrors(errors);
+            }
+            cards.saveCard(new File(dir, makeFileName(card)), card);
+            return st.withCardParams(clearParams(st.getCardParams()));
+        } catch (Exception ex) {
+            return st.withErrors(List.of(ex.getMessage()));
+        }
+    }
+
+    private CardDto clearParams(CardDto dto) {
+        if (dto instanceof CardFillGapsDto card) {
+            return card.withText("");
+        } else {
+            throw new Exn(String.format("Unexpected type of card %s", dto.getClass().getCanonicalName()));
+        }
+    }
+
+    private String makeFileName(Card card) {
+        String baseName = UUID.randomUUID().toString().replace("-", "_");
+        String extension;
+        if (card instanceof CardFillGaps) {
+            extension = CARD_FILL_GAPS_FILE_EXTENSION;
+        } else {
+            throw new Exn(String.format("Unexpected type of card %s", card.getClass().getCanonicalName()));
+        }
+        return baseName + extension;
     }
 
     private HtmlElem rndCard(NewCardState st) {
