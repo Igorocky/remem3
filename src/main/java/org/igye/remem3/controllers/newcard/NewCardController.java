@@ -18,7 +18,6 @@ import org.igye.remem3.utils.web.impl.RequestParamsImpl;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -87,15 +86,54 @@ public class NewCardController extends HtmlBuilder
     }
 
     @Override
-    public String renderState(NewCardState state) {
+    public String renderState(NewCardState st) {
         return simplePageWithTitle("Add new card",
-            rndErrors(state.getErrors()),
+            rndErrors(st.getErrors()),
             h3(text("Add new card")),
             form(
-                rndDirSelector(state),
-                rndCardType(state)
+                rndDirSelector(st),
+                rndCardType(st),
+                rndCard(st),
+                inpSubmit("ACT_CREATE_CARD", "Save")
             )
         ).toString();
+    }
+
+    private HtmlElem rndCard(NewCardState st) {
+        CardDto cardParams = st.getCardParams();
+        if (cardParams instanceof CardFillGapsDto card) {
+            return rndCardFillGaps(st, card);
+        } else {
+            throw new Exn(String.format("Unexpected type of card %s", cardParams.getClass().getCanonicalName()));
+        }
+    }
+
+    private HtmlElem rndCardFillGaps(NewCardState st, CardFillGapsDto card) {
+        return table(List.of(
+            List.of(
+                text("Language"),
+                rndAvailableLanguages(st.getSettings(), card.getLang())
+            ),
+            List.of(
+                text("Text"),
+                table(List.of(
+                    List.of(div("color:grey;", text("[[answer|translation|transcription]] or [[answer|hint|notes]]"))),
+                    List.of(textarea(PAR_CARD_FILL_GAPS_TEXT, card.getText(), 100, 5))
+                ))
+            ),
+            List.of(
+                text("Notes"),
+                textarea(PAR_CARD_FILL_GAPS_NOTES, card.getNotes(), 100, 5)
+            )
+        ));
+    }
+
+    private HtmlElem rndAvailableLanguages(Settings settings, String selectedLang) {
+        return select(PAR_CARD_FILL_GAPS_LANG, selectedLang,
+            settings.getLanguages().stream()
+                .map(lang -> Pair.of(lang, text(lang)))
+                .toList()
+        );
     }
 
     private HtmlElem rndCardType(NewCardState state) {
@@ -128,7 +166,7 @@ public class NewCardController extends HtmlBuilder
         if (CollectionUtils.isEmpty(errors)) {
             return null;
         }
-        return h("div", Map.of("style", "color:red;"),
+        return div("color:red;",
             h3(text("Error")),
             ul(errors.stream().map(msg -> pre(text(msg))).toList())
         );

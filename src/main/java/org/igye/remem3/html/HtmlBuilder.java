@@ -124,6 +124,14 @@ public class HtmlBuilder {
         return pre(childrenArrayToList(content));
     }
 
+    protected HtmlTag div(String style, List<? extends HtmlElem> children) {
+        return h("div", Map.of("style", style), children);
+    }
+
+    protected HtmlTag div(String style, HtmlElem... content) {
+        return div(style, childrenArrayToList(content));
+    }
+
     protected HtmlTag table(List<? extends List<? extends HtmlElem>> tableData) {
         return h("table",
             tableData.stream()
@@ -193,6 +201,12 @@ public class HtmlBuilder {
 
     protected HtmlTag select(String name, String selected, Pair<String, ? extends HtmlElem>... options) {
         return select(name, selected, childrenArrayToList(options));
+    }
+
+    protected HtmlTag textarea(String name, String value, int cols, int rows) {
+        return h("textarea", Map.of("name", name, "cols", String.valueOf(cols), "rows", String.valueOf(rows)),
+            text(value)
+        );
     }
 
     protected String keyValueParam(String key, String value) {
