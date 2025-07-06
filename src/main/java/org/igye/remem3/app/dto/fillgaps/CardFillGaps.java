@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.With;
+import org.igye.remem3.app.CardType;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 
@@ -12,6 +13,8 @@ import java.io.File;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+
+import static org.igye.remem3.app.CardType.FILL_GAPS;
 
 @Builder
 @Getter
@@ -31,4 +34,9 @@ public class CardFillGaps implements Card {
     private String notes = "";
     @Builder.Default
     private List<HistRec> history = List.of();
+
+    @Override
+    public CardType getType() {
+        return FILL_GAPS;
+    }
 }

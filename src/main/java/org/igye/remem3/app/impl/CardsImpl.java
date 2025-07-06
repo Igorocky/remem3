@@ -1,6 +1,7 @@
 package org.igye.remem3.app.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.Cards;
@@ -17,6 +18,8 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public class CardsImpl implements Cards {
@@ -39,7 +43,8 @@ public class CardsImpl implements Cards {
     private static final String ATTR_NAME_NOTES = "###notes";
     private static final String ATTR_NAME_HIST = "###hist";
     private static final String ATTR_NAME_CREATED_AT = "###created_at";
-    public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg.card";
+    private static final String CARD_EXTENSION = ".card";
+    public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg" + CARD_EXTENSION;
 
     private final Utils utils;
     private final Settings settings;
@@ -52,23 +57,32 @@ public class CardsImpl implements Cards {
         throw new Exn("Unsupported type of card " + file.getAbsolutePath());
     }
 
+    @SneakyThrows
+    @Override
+    public List<Card> loadAllCards(File dir) {
+        try (Stream<Path> stream = Files.walk(dir.toPath())) {
+            return stream
+                .filter(Files::isRegularFile)
+                .filter(file -> file.endsWith(".card"))
+                .map(Path::toFile)
+                .map(this::loadCard)
+                .toList();
+        }
+    }
+
     @Override
     public void saveCard(File file, Card card) {
         file.getParentFile().mkdirs();
-        if (card instanceof CardFillGaps fillGapsCard) {
-            utils.writeStringToFile(fillGapsCardToString(fillGapsCard), file);
-        } else {
-            throw new Exn("Unsupported type of card " + card.getClass().getCanonicalName());
+        switch (card.getType()) {
+            case FILL_GAPS -> utils.writeStringToFile(fillGapsCardToString((CardFillGaps) card), file);
         }
     }
 
     @Override
     public List<String> validateCard(Card card) {
-        if (card instanceof CardFillGaps fillGapsCard) {
-            return validateFillGapsCard(fillGapsCard);
-        } else {
-            throw new Exn("Unsupported type of card " + card.getClass().getCanonicalName());
-        }
+        return switch (card.getType()) {
+            case FILL_GAPS -> validateFillGapsCard((CardFillGaps) card);
+        };
     }
 
     @Override
@@ -78,17 +92,18 @@ public class CardsImpl implements Cards {
 
     @Override
     public Card makeCard(CardDto cardDto) {
-        if (cardDto instanceof CardFillGapsDto dto) {
-            return CardFillGaps.builder()
-                .createdAt(Optional.of(Instant.now()))
-                .lang(dto.getLang())
-                .text(parseText(dto.getText()))
-                .notes(dto.getNotes())
-                .history(List.of())
-                .build();
-        } else {
-            throw new Exn(String.format("Unexpected type of card %s", cardDto.getClass().getCanonicalName()));
-        }
+        return switch (cardDto.getType()) {
+            case FILL_GAPS -> {
+                CardFillGapsDto dto = (CardFillGapsDto) cardDto;
+                yield CardFillGaps.builder()
+                    .createdAt(Optional.of(Instant.now()))
+                    .lang(dto.getLang())
+                    .text(parseText(dto.getText()))
+                    .notes(dto.getNotes())
+                    .history(List.of())
+                    .build();
+            }
+        };
     }
 
     private List<String> validateFillGapsCard(CardFillGaps card) {

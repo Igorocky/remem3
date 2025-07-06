@@ -10,6 +10,8 @@ import java.util.List;
 public interface Cards {
     Card loadCard(File file);
 
+    List<Card> loadAllCards(File dir);
+
     void saveCard(File file, Card card);
 
     List<String> validateCard(Card card);

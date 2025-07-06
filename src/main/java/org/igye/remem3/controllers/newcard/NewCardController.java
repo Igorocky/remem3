@@ -6,10 +6,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
+import org.igye.remem3.app.CardType;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
-import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
 import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
@@ -22,6 +22,7 @@ import org.igye.remem3.utils.web.impl.RequestParamsImpl;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,7 +38,6 @@ public class NewCardController extends HtmlBuilder
 
     private static final String PAR_DIR_TO_SAVE_NEW_CARD_TO = "PAR_DIR_TO_SAVE_NEW_CARD_TO";
     private static final String PAR_CARD_TYPE = "PAR_CARD_TYPE";
-    public static final String CARD_TYPE_FILL_GAPS = "fill_gaps";
     private static final String PAR_CARD_FILL_GAPS_LANG = "PAR_CARD_FILL_GAPS_LANG";
     private static final String PAR_CARD_FILL_GAPS_TEXT = "PAR_CARD_FILL_GAPS_TEXT";
     private static final String PAR_CARD_FILL_GAPS_NOTES = "PAR_CARD_FILL_GAPS_NOTES";
@@ -123,44 +123,45 @@ public class NewCardController extends HtmlBuilder
                 return st.withErrors(List.of(String.format("Not a directory: %s", dirStr)));
             }
             Cards cards = new CardsImpl(utils, st.getSettings());
-            Card card = cards.makeCard(st.getCardParams());
+            CardDto cardDto = st.getCardParams();
+            Card card = cards.makeCard(cardDto);
             List<String> errors = cards.validateCard(card);
             if (CollectionUtils.isNotEmpty(errors)) {
                 return st.withErrors(errors);
             }
+            st.getCache().put(PAR_DIR_TO_SAVE_NEW_CARD_TO, dirStr);
+            switch (cardDto.getType()) {
+                case FILL_GAPS -> {
+                    CardFillGapsDto dto = (CardFillGapsDto) cardDto;
+                    st.getCache().put(PAR_CARD_FILL_GAPS_LANG, dto.getLang());
+                }
+            }
             cards.saveCard(new File(dir, makeFileName(card)), card);
-            return st.withCardParams(clearParams(st.getCardParams()));
+            return st.withCardParams(clearParams(cardDto));
         } catch (Exception ex) {
             return st.withErrors(List.of(ex.getMessage()));
         }
     }
 
     private CardDto clearParams(CardDto dto) {
-        if (dto instanceof CardFillGapsDto card) {
-            return card.withText("");
-        } else {
-            throw new Exn(String.format("Unexpected type of card %s", dto.getClass().getCanonicalName()));
-        }
+        return switch (dto.getType()) {
+            case FILL_GAPS -> ((CardFillGapsDto) dto).withText("");
+        };
     }
 
     private String makeFileName(Card card) {
         String baseName = UUID.randomUUID().toString().replace("-", "_");
-        String extension;
-        if (card instanceof CardFillGaps) {
-            extension = CARD_FILL_GAPS_FILE_EXTENSION;
-        } else {
-            throw new Exn(String.format("Unexpected type of card %s", card.getClass().getCanonicalName()));
-        }
+        String extension = switch (card.getType()) {
+            case FILL_GAPS -> CARD_FILL_GAPS_FILE_EXTENSION;
+        };
         return baseName + extension;
     }
 
     private HtmlElem rndCard(NewCardState st) {
         CardDto cardParams = st.getCardParams();
-        if (cardParams instanceof CardFillGapsDto card) {
-            return rndCardFillGaps(st, card);
-        } else {
-            throw new Exn(String.format("Unexpected type of card %s", cardParams.getClass().getCanonicalName()));
-        }
+        return switch (cardParams.getType()) {
+            case FILL_GAPS -> rndCardFillGaps(st, (CardFillGapsDto) cardParams);
+        };
     }
 
     private HtmlElem rndCardFillGaps(NewCardState st, CardFillGapsDto card) {
@@ -172,7 +173,7 @@ public class NewCardController extends HtmlBuilder
             List.of(
                 text("Text"),
                 table(List.of(
-                    List.of(div("color:grey;", text("[[answer|translation|transcription]] or [[answer|hint|notes]]"))),
+                    List.of(div("color:grey;", text("[[word|translation|transcription]] or [[answer|hint|notes]]"))),
                     List.of(textarea(PAR_CARD_FILL_GAPS_TEXT, card.getText(), 100, 5))
                 ))
             ),
@@ -196,10 +197,10 @@ public class NewCardController extends HtmlBuilder
             text("Card type"),
             select(
                 PAR_DIR_TO_SAVE_NEW_CARD_TO,
-                state.getCardParams().getCardType(),
-                List.of(
-                    Pair.of(CARD_TYPE_FILL_GAPS, text(CARD_TYPE_FILL_GAPS))
-                )
+                state.getCardParams().getType().getDisplayName(),
+                Arrays.stream(CardType.values())
+                    .map(cardType -> Pair.of(cardType.getCode(), text(cardType.getDisplayName())))
+                    .toList()
             )
         )));
     }
@@ -245,10 +246,8 @@ public class NewCardController extends HtmlBuilder
 
     private CardDto makeCardParams(RequestParams params, Settings settings, Cache cache) {
         if (params.hasParam(PAR_CARD_TYPE)) {
-            String cardType = params.getParam(PAR_CARD_TYPE);
-            return switch (cardType) {
-                case CARD_TYPE_FILL_GAPS -> makeFillGapsCardParams(params, settings, cache);
-                default -> throw new Exn(String.format("Unexpected type of card %s", cardType));
+            return switch (CardType.fromCode(params.getParam(PAR_CARD_TYPE))) {
+                case FILL_GAPS -> makeFillGapsCardParams(params, settings, cache);
             };
         } else {
             return makeFillGapsCardParams(params, settings, cache);

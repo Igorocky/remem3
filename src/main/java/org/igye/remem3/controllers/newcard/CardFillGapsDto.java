@@ -3,8 +3,9 @@ package org.igye.remem3.controllers.newcard;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.With;
+import org.igye.remem3.app.CardType;
 
-import static org.igye.remem3.controllers.newcard.NewCardController.CARD_TYPE_FILL_GAPS;
+import static org.igye.remem3.app.CardType.FILL_GAPS;
 
 @Builder
 @Getter
@@ -15,7 +16,7 @@ public class CardFillGapsDto implements CardDto {
     private String notes;
 
     @Override
-    public String getCardType() {
-        return CARD_TYPE_FILL_GAPS;
+    public CardType getType() {
+        return FILL_GAPS;
     }
 }
