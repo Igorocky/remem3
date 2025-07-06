@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.With;
+import org.igye.remem3.controllers.components.DirSelectorCmp;
 
 import java.util.List;
 
@@ -15,4 +16,5 @@ import java.util.List;
 @ToString
 public class ExerciseState {
     private List<String> errors;
+    private DirSelectorCmp dirSelector;
 }

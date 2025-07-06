@@ -18,6 +18,7 @@ import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
+import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.web.RequestParams;
 import org.igye.remem3.utils.web.impl.RequestParamsImpl;
@@ -103,12 +104,19 @@ public class NewCardController extends HtmlBuilder
             rndErrors(st.getErrors()),
             h3(text("Add new card")),
             form(
-                st.getDirSelector().render(),
+                rndDirSelector(st),
                 rndCardType(st),
                 rndCard(st),
                 inpSubmit(ACT_CREATE_CARD, "Save")
             )
         ).toString();
+    }
+
+    private HtmlTag rndDirSelector(NewCardState st) {
+        return table(List.of(List.of(
+            text("Directory"),
+            frag(st.getDirSelector().render())
+        )));
     }
 
     private NewCardState actCreateCard(NewCardState st) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.igye.remem3.app.App;
 import org.igye.remem3.controllers.IndexController;
+import org.igye.remem3.controllers.exercise.ExerciseController;
 import org.igye.remem3.controllers.newcard.NewCardController;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.PropertyFileReader;
@@ -45,7 +46,8 @@ public class AppImpl implements App {
         reloadProperties();
 
         Map<String, StatefulWebController> allControllers = Stream.of(
-            new NewCardController(this, utils)
+            new NewCardController(this, utils),
+            new ExerciseController(this, utils)
         ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(
             "",

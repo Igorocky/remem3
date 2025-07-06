@@ -54,10 +54,7 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
             selectors.add(rndDirSelector(keyValueParam(baseParamName, i), options, curDirPart));
             parentPath += (i == 0 ? "" : "/") + curDirPart;
         }
-        return table(List.of(List.of(
-            text("Directory"),
-            frag(selectors)
-        )));
+        return frag(selectors);
     }
 
     private List<String> getSelectedDirectory(RequestParams params) {
