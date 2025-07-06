@@ -241,7 +241,7 @@ class CardsImplTest {
             .build();
 
         Assertions.assertEquals(
-            List.of(),
+            List.of("At least one gap must be defined."),
             cards.validateCard(card)
         );
 
@@ -266,6 +266,18 @@ class CardsImplTest {
 
         Assertions.assertEquals(
             List.of("A gap cannot be empty."),
+            cards.validateCard(card)
+        );
+
+        card = Card.FillGaps.builder()
+            .lang("EN")
+            .text(cards.parseText("aaa [[111]] bbb"))
+            .notes("123")
+            .history(List.of(HistRec.builder().build()))
+            .build();
+
+        Assertions.assertEquals(
+            List.of(),
             cards.validateCard(card)
         );
     }

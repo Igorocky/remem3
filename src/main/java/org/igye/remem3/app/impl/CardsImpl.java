@@ -115,14 +115,22 @@ public class CardsImpl implements Cards {
             appendText(sb, text);
             if (StringUtils.isBlank(sb.toString())) {
                 res.add("Text is empty.");
+            } else {
+                long numOfGaps = text.stream()
+                    .filter(part -> part instanceof TextPart.Gap)
+                    .count();
+                if (numOfGaps == 0) {
+                    res.add("At least one gap must be defined.");
+                } else {
+                    res.addAll(
+                        text.stream()
+                            .filter(part -> part instanceof TextPart.Gap gap && StringUtils.isBlank((gap).getAnswer()))
+                            .map(_ -> "A gap cannot be empty.")
+                            .toList()
+                    );
+                }
             }
         }
-        res.addAll(
-            text.stream()
-                .filter(part -> part instanceof TextPart.Gap gap && StringUtils.isBlank((gap).getAnswer()))
-                .map(_ -> "A gap cannot be empty.")
-                .toList()
-        );
         return res;
     }
 
