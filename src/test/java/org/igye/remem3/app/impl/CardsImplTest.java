@@ -1,7 +1,7 @@
 package org.igye.remem3.app.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.igye.remem3.app.dto.CardFillGaps;
+import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.Gap;
 import org.igye.remem3.app.dto.fillgaps.Text;
@@ -148,7 +148,7 @@ class CardsImplTest {
     @Test
     void parseFillGapsCard_full() {
         CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
-        CardFillGaps card = CardFillGaps.builder()
+        Card.FillGaps card = Card.FillGaps.builder()
             .createdAt(Optional.of(Instant.now()))
             .lang("Lang1")
             .text(
@@ -188,7 +188,7 @@ class CardsImplTest {
     @Test
     void parseFillGapsCard_empty() {
         CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
-        CardFillGaps card = CardFillGaps.builder().build();
+        Card.FillGaps card = Card.FillGaps.builder().build();
 
         Assertions.assertEquals(
             card,
@@ -203,14 +203,14 @@ class CardsImplTest {
             SettingsImpl.builder().languages(List.of("EN")).build()
         );
 
-        CardFillGaps card = CardFillGaps.builder().build();
+        Card.FillGaps card = Card.FillGaps.builder().build();
 
         Assertions.assertEquals(
             List.of("Language is not set.", "Text is empty."),
             cards.validateCard(card)
         );
 
-        card = CardFillGaps.builder()
+        card = Card.FillGaps.builder()
             .lang("IT")
             .text(List.of())
             .notes("")
@@ -222,7 +222,7 @@ class CardsImplTest {
             cards.validateCard(card)
         );
 
-        card = CardFillGaps.builder()
+        card = Card.FillGaps.builder()
             .lang("EN")
             .text(List.of(Text.builder().text(" ").build()))
             .notes("123")
@@ -234,7 +234,7 @@ class CardsImplTest {
             cards.validateCard(card)
         );
 
-        card = CardFillGaps.builder()
+        card = Card.FillGaps.builder()
             .lang("EN")
             .text(List.of(Text.builder().text(".").build()))
             .notes("123")
@@ -246,7 +246,7 @@ class CardsImplTest {
             cards.validateCard(card)
         );
 
-        card = CardFillGaps.builder()
+        card = Card.FillGaps.builder()
             .lang("EN")
             .text(cards.parseText("aaa [[]] bbb"))
             .notes("123")
@@ -258,7 +258,7 @@ class CardsImplTest {
             cards.validateCard(card)
         );
 
-        card = CardFillGaps.builder()
+        card = Card.FillGaps.builder()
             .lang("EN")
             .text(cards.parseText("aaa [[   ]] bbb"))
             .notes("123")

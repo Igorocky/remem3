@@ -9,14 +9,12 @@ import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
-import org.igye.remem3.app.dto.CardFillGaps;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
-import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.web.RequestParams;
 import org.igye.remem3.utils.web.impl.RequestParamsImpl;
@@ -30,8 +28,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import static org.igye.remem3.app.impl.CardsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
-import static org.igye.remem3.app.impl.SettingsImpl.PROP_DIRECTORIES_WITH_CARDS;
-import static org.igye.remem3.app.impl.SettingsImpl.PROP_LANGUAGES;
 
 @RequiredArgsConstructor
 public class NewCardController extends HtmlBuilder
@@ -132,7 +128,7 @@ public class NewCardController extends HtmlBuilder
             }
             st.getCache().put(PAR_DIR_TO_SAVE_NEW_CARD_TO, dirStr);
             switch (cardDto) {
-                case CardFillGapsDto dto -> st.getCache().put(PAR_CARD_FILL_GAPS_LANG, dto.getLang());
+                case CardDto.FillGaps dto -> st.getCache().put(PAR_CARD_FILL_GAPS_LANG, dto.getLang());
             }
             cards.saveCard(new File(dir, makeFileName(card)), card);
             return st.withCardParams(clearParams(cardDto));
@@ -143,14 +139,14 @@ public class NewCardController extends HtmlBuilder
 
     private CardDto clearParams(CardDto dto) {
         return switch (dto) {
-            case CardFillGapsDto c -> c.withText("");
+            case CardDto.FillGaps c -> c.withText("");
         };
     }
 
     private String makeFileName(Card card) {
         String baseName = UUID.randomUUID().toString().replace("-", "_");
         String extension = switch (card) {
-            case CardFillGaps _ -> CARD_FILL_GAPS_FILE_EXTENSION;
+            case Card.FillGaps _ -> CARD_FILL_GAPS_FILE_EXTENSION;
         };
         return baseName + extension;
     }
@@ -158,11 +154,11 @@ public class NewCardController extends HtmlBuilder
     private HtmlElem rndCard(NewCardState st) {
         CardDto cardParams = st.getCardParams();
         return switch (cardParams) {
-            case CardFillGapsDto dto -> rndCardFillGaps(st, dto);
+            case CardDto.FillGaps dto -> rndCardFillGaps(st, dto);
         };
     }
 
-    private HtmlElem rndCardFillGaps(NewCardState st, CardFillGapsDto card) {
+    private HtmlElem rndCardFillGaps(NewCardState st, CardDto.FillGaps card) {
         return table(List.of(
             List.of(
                 text("Language"),
@@ -235,11 +231,7 @@ public class NewCardController extends HtmlBuilder
     }
 
     private String getDefaultDir(Settings settings) {
-        List<String> directoriesWithCards = settings.getDirectoriesWithCards();
-        if (CollectionUtils.isEmpty(directoriesWithCards)) {
-            throw new Exn(String.format("Property '%s' is empty", PROP_DIRECTORIES_WITH_CARDS));
-        }
-        return directoriesWithCards.getFirst();
+        return settings.getDirectoriesWithCards().getFirst();
     }
 
     private CardDto makeCardParams(RequestParams params, Settings settings, Cache cache) {
@@ -252,11 +244,8 @@ public class NewCardController extends HtmlBuilder
         }
     }
 
-    private CardFillGapsDto makeFillGapsCardParams(RequestParams params, Settings settings, Cache cache) {
-        if (CollectionUtils.isEmpty(settings.getLanguages())) {
-            throw new Exn(String.format("Property '%s' is empty", PROP_LANGUAGES));
-        }
-        return CardFillGapsDto.builder()
+    private CardDto.FillGaps makeFillGapsCardParams(RequestParams params, Settings settings, Cache cache) {
+        return CardDto.FillGaps.builder()
             .lang(params.getParam(
                 PAR_CARD_FILL_GAPS_LANG,
                 cache.getStr(PAR_CARD_FILL_GAPS_LANG, settings.getLanguages().getFirst())

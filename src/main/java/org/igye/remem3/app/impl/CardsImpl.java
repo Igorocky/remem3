@@ -7,13 +7,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
-import org.igye.remem3.app.dto.CardFillGaps;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.Gap;
 import org.igye.remem3.app.dto.fillgaps.Text;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.controllers.newcard.CardDto;
-import org.igye.remem3.controllers.newcard.CardFillGapsDto;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
@@ -74,14 +72,14 @@ public class CardsImpl implements Cards {
     public void saveCard(File file, Card card) {
         file.getParentFile().mkdirs();
         switch (card) {
-            case CardFillGaps c -> utils.writeStringToFile(fillGapsCardToString(c), file);
+            case Card.FillGaps c -> utils.writeStringToFile(fillGapsCardToString(c), file);
         }
     }
 
     @Override
     public List<String> validateCard(Card card) {
         return switch (card) {
-            case CardFillGaps c -> validateFillGapsCard(c);
+            case Card.FillGaps c -> validateFillGapsCard(c);
         };
     }
 
@@ -93,7 +91,7 @@ public class CardsImpl implements Cards {
     @Override
     public Card makeCard(CardDto cardDto) {
         return switch (cardDto) {
-            case CardFillGapsDto dto -> CardFillGaps.builder()
+            case CardDto.FillGaps dto -> Card.FillGaps.builder()
                 .createdAt(Optional.of(Instant.now()))
                 .lang(dto.getLang())
                 .text(parseText(dto.getText()))
@@ -103,7 +101,7 @@ public class CardsImpl implements Cards {
         };
     }
 
-    private List<String> validateFillGapsCard(CardFillGaps card) {
+    private List<String> validateFillGapsCard(Card.FillGaps card) {
         ArrayList<String> res = new ArrayList<>();
         String lang = card.getLang();
         if (StringUtils.isBlank(lang)) {
@@ -131,7 +129,7 @@ public class CardsImpl implements Cards {
         return res;
     }
 
-    protected String fillGapsCardToString(CardFillGaps card) {
+    protected String fillGapsCardToString(Card.FillGaps card) {
         StringBuilder sb = new StringBuilder();
         sb.append(ATTR_NAME_LANG).append("\n").append(card.getLang());
         sb.append("\n\n").append(ATTR_NAME_TEXT).append("\n");
@@ -201,7 +199,7 @@ public class CardsImpl implements Cards {
         if (StringUtils.isBlank(lang)) {
             lang = "";
         }
-        return CardFillGaps.builder()
+        return Card.FillGaps.builder()
             .file(file)
             .createdAt(
                 Optional.ofNullable(props.get(ATTR_NAME_CREATED_AT))
