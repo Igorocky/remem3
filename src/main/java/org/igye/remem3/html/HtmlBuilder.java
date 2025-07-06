@@ -184,19 +184,41 @@ public class HtmlBuilder {
         return h("input", Map.of("type", "submit", "id", name, "name", name, "value", value));
     }
 
-    protected HtmlTag select(String name, String selected, List<? extends Pair<String, ? extends HtmlElem>> options) {
-        return h("select", Map.of("name", name),
+    protected HtmlTag select(
+        String name,
+        boolean submitOnChange,
+        String selected,
+        List<? extends Pair<String, ? extends HtmlElem>> options
+    ) {
+        Map<String, String> selectAttrs = new HashMap<>();
+        selectAttrs.put("name", name);
+        if (submitOnChange) {
+            selectAttrs.put("onchange", "this.form.submit()");
+        }
+        return h("select", selectAttrs,
             options.stream()
                 .map(option -> {
-                    Map<String, String> attrs = new HashMap<>();
-                    attrs.put("value", option.getLeft());
+                    Map<String, String> optionAttrs = new HashMap<>();
+                    optionAttrs.put("value", option.getLeft());
                     if (option.getLeft().equals(selected)) {
-                        attrs.put("selected", "");
+                        optionAttrs.put("selected", "");
                     }
-                    return h("option", attrs, option.getRight());
+                    return h("option", optionAttrs, option.getRight());
                 })
                 .toList()
         );
+    }
+
+    protected HtmlTag select(
+        String name,
+        boolean submitOnChange,
+        String selected,
+        Pair<String, ? extends HtmlElem>... options) {
+        return select(name, submitOnChange, selected, childrenArrayToList(options));
+    }
+
+    protected HtmlTag select(String name, String selected, List<? extends Pair<String, ? extends HtmlElem>> options) {
+        return select(name, false, selected, options);
     }
 
     protected HtmlTag select(String name, String selected, Pair<String, ? extends HtmlElem>... options) {

@@ -8,8 +8,10 @@ import org.igye.remem3.app.App;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.utils.Exn;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -34,6 +36,14 @@ public class SettingsImpl implements Settings {
             Collections.unmodifiableList(app.getPropList(PROP_DIRECTORIES_WITH_CARDS))
         );
         checkNotEmpty(directoriesWithCards, PROP_DIRECTORIES_WITH_CARDS);
+        String nonExistentDirs = directoriesWithCards.stream()
+            .map(path -> new File(path))
+            .filter(dir -> !dir.exists() || !dir.isDirectory())
+            .map(File::getName)
+            .collect(Collectors.joining(", "));
+        if (StringUtils.isNotEmpty(nonExistentDirs)) {
+            throw new Exn(String.format("Invalid directories in %s: %s", PROP_DIRECTORIES_WITH_CARDS, nonExistentDirs));
+        }
         return SettingsImpl.builder()
             .languages(languages)
             .directoriesWithCards(directoriesWithCards)

@@ -3,6 +3,7 @@ package org.igye.remem3.controllers.newcard;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
@@ -21,6 +22,7 @@ import org.igye.remem3.utils.web.impl.RequestParamsImpl;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -58,7 +60,7 @@ public class NewCardController extends HtmlBuilder
             return NewCardState.builder()
                 .settings(settings)
                 .cache(cache)
-                .dir(getDir(params, settings, cache))
+                .dirParts(getDirParts(params, settings, cache))
                 .cardParams(makeCardParams(params, settings, cache))
                 .build();
         } catch (Exception ex) {
@@ -99,7 +101,7 @@ public class NewCardController extends HtmlBuilder
             rndErrors(st.getErrors()),
             h3(text("Add new card")),
             form(
-                rndDirSelector(st),
+                rndDirectorySelector(st),
                 rndCardType(st),
                 rndCard(st),
                 inpSubmit(ACT_CREATE_CARD, "Save")
@@ -109,7 +111,7 @@ public class NewCardController extends HtmlBuilder
 
     private NewCardState actCreateCard(NewCardState st) {
         try {
-            String dirStr = st.getDir();
+            String dirStr = StringUtils.join(st.getDirParts(), '/');
             File dir = new File(dirStr);
             if (!dir.exists()) {
                 dir.mkdirs();
@@ -199,17 +201,38 @@ public class NewCardController extends HtmlBuilder
         )));
     }
 
-    private HtmlElem rndDirSelector(NewCardState state) {
+    private HtmlElem rndDirectorySelector(NewCardState state) {
+        List<HtmlElem> selectors = new ArrayList<>();
+        String parentPath = "";
+        for (int i = 0; i < state.getDirParts().size(); i++) {
+            String curDirPart = state.getDirParts().get(i);
+            List<String> options;
+            if (i == 0) {
+                options = state.getSettings().getDirectoriesWithCards();
+            } else {
+                File[] subDirs = new File(parentPath).listFiles(File::isDirectory);
+                List<String> subDirNames = subDirs == null ? List.of() : Arrays.stream(subDirs)
+                    .filter(dir -> !dir.getName().startsWith("."))
+                    .map(File::getName)
+                    .toList();
+                options = new ArrayList<>();
+                options.add(".");
+                options.addAll(subDirNames);
+            }
+            if (i > 0) {
+                selectors.add(text("/"));
+            }
+            selectors.add(rndDirSelector(keyValueParam(PAR_DIR_TO_SAVE_NEW_CARD_TO, i), options, curDirPart));
+            parentPath += (i == 0 ? "" : "/") + curDirPart;
+        }
         return table(List.of(List.of(
             text("Directory"),
-            select(
-                PAR_DIR_TO_SAVE_NEW_CARD_TO,
-                state.getDir(),
-                state.getSettings().getDirectoriesWithCards().stream()
-                    .map(dir -> Pair.of(dir, text(dir)))
-                    .toList()
-            )
+            frag(selectors)
         )));
+    }
+
+    private HtmlElem rndDirSelector(String paramName, List<String> options, String selected) {
+        return select(paramName, true, selected, options.stream().map(opt -> Pair.of(opt, text(opt))).toList());
     }
 
     private HtmlElem rndErrors(List<String> errors) {
@@ -222,12 +245,53 @@ public class NewCardController extends HtmlBuilder
         );
     }
 
-    private String getDir(RequestParams params, Settings settings, Cache cache) {
-        if (params.hasParam(PAR_DIR_TO_SAVE_NEW_CARD_TO)) {
-            return params.getParam(PAR_DIR_TO_SAVE_NEW_CARD_TO);
+    private List<String> getDirParts(RequestParams params, Settings settings, Cache cache) {
+        ArrayList<String> res = new ArrayList<>();
+        if (params.hasParam(keyValueParam(PAR_DIR_TO_SAVE_NEW_CARD_TO, 0))) {
+            int i = 0;
+            while (params.hasParam(keyValueParam(PAR_DIR_TO_SAVE_NEW_CARD_TO, i))) {
+                String curDirPart = params.getParam(keyValueParam(PAR_DIR_TO_SAVE_NEW_CARD_TO, i++));
+                res.add(curDirPart);
+                if (".".equals(curDirPart)) {
+                    break;
+                }
+            }
         } else {
-            return cache.getStr(PAR_DIR_TO_SAVE_NEW_CARD_TO, getDefaultDir(settings));
+            String cachedDir = cache.getStr(PAR_DIR_TO_SAVE_NEW_CARD_TO, getDefaultDir(settings));
+            for (String dirFromSettings : settings.getDirectoriesWithCards()) {
+                if (cachedDir.startsWith(dirFromSettings)) {
+                    res.add(dirFromSettings);
+                    Arrays.stream(cachedDir.substring(dirFromSettings.length()).split("/"))
+                        .map(String::trim)
+                        .filter(StringUtils::isNotBlank)
+                        .forEach(res::add);
+                    break;
+                }
+            }
         }
+        return getValidDirs(res, settings);
+    }
+
+    private List<String> getValidDirs(List<String> dirs, Settings settings) {
+        ArrayList<String> validDirs = new ArrayList<>();
+        String curPath = "";
+        for (int i = 0; i < dirs.size(); i++) {
+            String curPart = dirs.get(i);
+            curPath += (i == 0 ? "" : "/") + curPart;
+            File curDir = new File(curPath);
+            if (curDir.exists() && curDir.isDirectory()) {
+                validDirs.add(curPart);
+            } else {
+                break;
+            }
+        }
+        if (validDirs.isEmpty()) {
+            validDirs.add(getDefaultDir(settings));
+        }
+        if (!".".equals(validDirs.getLast())) {
+            validDirs.add(".");
+        }
+        return validDirs;
     }
 
     private String getDefaultDir(Settings settings) {

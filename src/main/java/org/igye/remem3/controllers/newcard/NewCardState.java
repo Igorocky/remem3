@@ -19,6 +19,6 @@ public class NewCardState {
     private List<String> errors;
     private Settings settings;
     private Cache cache;
-    private String dir;
+    private List<String> dirParts;
     private CardDto cardParams;
 }
