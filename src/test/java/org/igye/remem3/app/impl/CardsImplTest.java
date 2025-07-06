@@ -1,8 +1,8 @@
 package org.igye.remem3.app.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.igye.remem3.app.dto.CardFillGaps;
 import org.igye.remem3.app.dto.HistRec;
-import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
 import org.igye.remem3.app.dto.fillgaps.Gap;
 import org.igye.remem3.app.dto.fillgaps.Text;
 import org.igye.remem3.utils.impl.UtilsImpl;

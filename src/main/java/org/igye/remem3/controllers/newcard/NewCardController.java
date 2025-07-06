@@ -6,10 +6,11 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.CardType;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
+import org.igye.remem3.app.dto.CardFillGaps;
+import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
@@ -130,11 +131,8 @@ public class NewCardController extends HtmlBuilder
                 return st.withErrors(errors);
             }
             st.getCache().put(PAR_DIR_TO_SAVE_NEW_CARD_TO, dirStr);
-            switch (cardDto.getType()) {
-                case FILL_GAPS -> {
-                    CardFillGapsDto dto = (CardFillGapsDto) cardDto;
-                    st.getCache().put(PAR_CARD_FILL_GAPS_LANG, dto.getLang());
-                }
+            switch (cardDto) {
+                case CardFillGapsDto dto -> st.getCache().put(PAR_CARD_FILL_GAPS_LANG, dto.getLang());
             }
             cards.saveCard(new File(dir, makeFileName(card)), card);
             return st.withCardParams(clearParams(cardDto));
@@ -144,23 +142,23 @@ public class NewCardController extends HtmlBuilder
     }
 
     private CardDto clearParams(CardDto dto) {
-        return switch (dto.getType()) {
-            case FILL_GAPS -> ((CardFillGapsDto) dto).withText("");
+        return switch (dto) {
+            case CardFillGapsDto c -> c.withText("");
         };
     }
 
     private String makeFileName(Card card) {
         String baseName = UUID.randomUUID().toString().replace("-", "_");
-        String extension = switch (card.getType()) {
-            case FILL_GAPS -> CARD_FILL_GAPS_FILE_EXTENSION;
+        String extension = switch (card) {
+            case CardFillGaps _ -> CARD_FILL_GAPS_FILE_EXTENSION;
         };
         return baseName + extension;
     }
 
     private HtmlElem rndCard(NewCardState st) {
         CardDto cardParams = st.getCardParams();
-        return switch (cardParams.getType()) {
-            case FILL_GAPS -> rndCardFillGaps(st, (CardFillGapsDto) cardParams);
+        return switch (cardParams) {
+            case CardFillGapsDto dto -> rndCardFillGaps(st, dto);
         };
     }
 

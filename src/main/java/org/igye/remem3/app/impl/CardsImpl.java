@@ -7,8 +7,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
+import org.igye.remem3.app.dto.CardFillGaps;
 import org.igye.remem3.app.dto.HistRec;
-import org.igye.remem3.app.dto.fillgaps.CardFillGaps;
 import org.igye.remem3.app.dto.fillgaps.Gap;
 import org.igye.remem3.app.dto.fillgaps.Text;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
@@ -73,15 +73,15 @@ public class CardsImpl implements Cards {
     @Override
     public void saveCard(File file, Card card) {
         file.getParentFile().mkdirs();
-        switch (card.getType()) {
-            case FILL_GAPS -> utils.writeStringToFile(fillGapsCardToString((CardFillGaps) card), file);
+        switch (card) {
+            case CardFillGaps c -> utils.writeStringToFile(fillGapsCardToString(c), file);
         }
     }
 
     @Override
     public List<String> validateCard(Card card) {
-        return switch (card.getType()) {
-            case FILL_GAPS -> validateFillGapsCard((CardFillGaps) card);
+        return switch (card) {
+            case CardFillGaps c -> validateFillGapsCard(c);
         };
     }
 
@@ -92,17 +92,14 @@ public class CardsImpl implements Cards {
 
     @Override
     public Card makeCard(CardDto cardDto) {
-        return switch (cardDto.getType()) {
-            case FILL_GAPS -> {
-                CardFillGapsDto dto = (CardFillGapsDto) cardDto;
-                yield CardFillGaps.builder()
-                    .createdAt(Optional.of(Instant.now()))
-                    .lang(dto.getLang())
-                    .text(parseText(dto.getText()))
-                    .notes(dto.getNotes())
-                    .history(List.of())
-                    .build();
-            }
+        return switch (cardDto) {
+            case CardFillGapsDto dto -> CardFillGaps.builder()
+                .createdAt(Optional.of(Instant.now()))
+                .lang(dto.getLang())
+                .text(parseText(dto.getText()))
+                .notes(dto.getNotes())
+                .history(List.of())
+                .build();
         };
     }
 
