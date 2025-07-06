@@ -3,8 +3,7 @@ package org.igye.remem3.app.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
-import org.igye.remem3.app.dto.fillgaps.Gap;
-import org.igye.remem3.app.dto.fillgaps.Text;
+import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -18,50 +17,50 @@ class CardsImplTest {
     void parseText() {
         CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Assertions.assertEquals(
-            List.of(Text.builder().text("abc def ghi").build()),
+            List.of(TextPart.Text.builder().text("abc def ghi").build()),
             cards.parseText("abc def ghi")
         );
         Assertions.assertEquals(
-            List.of(Text.builder().text("abc").build()),
+            List.of(TextPart.Text.builder().text("abc").build()),
             cards.parseText("\t\n  abc\n\n   \t")
         );
         Assertions.assertEquals(
-            List.of(Text.builder().text("abc [[def ghi").build()),
+            List.of(TextPart.Text.builder().text("abc [[def ghi").build()),
             cards.parseText("abc [[def ghi")
         );
         Assertions.assertEquals(
             List.of(
-                Text.builder().text("abc").build(),
-                Gap.builder().answer("def").hint("").notes("").build(),
-                Text.builder().text("ghi").build()
+                TextPart.Text.builder().text("abc").build(),
+                TextPart.Gap.builder().answer("def").hint("").notes("").build(),
+                TextPart.Text.builder().text("ghi").build()
             ),
             cards.parseText("abc [[def]] ghi")
         );
         Assertions.assertEquals(
             List.of(
-                Text.builder().text("abc").build(),
-                Gap.builder().answer("def").hint("").notes("").build(),
-                Text.builder().text("ghi").build(),
-                Gap.builder().answer("jkl").hint("123").notes("456").build(),
-                Text.builder().text("mno").build()
+                TextPart.Text.builder().text("abc").build(),
+                TextPart.Gap.builder().answer("def").hint("").notes("").build(),
+                TextPart.Text.builder().text("ghi").build(),
+                TextPart.Gap.builder().answer("jkl").hint("123").notes("456").build(),
+                TextPart.Text.builder().text("mno").build()
             ),
             cards.parseText("abc [[def]] ghi [[jkl|123|456]] mno")
         );
         Assertions.assertEquals(
             List.of(
-                Gap.builder().answer("def").hint("").notes("").build(),
-                Text.builder().text("ghi").build(),
-                Gap.builder().answer("jkl").hint("123").notes("456").build(),
-                Text.builder().text("mno").build()
+                TextPart.Gap.builder().answer("def").hint("").notes("").build(),
+                TextPart.Text.builder().text("ghi").build(),
+                TextPart.Gap.builder().answer("jkl").hint("123").notes("456").build(),
+                TextPart.Text.builder().text("mno").build()
             ),
             cards.parseText("[[def]] ghi [[jkl|123|456]] mno")
         );
         Assertions.assertEquals(
             List.of(
-                Text.builder().text("abc").build(),
-                Gap.builder().answer("def").hint("").notes("").build(),
-                Text.builder().text("ghi").build(),
-                Gap.builder().answer("jkl").hint("123").notes("456").build()
+                TextPart.Text.builder().text("abc").build(),
+                TextPart.Gap.builder().answer("def").hint("").notes("").build(),
+                TextPart.Text.builder().text("ghi").build(),
+                TextPart.Gap.builder().answer("jkl").hint("123").notes("456").build()
             ),
             cards.parseText("abc [[def]] ghi [[jkl|123|456]]")
         );
@@ -153,11 +152,11 @@ class CardsImplTest {
             .lang("Lang1")
             .text(
                 List.of(
-                    Text.builder().text("abc").build(),
-                    Gap.builder().answer("def").hint("").notes("").build(),
-                    Text.builder().text("ghi").build(),
-                    Gap.builder().answer("jkl").hint("123").notes("456").build(),
-                    Text.builder().text("mno").build()
+                    TextPart.Text.builder().text("abc").build(),
+                    TextPart.Gap.builder().answer("def").hint("").notes("").build(),
+                    TextPart.Text.builder().text("ghi").build(),
+                    TextPart.Gap.builder().answer("jkl").hint("123").notes("456").build(),
+                    TextPart.Text.builder().text("mno").build()
                 )
             )
             .notes("notes3")
@@ -224,7 +223,7 @@ class CardsImplTest {
 
         card = Card.FillGaps.builder()
             .lang("EN")
-            .text(List.of(Text.builder().text(" ").build()))
+            .text(List.of(TextPart.Text.builder().text(" ").build()))
             .notes("123")
             .history(List.of(HistRec.builder().build()))
             .build();
@@ -236,7 +235,7 @@ class CardsImplTest {
 
         card = Card.FillGaps.builder()
             .lang("EN")
-            .text(List.of(Text.builder().text(".").build()))
+            .text(List.of(TextPart.Text.builder().text(".").build()))
             .notes("123")
             .history(List.of(HistRec.builder().build()))
             .build();

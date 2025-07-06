@@ -8,8 +8,6 @@ import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
-import org.igye.remem3.app.dto.fillgaps.Gap;
-import org.igye.remem3.app.dto.fillgaps.Text;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.controllers.newcard.CardDto;
 import org.igye.remem3.utils.Exn;
@@ -121,8 +119,7 @@ public class CardsImpl implements Cards {
         }
         res.addAll(
             text.stream()
-                .filter(part -> part instanceof Gap)
-                .filter(gap -> StringUtils.isBlank(((Gap) gap).getAnswer()))
+                .filter(part -> part instanceof TextPart.Gap gap && StringUtils.isBlank((gap).getAnswer()))
                 .map(_ -> "A gap cannot be empty.")
                 .toList()
         );
@@ -154,28 +151,27 @@ public class CardsImpl implements Cards {
     }
 
     private String textPartToStr(TextPart textPart) {
-        if (textPart instanceof Text text) {
-            return text.getText();
-        } else if (textPart instanceof Gap gap) {
-            StringBuilder sb = new StringBuilder("[[").append(gap.getAnswer());
-            String hint = gap.getHint();
-            boolean hintAdded = false;
-            if (StringUtils.isNotBlank(hint)) {
-                sb.append("|").append(hint);
-                hintAdded = true;
-            }
-            String notes = gap.getNotes();
-            if (StringUtils.isNotBlank(notes)) {
-                if (!hintAdded) {
-                    sb.append("|");
+        return switch (textPart) {
+            case TextPart.Text text -> text.getText();
+            case TextPart.Gap gap -> {
+                StringBuilder sb = new StringBuilder("[[").append(gap.getAnswer());
+                String hint = gap.getHint();
+                boolean hintAdded = false;
+                if (StringUtils.isNotBlank(hint)) {
+                    sb.append("|").append(hint);
+                    hintAdded = true;
                 }
-                sb.append("|").append(notes);
+                String notes = gap.getNotes();
+                if (StringUtils.isNotBlank(notes)) {
+                    if (!hintAdded) {
+                        sb.append("|");
+                    }
+                    sb.append("|").append(notes);
+                }
+                sb.append("]]");
+                yield sb.toString();
             }
-            sb.append("]]");
-            return sb.toString();
-        } else {
-            throw new Exn("Unsupported type of TextPart " + textPart.getClass().getCanonicalName());
-        }
+        };
     }
 
     private void appendHistory(StringBuilder sb, List<HistRec> history) {
@@ -244,7 +240,7 @@ public class CardsImpl implements Cards {
         ArrayList<TextPart> res = new ArrayList<>();
         while (matcher.find()) {
             if (lastIdx < matcher.start()) {
-                res.add(Text.builder().text(str.substring(lastIdx, matcher.start()).trim()).build());
+                res.add(TextPart.Text.builder().text(str.substring(lastIdx, matcher.start()).trim()).build());
             }
             String gapText = matcher.group(1);
             String[] gapParts = gapText.split("\\|");
@@ -252,7 +248,7 @@ public class CardsImpl implements Cards {
                 throw new Exn(String.format("gapParts.length > 3 for %s", gapText));
             }
             res.add(
-                Gap.builder()
+                TextPart.Gap.builder()
                     .answer(getElemOrEmptyStr(gapParts, 0))
                     .hint(getElemOrEmptyStr(gapParts, 1))
                     .notes(getElemOrEmptyStr(gapParts, 2))
@@ -261,7 +257,7 @@ public class CardsImpl implements Cards {
             lastIdx = matcher.end();
         }
         if (lastIdx < str.length()) {
-            res.add(Text.builder().text(str.substring(lastIdx).trim()).build());
+            res.add(TextPart.Text.builder().text(str.substring(lastIdx).trim()).build());
         }
         return res;
     }
