@@ -19,12 +19,16 @@ public sealed interface Card permits Card.FillGaps {
 
     List<HistRec> getHistory();
 
+    List<TaskType> getTaskTypes();
+
     @Builder
     @Getter
     @ToString
     @EqualsAndHashCode
     @With
     final class FillGaps implements Card {
+        private static final List<TaskType> TASK_TYPES = List.of(TaskType.FillGaps.FILL_GAPS);
+
         @Builder.Default
         private Optional<File> file = Optional.empty();
         @Builder.Default
@@ -37,6 +41,11 @@ public sealed interface Card permits Card.FillGaps {
         private String notes = "";
         @Builder.Default
         private List<HistRec> history = List.of();
+
+        @Override
+        public List<TaskType> getTaskTypes() {
+            return TASK_TYPES;
+        }
     }
 
 }
