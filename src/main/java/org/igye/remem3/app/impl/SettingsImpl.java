@@ -13,7 +13,8 @@ import java.util.List;
 @Builder
 public class SettingsImpl implements Settings {
     public static final String PROP_DIRECTORIES_WITH_CARDS = "directories_with_cards";
-    
+    public static final String PROP_LANGUAGES = "languages";
+
     @Builder.Default
     private List<String> languages = Collections.emptyList();
     @Builder.Default
@@ -24,9 +25,9 @@ public class SettingsImpl implements Settings {
     public static Settings load(App app) {
         return SettingsImpl.builder()
             .languages(trimAndSkipEmpty(
-                Collections.unmodifiableList(app.getPropList("languages"))
+                Collections.unmodifiableList(app.getPropList(PROP_LANGUAGES))
             ))
-            .languages(trimAndSkipEmpty(
+            .directoriesWithCards(trimAndSkipEmpty(
                 Collections.unmodifiableList(app.getPropList(PROP_DIRECTORIES_WITH_CARDS))
             ))
             .cacheFile(app.getPropStr("cache_file"))

@@ -3,6 +3,7 @@ package org.igye.remem3.controllers.newcard;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
@@ -22,12 +23,18 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static org.igye.remem3.app.impl.SettingsImpl.PROP_DIRECTORIES_WITH_CARDS;
+import static org.igye.remem3.app.impl.SettingsImpl.PROP_LANGUAGES;
 
 @RequiredArgsConstructor
 public class NewCardController extends HtmlBuilder
     implements StatefulWebController<NewCardState, Supplier<NewCardState>> {
 
     private static final String PAR_DIR_TO_SAVE_NEW_CARD_TO = "PAR_DIR_TO_SAVE_NEW_CARD_TO";
+    private static final String PAR_CARD_TYPE = "PAR_CARD_TYPE";
+    public static final String CARD_TYPE_FILL_GAPS = "fill_gaps";
+    private static final String PAR_CARD_FILL_GAPS_LANG = "PAR_CARD_FILL_GAPS_LANG";
+    private static final String PAR_CARD_FILL_GAPS_TEXT = "PAR_CARD_FILL_GAPS_TEXT";
+    private static final String PAR_CARD_FILL_GAPS_NOTES = "PAR_CARD_FILL_GAPS_NOTES";
 
     private final App app;
     private final Utils utils;
@@ -48,6 +55,7 @@ public class NewCardController extends HtmlBuilder
                 .settings(settings)
                 .cache(cache)
                 .dir(getDir(params, settings, cache))
+                .cardParams(makeCardParams(params, settings, cache))
                 .build();
         } catch (Exception ex) {
             return NewCardState.builder()
@@ -82,10 +90,38 @@ public class NewCardController extends HtmlBuilder
     public String renderState(NewCardState state) {
         return simplePageWithTitle("Add new card",
             rndErrors(state.getErrors()),
+            h3(text("Add new card")),
             form(
-                h3(text("Add new card"))
+                rndDirSelector(state),
+                rndCardType(state)
             )
         ).toString();
+    }
+
+    private HtmlElem rndCardType(NewCardState state) {
+        return table(List.of(List.of(
+            text("Card type"),
+            select(
+                PAR_DIR_TO_SAVE_NEW_CARD_TO,
+                state.getCardParams().getCardType(),
+                List.of(
+                    Pair.of(CARD_TYPE_FILL_GAPS, text(CARD_TYPE_FILL_GAPS))
+                )
+            )
+        )));
+    }
+
+    private HtmlElem rndDirSelector(NewCardState state) {
+        return table(List.of(List.of(
+            text("Directory"),
+            select(
+                PAR_DIR_TO_SAVE_NEW_CARD_TO,
+                state.getDir(),
+                state.getSettings().getDirectoriesWithCards().stream()
+                    .map(dir -> Pair.of(dir, text(dir)))
+                    .toList()
+            )
+        )));
     }
 
     private HtmlElem rndErrors(List<String> errors) {
@@ -94,7 +130,7 @@ public class NewCardController extends HtmlBuilder
         }
         return h("div", Map.of("style", "color:red;"),
             h3(text("Error")),
-            table(errors.stream().map(msg -> List.of(pre(text(msg)))).toList())
+            ul(errors.stream().map(msg -> pre(text(msg))).toList())
         );
     }
 
@@ -114,5 +150,29 @@ public class NewCardController extends HtmlBuilder
         return directoriesWithCards.getFirst();
     }
 
+    private CardDto makeCardParams(RequestParams params, Settings settings, Cache cache) {
+        if (params.hasParam(PAR_CARD_TYPE)) {
+            String cardType = params.getParam(PAR_CARD_TYPE);
+            return switch (cardType) {
+                case CARD_TYPE_FILL_GAPS -> makeFillGapsCardParams(params, settings, cache);
+                default -> throw new Exn(String.format("Unexpected type of card %s", cardType));
+            };
+        } else {
+            return makeFillGapsCardParams(params, settings, cache);
+        }
+    }
 
+    private CardFillGapsDto makeFillGapsCardParams(RequestParams params, Settings settings, Cache cache) {
+        if (CollectionUtils.isEmpty(settings.getLanguages())) {
+            throw new Exn(String.format("Property '%s' is empty", PROP_LANGUAGES));
+        }
+        return CardFillGapsDto.builder()
+            .lang(params.getParam(
+                PAR_CARD_FILL_GAPS_LANG,
+                cache.getStr(PAR_CARD_FILL_GAPS_LANG, settings.getLanguages().getFirst())
+            ))
+            .text(params.getParam(PAR_CARD_FILL_GAPS_TEXT, ""))
+            .notes(params.getParam(PAR_CARD_FILL_GAPS_NOTES, ""))
+            .build();
+    }
 }

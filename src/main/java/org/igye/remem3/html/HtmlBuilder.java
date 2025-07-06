@@ -2,9 +2,11 @@ package org.igye.remem3.html;
 
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -134,11 +136,11 @@ public class HtmlBuilder {
         );
     }
 
-    protected HtmlTag uList(List<? extends HtmlElem> items) {
+    protected HtmlTag ul(List<? extends HtmlElem> items) {
         return htmlList("ul", items);
     }
 
-    protected HtmlTag oList(List<? extends HtmlElem> items) {
+    protected HtmlTag ol(List<? extends HtmlElem> items) {
         return htmlList("ol", items);
     }
 
@@ -174,8 +176,31 @@ public class HtmlBuilder {
         return h("input", Map.of("type", "submit", "id", name, "name", name, "value", value));
     }
 
-    protected String appendId(String paramName, long id) {
-        return paramName + ":" + id;
+    protected HtmlTag select(String name, String selected, List<? extends Pair<String, ? extends HtmlElem>> options) {
+        return h("select", Map.of("name", name),
+            options.stream()
+                .map(option -> {
+                    Map<String, String> attrs = new HashMap<>();
+                    attrs.put("value", option.getLeft());
+                    if (option.getLeft().equals(selected)) {
+                        attrs.put("selected", "");
+                    }
+                    return h("option", attrs, option.getRight());
+                })
+                .toList()
+        );
+    }
+
+    protected HtmlTag select(String name, String selected, Pair<String, ? extends HtmlElem>... options) {
+        return select(name, selected, childrenArrayToList(options));
+    }
+
+    protected String keyValueParam(String key, String value) {
+        return key + ":" + value;
+    }
+
+    protected String keyValueParam(String key, long value) {
+        return key + ":" + value;
     }
 
     private <T> List<T> childrenArrayToList(T[] arr) {

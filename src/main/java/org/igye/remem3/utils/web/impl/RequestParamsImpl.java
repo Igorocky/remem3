@@ -35,15 +35,31 @@ public class RequestParamsImpl implements RequestParams {
     @Override
     public String[] getParams(String paramName) {
         String[] values = params.get(paramName);
-        if (values == null || values.length == 0) {
-            throw new Exn(String.format("Param '%s' is not present.", paramName));
+        if (values == null) {
+            return new String[]{};
         }
         return values;
     }
 
     @Override
+    public String getParam(String paramName, String defaultValue) {
+        if (!hasParam(paramName)) {
+            return defaultValue;
+        }
+        String[] params = getParams(paramName);
+        if (params.length == 0) {
+            return defaultValue;
+        }
+        return params[0];
+    }
+
+    @Override
     public String getParam(String paramName) {
-        return getParams(paramName)[0];
+        String res = getParam(paramName, null);
+        if (res == null) {
+            throw new Exn(String.format("Param '%s' is not present.", paramName));
+        }
+        return res;
     }
 
     @Override
@@ -55,20 +71,45 @@ public class RequestParamsImpl implements RequestParams {
     @Override
     public List<String> getKeyValueParams(String key) {
         List<String> values = keyValueParams.get(key);
-        if (CollectionUtils.isEmpty(values)) {
-            throw new Exn(String.format("Key-value param '%s' is not present.", key));
+        if (values == null) {
+            return List.of();
         }
         return values;
     }
 
     @Override
+    public String getKeyValueParam(String key, String defaultValue) {
+        if (!hasKeyValueParam(key)) {
+            return defaultValue;
+        }
+        List<String> values = getKeyValueParams(key);
+        if (CollectionUtils.isEmpty(values)) {
+            return defaultValue;
+        }
+        return values.getFirst();
+    }
+
+    @Override
     public String getKeyValueParam(String key) {
-        return getKeyValueParams(key).getFirst();
+        String value = getKeyValueParam(key, null);
+        if (value == null) {
+            throw new Exn(String.format("Key-value param '%s' is not present.", key));
+        }
+        return value;
     }
 
     @Override
     public List<Long> getKeyValueParamsLong(String key) {
         return getKeyValueParams(key).stream().map(Long::parseLong).toList();
+    }
+
+    @Override
+    public Long getKeyValueParamLong(String key, Long defaultValue) {
+        String value = getKeyValueParam(key, null);
+        if (value == null) {
+            return defaultValue;
+        }
+        return Long.parseLong(value);
     }
 
     @Override
