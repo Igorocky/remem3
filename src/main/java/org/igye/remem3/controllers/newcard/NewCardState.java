@@ -7,6 +7,7 @@ import lombok.ToString;
 import lombok.With;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.controllers.components.DirSelectorCmp;
 
 import java.util.List;
 
@@ -19,6 +20,6 @@ public class NewCardState {
     private List<String> errors;
     private Settings settings;
     private Cache cache;
-    private List<String> dirParts;
+    private DirSelectorCmp dirSelector;
     private CardDto cardParams;
 }
