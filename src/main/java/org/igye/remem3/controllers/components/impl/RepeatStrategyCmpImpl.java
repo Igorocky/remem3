@@ -10,6 +10,8 @@ import org.igye.remem3.utils.web.RequestParams;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.igye.remem3.app.impl.RepeatStrategyCircle.DEFAULT_MAX_NUM_OF_CIRCLES;
+
 public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategyCmp {
 
     private final String baseParamName;
@@ -20,10 +22,14 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private final String parCircleRndFactor;
     private double valCircleRndFactor;
 
+    private final String parCircleMaxNumOfCircles;
+    private int valCircleMaxNumOfCircles;
+
     public RepeatStrategyCmpImpl(String baseParamName, RequestParams params) {
         this.baseParamName = baseParamName;
         parStrategyType = makeParamName("TYPE");
         parCircleRndFactor = makeParamName("CIRCLE_RANDOMNESS_FACTOR");
+        parCircleMaxNumOfCircles = makeParamName("CIRCLE_MAX_NUMBER_OF_CIRCLES");
 
         valStrategyType = params.hasParam(parStrategyType)
             ? RepeatStrategyType.valueOf(params.getParam(parStrategyType))
@@ -34,6 +40,9 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valCircleRndFactor = params.hasParam(parCircleRndFactor)
                     ? parseCircleRandomnessFactor(params.getParam(parCircleRndFactor))
                     : 0.3;
+                valCircleMaxNumOfCircles = params.hasParam(parCircleMaxNumOfCircles)
+                    ? parseCircleMaxNumOfCircles(params.getParam(parCircleMaxNumOfCircles))
+                    : DEFAULT_MAX_NUM_OF_CIRCLES;
             }
         }
     }
@@ -64,13 +73,25 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             List.of(
                 text("Randomness factor"),
                 inpText(parCircleRndFactor, String.valueOf(valCircleRndFactor), null)
+            ),
+            List.of(
+                text("Number of circles"),
+                inpText(parCircleMaxNumOfCircles, String.valueOf(valCircleMaxNumOfCircles), null)
             )
         ));
     }
 
-    private double parseCircleRandomnessFactor(String rndFactor) {
+    private int parseCircleMaxNumOfCircles(String intStr) {
         try {
-            return Math.max(0, Math.min(Double.parseDouble(rndFactor), 1));
+            return Math.max(1, Math.min(Integer.parseInt(intStr), DEFAULT_MAX_NUM_OF_CIRCLES));
+        } catch (NumberFormatException e) {
+            return DEFAULT_MAX_NUM_OF_CIRCLES;
+        }
+    }
+
+    private double parseCircleRandomnessFactor(String doubleStr) {
+        try {
+            return Math.max(0, Math.min(Double.parseDouble(doubleStr), 1));
         } catch (NumberFormatException e) {
             return 0.3;
         }

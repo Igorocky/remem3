@@ -42,7 +42,7 @@ public sealed interface Card permits Card.FillGaps {
 
         @Override
         public List<TaskType> getTaskTypes() {
-            return List.of(TaskType.FillGaps.builder().lang(lang).build());
+            return List.of(new TaskType.FillGaps(lang));
         }
     }
 

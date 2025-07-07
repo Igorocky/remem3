@@ -1,23 +1,27 @@
 package org.igye.remem3.app.dto;
 
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 
 public sealed interface TaskType permits TaskType.FillGaps {
     String getCode();
 
-    @Getter
-    @Builder
     @EqualsAndHashCode
     @ToString
     final class FillGaps implements TaskType {
-        private String lang;
+        private final String lang;
+        private String code;
+
+        public FillGaps(String lang) {
+            this.lang = lang;
+        }
 
         @Override
         public String getCode() {
-            return "FillGaps:" + lang;
+            if (code == null) {
+                code = "FillGaps:" + lang;
+            }
+            return code;
         }
     }
 }
