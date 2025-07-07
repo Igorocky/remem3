@@ -3,7 +3,6 @@ package org.igye.remem3.controllers.newcard;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
@@ -121,7 +120,7 @@ public class NewCardController extends HtmlBuilder
 
     private NewCardState actCreateCard(NewCardState st) {
         try {
-            String dirStr = StringUtils.join(st.getDirSelector().getSelectedDirectory(), '/');
+            String dirStr = st.getDirSelector().getSelectedDirectoryStr();
             File dir = new File(dirStr);
             if (!dir.exists()) {
                 dir.mkdirs();

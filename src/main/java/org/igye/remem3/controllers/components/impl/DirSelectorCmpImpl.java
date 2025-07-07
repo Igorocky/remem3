@@ -1,6 +1,5 @@
 package org.igye.remem3.controllers.components.impl;
 
-import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
@@ -13,28 +12,43 @@ import org.igye.remem3.utils.web.RequestParams;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
     private final Settings settings;
     private final Cache cache;
     private final String baseParamName;
-    @Getter
-    private final List<String> selectedDirectory;
+    private final List<String> selectedDirectoryList;
 
     public DirSelectorCmpImpl(Settings settings, Cache cache, RequestParams params, String baseParamName) {
         this.settings = settings;
         this.cache = cache;
         this.baseParamName = baseParamName;
-        this.selectedDirectory = getSelectedDirectory(params);
+        this.selectedDirectoryList = getSelectedDirectoryList(params);
+    }
+
+    @Override
+    public List<String> getSelectedDirectoryList() {
+        return selectedDirectoryList;
+    }
+
+    @Override
+    public String getSelectedDirectoryStr() {
+        return StringUtils.join(getSelectedDirectoryList().stream().filter(dir -> !dir.startsWith(".")).toList(), '/');
+    }
+
+    @Override
+    public File getSelectedDirectory() {
+        return new File(getSelectedDirectoryStr());
     }
 
     @Override
     public HtmlElem render() {
         List<HtmlElem> selectors = new ArrayList<>();
         String parentPath = "";
-        for (int i = 0; i < selectedDirectory.size(); i++) {
-            String curDirPart = selectedDirectory.get(i);
+        for (int i = 0; i < selectedDirectoryList.size(); i++) {
+            String curDirPart = selectedDirectoryList.get(i);
             List<String> options;
             if (i == 0) {
                 options = settings.getDirectoriesWithCards();
@@ -57,7 +71,7 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
         return frag(selectors);
     }
 
-    private List<String> getSelectedDirectory(RequestParams params) {
+    private List<String> getSelectedDirectoryList(RequestParams params) {
         ArrayList<String> res = new ArrayList<>();
         if (params.hasParam(keyValueParam(baseParamName, 0))) {
             int i = 0;
@@ -81,7 +95,7 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
                 }
             }
         }
-        return getValidDirs(res, settings);
+        return Collections.unmodifiableList(getValidDirs(res, settings));
     }
 
     private List<String> getValidDirs(List<String> dirs, Settings settings) {

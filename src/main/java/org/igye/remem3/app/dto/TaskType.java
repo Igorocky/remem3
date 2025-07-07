@@ -5,19 +5,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public sealed interface TaskType {
-    String getName();
+public sealed interface TaskType permits TaskType.FillGaps {
+    String getCode();
 
     @Getter
     @Builder
     @EqualsAndHashCode
     @ToString
     final class FillGaps implements TaskType {
-        public static final FillGaps FILL_GAPS = new FillGaps();
+        private String lang;
 
         @Override
-        public String getName() {
-            return "FillGaps";
+        public String getCode() {
+            return "FillGaps:" + lang;
         }
     }
 }

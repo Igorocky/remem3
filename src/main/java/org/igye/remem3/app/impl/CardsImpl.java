@@ -47,10 +47,21 @@ public class CardsImpl implements Cards {
 
     @Override
     public Card loadCard(File file) {
-        if (file.getName().endsWith(CARD_FILL_GAPS_FILE_EXTENSION)) {
-            return loadFillGapsCard(file);
+        try {
+            if (file.getName().endsWith(CARD_FILL_GAPS_FILE_EXTENSION)) {
+                return loadFillGapsCard(file);
+            }
+            throw new Exn("Unsupported type of card " + file.getAbsolutePath());
+        } catch (Exception ex) {
+            throw new Exn(
+                String.format(
+                    "An exception occurred while reading a card from the file %s: %s",
+                    file.getAbsolutePath(),
+                    ex.getMessage()
+                ),
+                ex
+            );
         }
-        throw new Exn("Unsupported type of card " + file.getAbsolutePath());
     }
 
     @SneakyThrows
@@ -58,9 +69,9 @@ public class CardsImpl implements Cards {
     public List<Card> loadAllCards(File dir) {
         try (Stream<Path> stream = Files.walk(dir.toPath())) {
             return stream
-                .filter(Files::isRegularFile)
-                .filter(file -> file.endsWith(".card"))
                 .map(Path::toFile)
+                .filter(File::isFile)
+                .filter(file -> file.getName().endsWith(".card"))
                 .map(this::loadCard)
                 .toList();
         }
@@ -68,9 +79,20 @@ public class CardsImpl implements Cards {
 
     @Override
     public void saveCard(File file, Card card) {
-        file.getParentFile().mkdirs();
-        switch (card) {
-            case Card.FillGaps c -> utils.writeStringToFile(fillGapsCardToString(c), file);
+        try {
+            file.getParentFile().mkdirs();
+            switch (card) {
+                case Card.FillGaps c -> utils.writeStringToFile(fillGapsCardToString(c), file);
+            }
+        } catch (Exception ex) {
+            throw new Exn(
+                String.format(
+                    "An exception occurred while writing a card to the file %s: %s",
+                    file.getAbsolutePath(),
+                    ex.getMessage()
+                ),
+                ex
+            );
         }
     }
 

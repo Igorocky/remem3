@@ -27,8 +27,6 @@ public sealed interface Card permits Card.FillGaps {
     @EqualsAndHashCode
     @With
     final class FillGaps implements Card {
-        private static final List<TaskType> TASK_TYPES = List.of(TaskType.FillGaps.FILL_GAPS);
-
         @Builder.Default
         private Optional<File> file = Optional.empty();
         @Builder.Default
@@ -44,7 +42,7 @@ public sealed interface Card permits Card.FillGaps {
 
         @Override
         public List<TaskType> getTaskTypes() {
-            return TASK_TYPES;
+            return List.of(TaskType.FillGaps.builder().lang(lang).build());
         }
     }
 

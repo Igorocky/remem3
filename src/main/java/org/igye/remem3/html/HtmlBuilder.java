@@ -184,6 +184,17 @@ public class HtmlBuilder {
         return h("input", Map.of("type", "submit", "id", name, "name", name, "value", value));
     }
 
+    protected HtmlTag inpCheckbox(String name, String value, boolean checked) {
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put("type", "checkbox");
+        attrs.put("name", name);
+        attrs.put("value", value);
+        if (checked) {
+            attrs.put("checked", "checked");
+        }
+        return h("input", attrs);
+    }
+
     protected HtmlTag select(
         String name,
         boolean submitOnChange,
@@ -201,7 +212,7 @@ public class HtmlBuilder {
                     Map<String, String> optionAttrs = new HashMap<>();
                     optionAttrs.put("value", option.getLeft());
                     if (option.getLeft().equals(selected)) {
-                        optionAttrs.put("selected", "");
+                        optionAttrs.put("selected", "selected");
                     }
                     return h("option", optionAttrs, option.getRight());
                 })

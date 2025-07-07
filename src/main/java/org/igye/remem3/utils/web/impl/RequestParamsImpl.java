@@ -19,9 +19,12 @@ public class RequestParamsImpl implements RequestParams {
         keyValueParams = new HashMap<>();
         req.getParameterMap().forEach((param, value) -> {
             params.put(param, value);
-            if (param.contains(":")) {
-                String[] keyValue = param.split(":");
-                keyValueParams.computeIfAbsent(keyValue[0], _ -> new ArrayList<>()).add(keyValue[1]);
+            int colonIdx = param.indexOf(':');
+            if (colonIdx > 0) {
+                keyValueParams.computeIfAbsent(
+                    param.substring(0, colonIdx),
+                    _ -> new ArrayList<>()
+                ).add(param.substring(colonIdx + 1));
             }
         });
     }
