@@ -57,7 +57,7 @@ public class AppImpl implements App {
     }
 
     @Override
-    public void reloadProperties() {
+    public synchronized void reloadProperties() {
         propFiles.clear();
         propFiles.addAll(
             getPropList("property-files", Collections.emptyList()).stream()

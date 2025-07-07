@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
+import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 
 import java.util.List;
 
@@ -22,4 +23,5 @@ public class ExerciseState {
     private CardsImpl cards;
     private DirSelectorCmp dirSelector;
     private List<Pair<TaskType, Boolean>> taskTypes;
+    private RepeatStrategyCmp repeatStrategyCmp;
 }

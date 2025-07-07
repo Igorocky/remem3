@@ -13,6 +13,7 @@ import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.controllers.components.impl.RepeatStrategyCmpImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
@@ -62,6 +63,7 @@ public class ExerciseController extends HtmlBuilder
                 .cards(cards)
                 .dirSelector(dirSelector)
                 .taskTypes(getTaskTypes(availableTaskTypes, params))
+                .repeatStrategyCmp(new RepeatStrategyCmpImpl("PAR_REPEAT_STRATEGY", params))
                 .build();
         } catch (Exception ex) {
             return ExerciseState.builder()
@@ -96,7 +98,9 @@ public class ExerciseController extends HtmlBuilder
         return simplePageWithTitle("Exercise",
             form(
                 rndDirSelector(st),
-                rndTaskTypes(st)
+                rndTaskTypes(st),
+                h("br"),
+                st.getRepeatStrategyCmp().render()
             )
         ).toString();
     }

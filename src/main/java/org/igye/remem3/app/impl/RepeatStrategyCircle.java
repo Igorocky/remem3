@@ -1,7 +1,7 @@
 package org.igye.remem3.app.impl;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.igye.remem3.app.TaskRepeatStrategy;
+import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.utils.Exn;
@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-public class TaskRepeatStrategyCircle implements TaskRepeatStrategy {
+public class RepeatStrategyCircle implements RepeatStrategy {
 
     private final List<Task> allTasks;
     private final double randomnessFactor;
     private final Random rnd;
 
-    public TaskRepeatStrategyCircle(List<Task> allTasks, double randomnessFactor) {
+    public RepeatStrategyCircle(List<Task> allTasks, double randomnessFactor) {
         if (CollectionUtils.isEmpty(allTasks)) {
             throw new Exn("allTasks cannot be empty.");
         }
