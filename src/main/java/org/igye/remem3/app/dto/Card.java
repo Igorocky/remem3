@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-public sealed interface Card permits Card.FillGaps {
+public sealed interface Card {
     Optional<File> getFile();
 
     Optional<Instant> getCreatedAt();

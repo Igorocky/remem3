@@ -5,7 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public sealed interface TextPart permits TextPart.Text, TextPart.Gap {
+public sealed interface TextPart {
     @Builder
     @Getter
     @EqualsAndHashCode

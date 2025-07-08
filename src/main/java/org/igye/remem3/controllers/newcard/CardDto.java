@@ -7,7 +7,7 @@ import org.igye.remem3.app.dto.CardType;
 
 import static org.igye.remem3.app.dto.CardType.FILL_GAPS;
 
-public sealed interface CardDto permits CardDto.FillGaps {
+public sealed interface CardDto {
     CardType getType();
 
     @Builder

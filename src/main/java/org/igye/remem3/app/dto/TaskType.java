@@ -3,7 +3,7 @@ package org.igye.remem3.app.dto;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-public sealed interface TaskType permits TaskType.FillGaps {
+public sealed interface TaskType {
     String getCode();
 
     @EqualsAndHashCode
@@ -19,7 +19,7 @@ public sealed interface TaskType permits TaskType.FillGaps {
         @Override
         public String getCode() {
             if (code == null) {
-                code = "FillGaps:" + lang;
+                code = "fill_gaps:" + lang;
             }
             return code;
         }

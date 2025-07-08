@@ -3,7 +3,7 @@ package org.igye.remem3.app.dto;
 import lombok.Getter;
 import org.igye.remem3.utils.Exn;
 
-public sealed interface Task permits Task.FillGaps {
+public sealed interface Task {
     Card getCard();
 
     TaskType getTaskType();
