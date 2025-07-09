@@ -1,6 +1,7 @@
 package org.igye.remem3.app.dto;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 
 public sealed interface TaskType {
@@ -9,6 +10,7 @@ public sealed interface TaskType {
     @EqualsAndHashCode
     @ToString
     final class FillGaps implements TaskType {
+        @Getter
         private final String lang;
         private String code;
 

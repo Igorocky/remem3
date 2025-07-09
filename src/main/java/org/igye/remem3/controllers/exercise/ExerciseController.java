@@ -92,7 +92,10 @@ public class ExerciseController extends HtmlBuilder
 
     @Override
     public void saveState(ExerciseState state) {
-
+        switch (state) {
+            case ExerciseState.SetParams _ -> this.startedState = null;
+            case ExerciseState.Started st -> this.startedState = st;
+        }
     }
 
     @Override
