@@ -42,13 +42,27 @@ public class CacheImpl implements Cache {
     }
 
     @Override
-    public Long getLong(String key, Long defaultValue) {
+    public long getLong(String key, long defaultValue) {
         String value = cacheData.get(key);
         if (value == null) {
             return defaultValue;
         }
         try {
             return Long.parseLong(value);
+        } catch (Exception ex) {
+            log.warn(ex.getMessage(), ex);
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public boolean getBool(String key, boolean defaultValue) {
+        String value = cacheData.get(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Boolean.parseBoolean(value);
         } catch (Exception ex) {
             log.warn(ex.getMessage(), ex);
             return defaultValue;

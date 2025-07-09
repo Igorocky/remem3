@@ -4,6 +4,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.html.HtmlBuilder;
+import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 
 import java.time.Instant;
@@ -17,10 +19,10 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class RepeatStrategyCircle implements RepeatStrategy {
+public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy {
 
     public static final int DEFAULT_MAX_NUM_OF_CIRCLES = 1000_000;
-    
+
     private final List<Task> allTasks;
     private final Instant startTime;
     private final double randomnessFactor;
@@ -82,5 +84,10 @@ public class RepeatStrategyCircle implements RepeatStrategy {
         } else {
             return Optional.of(tasksToSelectFrom.get(rnd.nextInt(tasksToSelectFrom.size())));
         }
+    }
+
+    @Override
+    public HtmlElem renderStats() {
+        return text(String.format("Total number of tasks: %s", allTasks.size()));
     }
 }

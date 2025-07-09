@@ -6,14 +6,16 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.With;
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.Cache;
+import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.RepeatStrategy;
-import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.TaskType;
-import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 
 import java.util.List;
+import java.util.Set;
 
 public sealed interface ExerciseState {
     List<String> getErrors();
@@ -25,7 +27,9 @@ public sealed interface ExerciseState {
     @ToString
     final class SetParams implements ExerciseState {
         private List<String> errors;
-        private CardsImpl cards;
+        private Settings settings;
+        private Cache cache;
+        private Cards cards;
         private DirSelectorCmp dirSelector;
         private List<Pair<TaskType, Boolean>> taskTypes;
         private RepeatStrategyCmp repeatStrategyCmp;
@@ -38,9 +42,13 @@ public sealed interface ExerciseState {
     @ToString
     final class Started implements ExerciseState {
         private List<String> errors;
+        private Settings settings;
+        private Cache cache;
+        private Cards cards;
+        private RepeatStrategyCmp repeatStrategyCmp;
         private String dir;
-        private List<String> taskTypes;
-        private List<Task> tasks;
+        private Set<String> taskTypes;
         private RepeatStrategy repeatStrategy;
+        private boolean showParams;
     }
 }

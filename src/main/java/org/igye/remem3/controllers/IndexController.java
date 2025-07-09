@@ -1,7 +1,7 @@
 package org.igye.remem3.controllers;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.igye.remem3.html.HtmlBuilder;
+import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.util.List;
@@ -21,12 +21,12 @@ public class IndexController extends HtmlBuilder implements StatefulWebControlle
     }
 
     @Override
-    public Void loadState(HttpServletRequest req) {
+    public Void loadState(RequestParams params) {
         return null;
     }
 
     @Override
-    public Optional<Void> decodeAction(HttpServletRequest req, Void state) {
+    public Optional<Void> decodeAction(RequestParams params, Void state) {
         return Optional.empty();
     }
 

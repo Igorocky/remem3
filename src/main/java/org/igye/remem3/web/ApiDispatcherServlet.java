@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.impl.AppImpl;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.web.impl.RequestParamsImpl;
 
 import java.util.Optional;
 
@@ -34,8 +35,9 @@ public class ApiDispatcherServlet extends HttpServlet {
                 "Cannot find a controller for the path '%s'.", path
             )));
         controller.setContextPath(req.getContextPath());
-        Object state = controller.loadState(req);
-        Object newState = ((Optional<Object>) controller.decodeAction(req, state))
+        RequestParams params = new RequestParamsImpl(req);
+        Object state = controller.loadState(params);
+        Object newState = ((Optional<Object>) controller.decodeAction(params, state))
             .map(act -> controller.updateState(state, act))
             .orElse(state);
         controller.saveState(newState);

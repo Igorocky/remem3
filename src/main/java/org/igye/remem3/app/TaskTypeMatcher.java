@@ -4,7 +4,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.TaskTypeMatcherImpl;
 
-import java.util.List;
+import java.util.Set;
 
 public interface TaskTypeMatcher {
     boolean matches(TaskType taskType);
@@ -13,7 +13,7 @@ public interface TaskTypeMatcher {
         return typ -> this.matches(typ) || other.matches(typ);
     }
 
-    static TaskTypeMatcher fromList(List<String> typesStr) {
+    static TaskTypeMatcher fromList(Set<String> typesStr) {
         if (CollectionUtils.isEmpty(typesStr)) {
             return _ -> true;
         }

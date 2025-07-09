@@ -1,6 +1,5 @@
 package org.igye.remem3.controllers.newcard;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -19,8 +18,7 @@ import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Utils;
-import org.igye.remem3.utils.web.RequestParams;
-import org.igye.remem3.utils.web.impl.RequestParamsImpl;
+import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.io.File;
@@ -52,12 +50,11 @@ public class NewCardController extends HtmlBuilder
     }
 
     @Override
-    public NewCardState loadState(HttpServletRequest req) {
+    public NewCardState loadState(RequestParams params) {
         try {
             app.reloadProperties();
             Settings settings = SettingsImpl.load(app);
             Cache cache = CacheImpl.load(utils, settings);
-            RequestParams params = new RequestParamsImpl(req);
             DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, params, PAR_DIR_TO_SAVE_NEW_CARD_TO);
             return NewCardState.builder()
                 .settings(settings)
@@ -73,11 +70,10 @@ public class NewCardController extends HtmlBuilder
     }
 
     @Override
-    public Optional<Supplier<NewCardState>> decodeAction(HttpServletRequest req, NewCardState state) {
+    public Optional<Supplier<NewCardState>> decodeAction(RequestParams params, NewCardState state) {
         if (CollectionUtils.isNotEmpty(state.getErrors())) {
             return Optional.empty();
         }
-        RequestParams params = new RequestParamsImpl(req);
         if (params.hasParam(ACT_CREATE_CARD)) {
             return Optional.of(() -> actCreateCard(state));
         }

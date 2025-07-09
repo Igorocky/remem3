@@ -21,28 +21,48 @@ public sealed interface Card {
 
     List<TaskType> getTaskTypes();
 
+    List<Task> getTasks();
+
     @Builder
-    @Getter
     @ToString
     @EqualsAndHashCode
     @With
     final class FillGaps implements Card {
+        @Getter
         @Builder.Default
         private Optional<File> file = Optional.empty();
+        @Getter
         @Builder.Default
         private Optional<Instant> createdAt = Optional.empty();
+        @Getter
         @Builder.Default
         private String lang = "";
+        @Getter
         @Builder.Default
         private List<TextPart> text = List.of();
+        @Getter
         @Builder.Default
         private String notes = "";
+        @Getter
         @Builder.Default
         private List<HistRec> history = List.of();
+        private List<TaskType> taskTypes;
+        private List<Task> tasks;
 
         @Override
         public List<TaskType> getTaskTypes() {
-            return List.of(new TaskType.FillGaps(lang));
+            if (taskTypes == null) {
+                taskTypes = List.of(new TaskType.FillGaps(lang));
+            }
+            return taskTypes;
+        }
+
+        @Override
+        public List<Task> getTasks() {
+            if (tasks == null) {
+                tasks = List.of(new Task.FillGaps(this));
+            }
+            return tasks;
         }
     }
 

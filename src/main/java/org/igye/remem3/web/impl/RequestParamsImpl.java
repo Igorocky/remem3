@@ -1,9 +1,9 @@
-package org.igye.remem3.utils.web.impl;
+package org.igye.remem3.web.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.utils.Exn;
-import org.igye.remem3.utils.web.RequestParams;
+import org.igye.remem3.web.RequestParams;
 
 import java.util.ArrayList;
 import java.util.HashMap;

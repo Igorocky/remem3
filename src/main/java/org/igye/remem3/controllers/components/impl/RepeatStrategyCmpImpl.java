@@ -1,12 +1,16 @@
 package org.igye.remem3.controllers.components.impl;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.RepeatStrategyType;
+import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.impl.RepeatStrategyCircle;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
-import org.igye.remem3.utils.web.RequestParams;
+import org.igye.remem3.web.RequestParams;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,6 +70,13 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 case CIRCLE -> rndCircleParams();
             }
         );
+    }
+
+    @Override
+    public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
+        return switch (valStrategyType) {
+            case CIRCLE -> new RepeatStrategyCircle(tasks, Instant.now(), valCircleRndFactor, valCircleMaxNumOfCircles);
+        };
     }
 
     private HtmlElem rndCircleParams() {

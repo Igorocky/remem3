@@ -7,7 +7,7 @@ import org.igye.remem3.app.Settings;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
-import org.igye.remem3.utils.web.RequestParams;
+import org.igye.remem3.web.RequestParams;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,6 +26,13 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
         this.cache = cache;
         this.baseParamName = baseParamName;
         this.selectedDirectoryList = getSelectedDirectoryList(params);
+    }
+
+    public DirSelectorCmpImpl(Settings settings, Cache cache, String dirStr, String baseParamName) {
+        this.settings = settings;
+        this.cache = cache;
+        this.baseParamName = baseParamName;
+        this.selectedDirectoryList = getSelectedDirectoryList(dirStr);
     }
 
     @Override
@@ -84,15 +91,21 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
             }
         } else {
             String cachedDir = cache.getStr(baseParamName, getDefaultDir(settings));
-            for (String dirFromSettings : settings.getDirectoriesWithCards()) {
-                if (cachedDir.startsWith(dirFromSettings)) {
-                    res.add(dirFromSettings);
-                    Arrays.stream(cachedDir.substring(dirFromSettings.length()).split("/"))
-                        .map(String::trim)
-                        .filter(StringUtils::isNotBlank)
-                        .forEach(res::add);
-                    break;
-                }
+            getSelectedDirectoryList(cachedDir).forEach(res::add);
+        }
+        return Collections.unmodifiableList(getValidDirs(res, settings));
+    }
+
+    private List<String> getSelectedDirectoryList(String dirStr) {
+        ArrayList<String> res = new ArrayList<>();
+        for (String dirFromSettings : settings.getDirectoriesWithCards()) {
+            if (dirStr.startsWith(dirFromSettings)) {
+                res.add(dirFromSettings);
+                Arrays.stream(dirStr.substring(dirFromSettings.length()).split("/"))
+                    .map(String::trim)
+                    .filter(StringUtils::isNotBlank)
+                    .forEach(res::add);
+                break;
             }
         }
         return Collections.unmodifiableList(getValidDirs(res, settings));

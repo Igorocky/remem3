@@ -7,4 +7,7 @@ public sealed interface ExerciseAction {
 
     final class CancelExercise implements ExerciseAction {
     }
+
+    final class ToggleShowExerciseParams implements ExerciseAction {
+    }
 }
