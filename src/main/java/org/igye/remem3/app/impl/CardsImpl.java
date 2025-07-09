@@ -14,6 +14,7 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -81,9 +82,12 @@ public class CardsImpl implements Cards {
     public void saveCard(File file, Card card) {
         try {
             file.getParentFile().mkdirs();
-            switch (card) {
-                case Card.FillGaps c -> utils.writeStringToFile(fillGapsCardToString(c), file);
-            }
+            utils.writeStringToFile(
+                switch (card) {
+                    case Card.FillGaps c -> fillGapsCardToString(c);
+                },
+                file
+            );
         } catch (Exception ex) {
             throw new Exn(
                 String.format(
@@ -103,9 +107,12 @@ public class CardsImpl implements Cards {
         };
     }
 
+    @SneakyThrows
     @Override
     public void appendHistRecToFile(File file, HistRec histRec) {
-        throw new Exn("Not implemented.");
+        try (FileWriter wr = new FileWriter(file, true)) {
+            wr.append("\n").append(histRecToStr(histRec));
+        }
     }
 
     @Override
@@ -205,14 +212,16 @@ public class CardsImpl implements Cards {
     }
 
     private void appendHistory(StringBuilder sb, List<HistRec> history) {
-        history.forEach(histRec ->
-            sb
-                .append("\n")
-                .append(histRec.getTime().toString())
-                .append(" ").append(histRec.getTaskType())
-                .append(" ").append(histRec.getMark())
-                .append(" ").append(histRec.getNotes())
-        );
+        history.forEach(histRec -> sb.append("\n").append(histRecToStr(histRec)));
+    }
+
+    private String histRecToStr(HistRec histRec) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(histRec.getTime().toString())
+            .append(" ").append(histRec.getTaskType())
+            .append(" ").append(histRec.getMark())
+            .append(" ").append(histRec.getNotes());
+        return sb.toString();
     }
 
     private Card loadFillGapsCard(File file) {

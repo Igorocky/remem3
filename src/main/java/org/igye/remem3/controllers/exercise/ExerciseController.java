@@ -6,6 +6,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.TaskTypeMatcher;
 import org.igye.remem3.app.dto.Task;
@@ -140,7 +141,7 @@ public class ExerciseController extends HtmlBuilder
         return st.withShowParams(newShowParams);
     }
 
-    private ExerciseState.Started actStartExercise(ExerciseState.SetParams st) {
+    private ExerciseState actStartExercise(ExerciseState.SetParams st) {
         Set<String> taskTypes = st.getTaskTypes().stream()
             .filter(Pair::getRight)
             .map(Pair::getLeft)
@@ -152,6 +153,10 @@ public class ExerciseController extends HtmlBuilder
             .flatMap(card -> card.getTasks().stream())
             .filter(task -> taskTypeMatcher.matches(task.getTaskType()))
             .toList();
+        if (tasks.isEmpty()) {
+            return st.withErrors(List.of("There are no tasks."));
+        }
+        RepeatStrategy repeatStrategy = st.getRepeatStrategyCmp().makeRepeatStrategy(tasks);
         return ExerciseState.Started.builder()
             .settings(st.getSettings())
             .cache(st.getCache())
@@ -159,8 +164,9 @@ public class ExerciseController extends HtmlBuilder
             .repeatStrategyCmp(st.getRepeatStrategyCmp())
             .dir(selectedDir.getAbsolutePath())
             .taskTypes(taskTypes)
-            .repeatStrategy(st.getRepeatStrategyCmp().makeRepeatStrategy(tasks))
+            .repeatStrategy(repeatStrategy)
             .showParams(st.getCache().getBool(PAR_SHOW_EXERCISE_PARAMS, false))
+            .nextTasks(repeatStrategy.getNextTasks())
             .build();
     }
 
@@ -215,12 +221,13 @@ public class ExerciseController extends HtmlBuilder
         } else {
             params = null;
         }
+        boolean completed = st.getNextTasks().isEmpty();
         return frag(
             h4(text("Exercise")),
             inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS, st.isShowParams() ? "Hide parameters" : "Show parameters"),
             params,
             h("hr"),
-            inpSubmit(ACT_CANCEL_EXERCISE, "Cancel")
+            inpSubmit(ACT_CANCEL_EXERCISE, completed ? "Done" : "Cancel")
         );
     }
 

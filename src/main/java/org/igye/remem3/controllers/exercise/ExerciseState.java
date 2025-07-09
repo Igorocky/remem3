@@ -10,11 +10,13 @@ import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public sealed interface ExerciseState {
@@ -50,5 +52,6 @@ public sealed interface ExerciseState {
         private Set<String> taskTypes;
         private RepeatStrategy repeatStrategy;
         private boolean showParams;
+        private Optional<List<Task>> nextTasks;
     }
 }

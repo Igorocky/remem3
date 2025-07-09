@@ -1,6 +1,8 @@
 package org.igye.remem3.app.dto;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import org.igye.remem3.utils.Exn;
 
 public sealed interface Task {
@@ -10,6 +12,8 @@ public sealed interface Task {
 
     String getId();
 
+    @EqualsAndHashCode
+    @ToString
     final class FillGaps implements Task {
         @Getter
         private final Card.FillGaps card;

@@ -4,11 +4,12 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.With;
+import lombok.experimental.SuperBuilder;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,17 +24,59 @@ public sealed interface Card {
 
     List<Task> getTasks();
 
-    @Builder
-    @ToString
-    @EqualsAndHashCode
-    @With
-    final class FillGaps implements Card {
+    void appendHistRec(HistRec histRec);
+
+    @SuperBuilder
+    @ToString(exclude = {"taskTypes", "tasks"})
+    @EqualsAndHashCode(exclude = {"taskTypes", "tasks"})
+    sealed abstract class BaseCard implements Card {
         @Getter
         @Builder.Default
         private Optional<File> file = Optional.empty();
         @Getter
         @Builder.Default
         private Optional<Instant> createdAt = Optional.empty();
+        @Getter
+        @Builder.Default
+        private List<HistRec> history = List.of();
+        private List<TaskType> taskTypes;
+        private List<Task> tasks;
+
+        @Override
+        public void appendHistRec(HistRec histRec) {
+            if (this.history instanceof ArrayList<HistRec>) {
+                this.history.add(histRec);
+            } else {
+                this.history = new ArrayList<>(this.history);
+                appendHistRec(histRec);
+            }
+        }
+
+        @Override
+        public List<TaskType> getTaskTypes() {
+            if (taskTypes == null) {
+                taskTypes = makeTaskTypes();
+            }
+            return taskTypes;
+        }
+
+        @Override
+        public List<Task> getTasks() {
+            if (tasks == null) {
+                tasks = makeTasks();
+            }
+            return tasks;
+        }
+
+        abstract protected List<TaskType> makeTaskTypes();
+
+        abstract protected List<Task> makeTasks();
+    }
+
+    @SuperBuilder
+    @ToString(callSuper = true)
+    @EqualsAndHashCode(callSuper = true)
+    final class FillGaps extends BaseCard {
         @Getter
         @Builder.Default
         private String lang = "";
@@ -43,26 +86,15 @@ public sealed interface Card {
         @Getter
         @Builder.Default
         private String notes = "";
-        @Getter
-        @Builder.Default
-        private List<HistRec> history = List.of();
-        private List<TaskType> taskTypes;
-        private List<Task> tasks;
 
         @Override
-        public List<TaskType> getTaskTypes() {
-            if (taskTypes == null) {
-                taskTypes = List.of(new TaskType.FillGaps(lang));
-            }
-            return taskTypes;
+        protected List<TaskType> makeTaskTypes() {
+            return List.of(new TaskType.FillGaps(lang));
         }
 
         @Override
-        public List<Task> getTasks() {
-            if (tasks == null) {
-                tasks = List.of(new Task.FillGaps(this));
-            }
-            return tasks;
+        protected List<Task> makeTasks() {
+            return List.of(new Task.FillGaps(this));
         }
     }
 

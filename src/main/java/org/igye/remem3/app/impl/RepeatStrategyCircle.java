@@ -46,7 +46,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     }
 
     @Override
-    public Optional<Task> getNextTask() {
+    public Optional<List<Task>> getNextTasks() {
         Map<String, List<HistRec>> hist = allTasks.stream()
             .collect(Collectors.toMap(
                 Task::getId,
@@ -82,7 +82,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         if (tasksToSelectFrom.isEmpty()) {
             return Optional.empty();
         } else {
-            return Optional.of(tasksToSelectFrom.get(rnd.nextInt(tasksToSelectFrom.size())));
+            return Optional.of(List.of(tasksToSelectFrom.get(rnd.nextInt(tasksToSelectFrom.size()))));
         }
     }
 
