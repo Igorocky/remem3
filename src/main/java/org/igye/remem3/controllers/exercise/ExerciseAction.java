@@ -10,4 +10,7 @@ public sealed interface ExerciseAction {
 
     final class ToggleShowExerciseParams implements ExerciseAction {
     }
+
+    final class ReloadCard implements ExerciseAction {
+    }
 }

@@ -9,7 +9,6 @@ import org.igye.remem3.app.dto.fillgaps.TextPart;
 
 import java.io.File;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +23,7 @@ public sealed interface Card {
 
     List<Task> getTasks();
 
-    void appendHistRec(HistRec histRec);
+    void copyFrom(Card other);
 
     @SuperBuilder
     @ToString(exclude = {"taskTypes", "tasks"})
@@ -43,13 +42,13 @@ public sealed interface Card {
         private List<Task> tasks;
 
         @Override
-        public void appendHistRec(HistRec histRec) {
-            if (this.history instanceof ArrayList<HistRec>) {
-                this.history.add(histRec);
-            } else {
-                this.history = new ArrayList<>(this.history);
-                appendHistRec(histRec);
-            }
+        public void copyFrom(Card other) {
+            file = other.getFile();
+            createdAt = other.getCreatedAt();
+            history = other.getHistory();
+            taskTypes = null;
+            tasks = null;
+            childCopyFrom(other);
         }
 
         @Override
@@ -67,6 +66,8 @@ public sealed interface Card {
             }
             return tasks;
         }
+
+        abstract protected void childCopyFrom(Card other);
 
         abstract protected List<TaskType> makeTaskTypes();
 
@@ -86,6 +87,14 @@ public sealed interface Card {
         @Getter
         @Builder.Default
         private String notes = "";
+
+        @Override
+        protected void childCopyFrom(Card card) {
+            FillGaps other = (FillGaps) card;
+            lang = other.getLang();
+            text = other.getText();
+            notes = other.getNotes();
+        }
 
         @Override
         protected List<TaskType> makeTaskTypes() {
