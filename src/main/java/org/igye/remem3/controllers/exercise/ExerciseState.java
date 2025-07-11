@@ -12,6 +12,7 @@ import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
+import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 
@@ -53,5 +54,6 @@ public sealed interface ExerciseState {
         private RepeatStrategy repeatStrategy;
         private boolean showParams;
         private Optional<List<Task>> nextTasks;
+        private Optional<TaskState> taskState;
     }
 }

@@ -15,6 +15,8 @@ import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
+import org.igye.remem3.app.task.TaskState;
+import org.igye.remem3.app.task.impl.TaskStateFillGaps;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.controllers.components.impl.RepeatStrategyCmpImpl;
@@ -33,17 +35,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class ExerciseController extends HtmlBuilder
-    implements StatefulWebController<ExerciseState, ExerciseAction> {
+    implements StatefulWebController<ExerciseState, Supplier<ExerciseState>> {
 
     private static final String PAR_EXERCISE_STAGE = "PAR_EXERCISE_STAGE";
     private static final String PAR_DIR_TO_READ_TASKS_FROM = "PAR_DIR_TO_READ_TASKS_FROM";
     private static final String PAR_TASK_TYPE = "PAR_TASK_TYPE";
     private static final String ACT_START_EXERCISE = "ACT_START_EXERCISE";
     private static final String ACT_CANCEL_EXERCISE = "ACT_CANCEL_EXERCISE";
+    private static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
     private static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
     private static final String ACT_RELOAD_CARD = "ACT_RELOAD_CARD";
     private static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
@@ -84,26 +88,26 @@ public class ExerciseController extends HtmlBuilder
     }
 
     @Override
-    public Optional<ExerciseAction> decodeAction(RequestParams params, ExerciseState state) {
+    public Optional<Supplier<ExerciseState>> decodeAction(RequestParams params, ExerciseState state) {
         if (CollectionUtils.isNotEmpty(state.getErrors())) {
             return Optional.empty();
         }
         return switch (state) {
-            case ExerciseState.SetParams _ -> {
+            case ExerciseState.SetParams st -> {
                 if (params.hasParam(ACT_START_EXERCISE)) {
-                    yield Optional.of(new ExerciseAction.StartExercise());
+                    yield Optional.of(() -> actStartExercise(st));
                 }
                 yield Optional.empty();
             }
-            case ExerciseState.Started _ -> {
+            case ExerciseState.Started st -> {
                 if (params.hasParam(ACT_CANCEL_EXERCISE)) {
-                    yield Optional.of(new ExerciseAction.CancelExercise());
+                    yield Optional.of(() -> actCancelExercise(st));
                 }
                 if (params.hasParam(ACT_TOGGLE_SHOW_EXERCISE_PARAMS)) {
-                    yield Optional.of(new ExerciseAction.ToggleShowExerciseParams());
+                    yield Optional.of(() -> actToggleShowParams(st));
                 }
                 if (params.hasParam(ACT_RELOAD_CARD)) {
-                    yield Optional.of(new ExerciseAction.ReloadCard());
+                    yield Optional.of(() -> actReloadCard(st));
                 }
                 yield Optional.empty();
             }
@@ -111,13 +115,8 @@ public class ExerciseController extends HtmlBuilder
     }
 
     @Override
-    public ExerciseState updateState(ExerciseState state, ExerciseAction action) {
-        return switch (action) {
-            case ExerciseAction.StartExercise _ -> actStartExercise((ExerciseState.SetParams) state);
-            case ExerciseAction.CancelExercise _ -> actCancelExercise((ExerciseState.Started) state);
-            case ExerciseAction.ToggleShowExerciseParams _ -> actToggleShowParams((ExerciseState.Started) state);
-            case ExerciseAction.ReloadCard _ -> actReloadCard((ExerciseState.Started) state);
-        };
+    public ExerciseState updateState(ExerciseState state, Supplier<ExerciseState> action) {
+        return action.get();
     }
 
     @Override
@@ -189,6 +188,7 @@ public class ExerciseController extends HtmlBuilder
             return st.withErrors(List.of("There are no tasks."));
         }
         RepeatStrategy repeatStrategy = st.getRepeatStrategyCmp().makeRepeatStrategy(tasks);
+        Optional<List<Task>> nextTasks = repeatStrategy.getNextTasks();
         return ExerciseState.Started.builder()
             .settings(st.getSettings())
             .cache(st.getCache())
@@ -198,8 +198,15 @@ public class ExerciseController extends HtmlBuilder
             .taskTypes(taskTypes)
             .repeatStrategy(repeatStrategy)
             .showParams(st.getCache().getBool(PAR_SHOW_EXERCISE_PARAMS, false))
-            .nextTasks(repeatStrategy.getNextTasks())
+            .nextTasks(nextTasks)
+            .taskState(nextTasks.flatMap(nt -> nt.isEmpty() ? Optional.empty() : makeTaskState(nt.getFirst())))
             .build();
+    }
+
+    private Optional<TaskState> makeTaskState(Task task) {
+        return switch (task) {
+            case Task.FillGaps t -> Optional.of(new TaskStateFillGaps(t));
+        };
     }
 
     private ExerciseState actCancelExercise(ExerciseState.Started st) {
@@ -258,13 +265,29 @@ public class ExerciseController extends HtmlBuilder
             params = null;
         }
         boolean completed = st.getNextTasks().isEmpty();
+        HtmlElem taskContent;
+        if (completed) {
+            taskContent = frag(
+                text("You have completed this exercise. "),
+                inpSubmit(ACT_CANCEL_EXERCISE, "Done")
+            );
+        } else if (st.getTaskState().isPresent()) {
+            taskContent = st.getTaskState().get().render();
+        } else {
+            taskContent = frag(
+                text("There are no active tasks. "),
+                inpSubmit(ACT_REFRESH_EXERCISE, "Refresh")
+            );
+        }
         return frag(
             h4(text("Exercise")),
             inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS, st.isShowParams() ? "Hide parameters" : "Show parameters"),
+            inpSubmit(ACT_RELOAD_CARD, "Reload card"),
             params,
             h("hr"),
-            inpSubmit(ACT_CANCEL_EXERCISE, completed ? "Done" : "Cancel"),
-            inpSubmit(ACT_RELOAD_CARD, "Reload card")
+            taskContent,
+            h("hr"),
+            completed ? null : inpSubmit(ACT_CANCEL_EXERCISE, "Cancel")
         );
     }
 

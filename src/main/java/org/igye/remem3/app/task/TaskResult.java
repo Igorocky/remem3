@@ -1,4 +1,4 @@
-package org.igye.remem3.app;
+package org.igye.remem3.app.task;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
