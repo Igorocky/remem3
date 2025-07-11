@@ -29,6 +29,7 @@ import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -49,7 +50,7 @@ public class ExerciseController extends HtmlBuilder
     private static final String ACT_CANCEL_EXERCISE = "ACT_CANCEL_EXERCISE";
     private static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
     private static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
-    private static final String ACT_RELOAD_CARD = "ACT_RELOAD_CARD";
+    private static final String ACT_SKIP_TASK = "ACT_SKIP_TASK";
     private static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
 
     private final App app;
@@ -106,8 +107,8 @@ public class ExerciseController extends HtmlBuilder
                 if (params.hasParam(ACT_TOGGLE_SHOW_EXERCISE_PARAMS)) {
                     yield Optional.of(() -> actToggleShowParams(st));
                 }
-                if (params.hasParam(ACT_RELOAD_CARD)) {
-                    yield Optional.of(() -> actReloadCard(st));
+                if (params.hasParam(ACT_SKIP_TASK)) {
+                    yield Optional.of(() -> actGoToNextTask(st));
                 }
                 yield Optional.empty();
             }
@@ -141,22 +142,27 @@ public class ExerciseController extends HtmlBuilder
         ).toString();
     }
 
-    private ExerciseState actReloadCard(ExerciseState.Started st) {
-        Optional<List<Task>> nextTasksOpt = st.getNextTasks();
-        if (nextTasksOpt.isEmpty()) {
-            return st;
+    private ExerciseState actGoToNextTask(ExerciseState.Started st) {
+        Optional<List<Task>> nextTasksOpt = st.getNextTasks().flatMap(tasks -> {
+            if (tasks.isEmpty()) {
+                throw new Exn("tasks.isEmpty()");
+            } else if (tasks.size() == 1) {
+                return st.getRepeatStrategy().getNextTasks();
+            } else {
+                ArrayList<Task> tail = new ArrayList<>(tasks);
+                tail.removeFirst();
+                return Optional.of(tail);
+            }
+        });
+        if (nextTasksOpt.isEmpty() || nextTasksOpt.get().isEmpty()) {
+            return st
+                .withNextTasks(nextTasksOpt)
+                .withTaskState(Optional.empty());
         }
-        List<Task> nextTasks = nextTasksOpt.get();
-        if (nextTasks.isEmpty()) {
-            return st;
-        }
-        Card curCard = nextTasks.getFirst().getCard();
-        curCard.copyFrom(
-            st.getCards().loadCard(
-                curCard.getFile().orElseThrow(() -> new Exn("A file not set for a card in actReloadCard"))
-            )
-        );
-        return st;
+        Task nextTask = nextTasksOpt.get().getFirst();
+        return st
+            .withNextTasks(nextTasksOpt)
+            .withTaskState(makeTaskState(nextTask));
     }
 
     private Optional<File> getCurrentCardFile(ExerciseState.Started st) {
@@ -282,7 +288,7 @@ public class ExerciseController extends HtmlBuilder
         return frag(
             h4(text("Exercise")),
             inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS, st.isShowParams() ? "Hide parameters" : "Show parameters"),
-            inpSubmit(ACT_RELOAD_CARD, "Reload card"),
+            inpSubmit(ACT_SKIP_TASK, "Skip this task"),
             params,
             h("hr"),
             taskContent,

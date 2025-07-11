@@ -1,5 +1,7 @@
 package org.igye.remem3.app.impl;
 
+import lombok.Builder;
+import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.dto.HistRec;
@@ -89,5 +91,11 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     @Override
     public HtmlElem renderStats() {
         return text(String.format("Total number of tasks: %s", allTasks.size()));
+    }
+
+    @Getter
+    @Builder
+    private static class Stats {
+        private Map<String, List<HistRec>> hist;
     }
 }
