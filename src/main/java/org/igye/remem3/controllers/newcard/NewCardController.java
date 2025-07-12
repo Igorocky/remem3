@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import static org.igye.remem3.app.impl.CardsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
+import static org.igye.remem3.app.impl.CardsImpl.CARD_TRANSLATE_FILE_EXTENSION;
 
 @RequiredArgsConstructor
 public class NewCardController extends HtmlBuilder
@@ -36,9 +37,19 @@ public class NewCardController extends HtmlBuilder
 
     private static final String PAR_DIR_TO_SAVE_NEW_CARD_TO = "PAR_DIR_TO_SAVE_NEW_CARD_TO";
     private static final String PAR_CARD_TYPE = "PAR_CARD_TYPE";
+
     private static final String PAR_CARD_FILL_GAPS_LANG = "PAR_CARD_FILL_GAPS_LANG";
     private static final String PAR_CARD_FILL_GAPS_TEXT = "PAR_CARD_FILL_GAPS_TEXT";
     private static final String PAR_CARD_FILL_GAPS_NOTES = "PAR_CARD_FILL_GAPS_NOTES";
+
+    private static final String PAR_CARD_TRANSLATE_LANG_1 = "PAR_CARD_TRANSLATE_LANG_1";
+    private static final String PAR_CARD_TRANSLATE_READONLY_1 = "PAR_CARD_TRANSLATE_READONLY_1";
+    private static final String PAR_CARD_TRANSLATE_TEXT_1 = "PAR_CARD_TRANSLATE_TEXT_1";
+    private static final String PAR_CARD_TRANSLATE_LANG_2 = "PAR_CARD_TRANSLATE_LANG_2";
+    private static final String PAR_CARD_TRANSLATE_READONLY_2 = "PAR_CARD_TRANSLATE_READONLY_2";
+    private static final String PAR_CARD_TRANSLATE_TEXT_2 = "PAR_CARD_TRANSLATE_TEXT_2";
+    private static final String PAR_CARD_TRANSLATE_NOTES = "PAR_CARD_TRANSLATE_NOTES";
+
     private static final String ACT_CREATE_CARD = "ACT_CREATE_CARD";
 
     private final App app;
@@ -90,7 +101,7 @@ public class NewCardController extends HtmlBuilder
 
     @Override
     public void saveState(NewCardState state) {
-
+        state.getCache().put(PAR_CARD_TYPE, state.getCardParams().getType().getCode());
     }
 
     @Override
@@ -99,9 +110,13 @@ public class NewCardController extends HtmlBuilder
             rndErrors(st.getErrors()),
             h3(text("Add new card")),
             form(
-                rndDirSelector(st),
-                rndCardType(st),
-                rndCard(st),
+                div(
+                    rndDirSelector(st),
+                    rndCardType(st)
+                ),
+                br(),
+                div(rndCard(st)),
+                br(),
                 inpSubmit(ACT_CREATE_CARD, "Save")
             )
         ).toString();
@@ -136,6 +151,10 @@ public class NewCardController extends HtmlBuilder
             st.getCache().put(PAR_DIR_TO_SAVE_NEW_CARD_TO, dirStr);
             switch (cardDto) {
                 case CardDto.FillGaps dto -> st.getCache().put(PAR_CARD_FILL_GAPS_LANG, dto.getLang());
+                case CardDto.Translate dto -> {
+                    st.getCache().put(PAR_CARD_TRANSLATE_LANG_1, dto.getLang1());
+                    st.getCache().put(PAR_CARD_TRANSLATE_LANG_2, dto.getLang2());
+                }
             }
             cards.saveCard(new File(dir, makeFileName(card)), card);
             return st.withCardParams(clearParams(cardDto));
@@ -147,6 +166,7 @@ public class NewCardController extends HtmlBuilder
     private CardDto clearParams(CardDto dto) {
         return switch (dto) {
             case CardDto.FillGaps c -> c.withText("");
+            case CardDto.Translate c -> c.withText1("").withText2("");
         };
     }
 
@@ -154,6 +174,7 @@ public class NewCardController extends HtmlBuilder
         String baseName = UUID.randomUUID().toString().replace("-", "_");
         String extension = switch (card) {
             case Card.FillGaps _ -> CARD_FILL_GAPS_FILE_EXTENSION;
+            case Card.Translate _ -> CARD_TRANSLATE_FILE_EXTENSION;
         };
         return baseName + extension;
     }
@@ -162,6 +183,7 @@ public class NewCardController extends HtmlBuilder
         CardDto cardParams = st.getCardParams();
         return switch (cardParams) {
             case CardDto.FillGaps dto -> rndCardFillGaps(st, dto);
+            case CardDto.Translate dto -> rndCardTranslate(st, dto);
         };
     }
 
@@ -169,7 +191,7 @@ public class NewCardController extends HtmlBuilder
         return table(List.of(
             List.of(
                 text("Language"),
-                rndAvailableLanguages(st.getSettings(), card.getLang())
+                rndAvailableLanguages(st.getSettings(), card.getLang(), PAR_CARD_FILL_GAPS_LANG)
             ),
             List.of(
                 text("Text"),
@@ -185,8 +207,49 @@ public class NewCardController extends HtmlBuilder
         ));
     }
 
-    private HtmlElem rndAvailableLanguages(Settings settings, String selectedLang) {
-        return select(PAR_CARD_FILL_GAPS_LANG, selectedLang,
+    private HtmlElem rndCardTranslate(NewCardState st, CardDto.Translate card) {
+        return table(List.of(
+            List.of(
+                text("Language 1"),
+                rndAvailableLanguages(st.getSettings(), card.getLang1(), PAR_CARD_TRANSLATE_LANG_1)
+            ),
+            List.of(
+                text("Read only 1"),
+                inpCheckbox(PAR_CARD_TRANSLATE_READONLY_1, "true", card.isReadOnly1())
+            ),
+            List.of(
+                text("Text 1"),
+                textarea(PAR_CARD_TRANSLATE_TEXT_1, card.getText1(), 100, 5)
+            ),
+            List.of(
+                div("height:30px"),
+                div("height:30px")
+            ),
+            List.of(
+                text("Language 2"),
+                rndAvailableLanguages(st.getSettings(), card.getLang2(), PAR_CARD_TRANSLATE_LANG_2)
+            ),
+            List.of(
+                text("Read only 2"),
+                inpCheckbox(PAR_CARD_TRANSLATE_READONLY_2, "true", card.isReadOnly2())
+            ),
+            List.of(
+                text("Text 2"),
+                textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5)
+            ),
+            List.of(
+                div("height:30px"),
+                div("height:30px")
+            ),
+            List.of(
+                text("Notes"),
+                textarea(PAR_CARD_TRANSLATE_NOTES, card.getNotes(), 100, 5)
+            )
+        ));
+    }
+
+    private HtmlElem rndAvailableLanguages(Settings settings, String selectedLang, String paramName) {
+        return select(paramName, selectedLang,
             settings.getLanguages().stream()
                 .map(lang -> Pair.of(lang, text(lang)))
                 .toList()
@@ -197,8 +260,9 @@ public class NewCardController extends HtmlBuilder
         return table(List.of(List.of(
             text("Card type"),
             select(
-                PAR_DIR_TO_SAVE_NEW_CARD_TO,
-                state.getCardParams().getType().getDisplayName(),
+                PAR_CARD_TYPE,
+                true,
+                state.getCardParams().getType().getCode(),
                 Arrays.stream(CardType.values())
                     .map(cardType -> Pair.of(cardType.getCode(), text(cardType.getDisplayName())))
                     .toList()
@@ -217,13 +281,22 @@ public class NewCardController extends HtmlBuilder
     }
 
     private CardDto makeCardParams(RequestParams params, Settings settings, Cache cache) {
-        if (params.hasParam(PAR_CARD_TYPE)) {
-            return switch (CardType.fromCode(params.getParam(PAR_CARD_TYPE))) {
-                case FILL_GAPS -> makeFillGapsCardParams(params, settings, cache);
-            };
-        } else {
-            return makeFillGapsCardParams(params, settings, cache);
+        CardType defaultCardType = CardType.FILL_GAPS;
+        CardType cardType;
+        try {
+            if (params.hasParam(PAR_CARD_TYPE)) {
+                cardType = CardType.fromCode(params.getParam(PAR_CARD_TYPE));
+            } else {
+
+                cardType = CardType.fromCode(cache.getStr(PAR_CARD_TYPE, defaultCardType.getCode()));
+            }
+        } catch (Exception e) {
+            cardType = defaultCardType;
         }
+        return switch (cardType) {
+            case FILL_GAPS -> makeFillGapsCardParams(params, settings, cache);
+            case TRANSLATE -> makeTranslateCardParams(params, settings, cache);
+        };
     }
 
     private CardDto.FillGaps makeFillGapsCardParams(RequestParams params, Settings settings, Cache cache) {
@@ -234,6 +307,24 @@ public class NewCardController extends HtmlBuilder
             ))
             .text(params.getParam(PAR_CARD_FILL_GAPS_TEXT, ""))
             .notes(params.getParam(PAR_CARD_FILL_GAPS_NOTES, ""))
+            .build();
+    }
+
+    private CardDto.Translate makeTranslateCardParams(RequestParams params, Settings settings, Cache cache) {
+        return CardDto.Translate.builder()
+            .lang1(params.getParam(
+                PAR_CARD_TRANSLATE_LANG_1,
+                cache.getStr(PAR_CARD_TRANSLATE_LANG_1, settings.getLanguages().getFirst())
+            ))
+            .readOnly1(params.hasParam(PAR_CARD_TRANSLATE_READONLY_1))
+            .text1(params.getParam(PAR_CARD_TRANSLATE_TEXT_1, ""))
+            .lang2(params.getParam(
+                PAR_CARD_TRANSLATE_LANG_2,
+                cache.getStr(PAR_CARD_TRANSLATE_LANG_2, settings.getLanguages().getFirst())
+            ))
+            .readOnly2(params.hasParam(PAR_CARD_TRANSLATE_READONLY_2))
+            .text2(params.getParam(PAR_CARD_TRANSLATE_TEXT_2, ""))
+            .notes(params.getParam(PAR_CARD_TRANSLATE_NOTES, ""))
             .build();
     }
 }

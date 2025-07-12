@@ -38,13 +38,20 @@ public class CardsImpl implements Cards {
         "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
     );
     private static final String ATTR_NAME_LANG = "###lang";
+    private static final String ATTR_NAME_LANG_1 = "###lang1";
+    private static final String ATTR_NAME_LANG_2 = "###lang2";
+    private static final String ATTR_NAME_READONLY_1 = "###readonly1";
+    private static final String ATTR_NAME_READONLY_2 = "###readonly2";
     private static final String ATTR_NAME_DESCR = "###descr";
     private static final String ATTR_NAME_TEXT = "###text";
+    private static final String ATTR_NAME_TEXT_1 = "###text1";
+    private static final String ATTR_NAME_TEXT_2 = "###text2";
     private static final String ATTR_NAME_NOTES = "###notes";
     private static final String ATTR_NAME_HIST = "###hist";
     private static final String ATTR_NAME_CREATED_AT = "###created_at";
     private static final String CARD_EXTENSION = ".card";
     public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg" + CARD_EXTENSION;
+    public static final String CARD_TRANSLATE_FILE_EXTENSION = ".tr" + CARD_EXTENSION;
     public static final DateTimeFormatter HIST_TIME_FORMATTER = DateTimeFormatter.ofPattern(
         "yyyy-MM-dd'T'HH:mm:ss'Z'"
     );
@@ -57,6 +64,8 @@ public class CardsImpl implements Cards {
         try {
             if (file.getName().endsWith(CARD_FILL_GAPS_FILE_EXTENSION)) {
                 return loadFillGapsCard(file);
+            } else if (file.getName().endsWith(CARD_TRANSLATE_FILE_EXTENSION)) {
+                return loadTranslateCard(file);
             }
             throw new Exn("Unsupported type of card " + file.getAbsolutePath());
         } catch (Exception ex) {
@@ -91,6 +100,7 @@ public class CardsImpl implements Cards {
             utils.writeStringToFile(
                 switch (card) {
                     case Card.FillGaps c -> fillGapsCardToString(c);
+                    case Card.Translate c -> translateCardToString(c);
                 },
                 file
             );
@@ -110,6 +120,7 @@ public class CardsImpl implements Cards {
     public List<String> validateCard(Card card) {
         return switch (card) {
             case Card.FillGaps c -> validateFillGapsCard(c);
+            case Card.Translate c -> validateTranslateCard(c);
         };
     }
 
@@ -128,6 +139,17 @@ public class CardsImpl implements Cards {
                 .createdAt(Optional.of(Instant.now()))
                 .lang(dto.getLang())
                 .text(parseText(dto.getText()))
+                .notes(dto.getNotes())
+                .history(List.of())
+                .build();
+            case CardDto.Translate dto -> Card.Translate.builder()
+                .createdAt(Optional.of(Instant.now()))
+                .lang1(dto.getLang1())
+                .readOnly1(dto.isReadOnly1())
+                .text1(dto.getText1())
+                .lang2(dto.getLang2())
+                .readOnly2(dto.isReadOnly2())
+                .text2(dto.getText2())
                 .notes(dto.getNotes())
                 .history(List.of())
                 .build();
@@ -169,6 +191,31 @@ public class CardsImpl implements Cards {
         return res;
     }
 
+    private List<String> validateTranslateCard(Card.Translate card) {
+        ArrayList<String> res = new ArrayList<>();
+        String lang1 = card.getLang1();
+        if (StringUtils.isBlank(lang1)) {
+            res.add("Language1 is not set.");
+        } else if (!settings.getLanguages().contains(lang1)) {
+            res.add(String.format("Language1 '%s' is not registered.", lang1));
+        }
+        String text1 = card.getText1();
+        if (StringUtils.isBlank(text1)) {
+            res.add("Text1 is not set.");
+        }
+        String lang2 = card.getLang2();
+        if (StringUtils.isBlank(lang2)) {
+            res.add("Language2 is not set.");
+        } else if (!settings.getLanguages().contains(lang2)) {
+            res.add(String.format("Language2 '%s' is not registered.", lang2));
+        }
+        String text2 = card.getText2();
+        if (StringUtils.isBlank(text2)) {
+            res.add("Text2 is not set.");
+        }
+        return res;
+    }
+
     protected String fillGapsCardToString(Card.FillGaps card) {
         StringBuilder sb = new StringBuilder();
         sb.append(ATTR_NAME_LANG).append("\n").append(card.getLang());
@@ -176,12 +223,29 @@ public class CardsImpl implements Cards {
         sb.append("\n\n").append(ATTR_NAME_TEXT).append("\n");
         appendText(sb, card.getText());
         sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
+        appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
+        return sb.toString();
+    }
+
+    protected String translateCardToString(Card.Translate card) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ATTR_NAME_LANG_1).append("\n").append(card.getLang1());
+        sb.append("\n\n").append(ATTR_NAME_READONLY_1).append("\n").append(card.isReadOnly1());
+        sb.append("\n\n").append(ATTR_NAME_TEXT_1).append("\n").append(card.getText1());
+        sb.append("\n\n").append(ATTR_NAME_LANG_2).append("\n").append(card.getLang2());
+        sb.append("\n\n").append(ATTR_NAME_READONLY_2).append("\n").append(card.isReadOnly2());
+        sb.append("\n\n").append(ATTR_NAME_TEXT_2).append("\n").append(card.getText2());
+        sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
+        appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
+        return sb.toString();
+    }
+
+    private void appendCreatedAtAndHist(StringBuilder sb, Optional<Instant> createdAt, List<HistRec> hist) {
         sb.append("\n\n").append(ATTR_NAME_CREATED_AT).append("\n").append(
-            card.getCreatedAt().map(this::instantToStr).orElse("")
+            createdAt.map(this::instantToStr).orElse("")
         );
         sb.append("\n\n").append(ATTR_NAME_HIST);
-        appendHistory(sb, card.getHistory());
-        return sb.toString();
+        appendHistory(sb, hist);
     }
 
     private void appendText(StringBuilder sb, List<TextPart> text) {
@@ -239,21 +303,32 @@ public class CardsImpl implements Cards {
         return parseFillGapsCard(utils.readStringFromFile(file), Optional.of(file));
     }
 
+    private Card loadTranslateCard(File file) {
+        return parseTranslateCard(utils.readStringFromFile(file), Optional.of(file));
+    }
+
+    private Card parseTranslateCard(String str, Optional<File> file) {
+        Map<String, List<String>> props = parseProps(str);
+        return Card.Translate.builder()
+            .file(file)
+            .createdAt(getInstantOpt(props, ATTR_NAME_CREATED_AT))
+            .lang1(getStr(props, ATTR_NAME_LANG_1, "").trim())
+            .readOnly1(getBool(props, ATTR_NAME_READONLY_1, false))
+            .text1(getStr(props, ATTR_NAME_TEXT_1, "").trim())
+            .lang2(getStr(props, ATTR_NAME_LANG_2, "").trim())
+            .readOnly2(getBool(props, ATTR_NAME_READONLY_2, false))
+            .text2(getStr(props, ATTR_NAME_TEXT_2, "").trim())
+            .notes(getStr(props, ATTR_NAME_NOTES, "").trim())
+            .history(parseHistory(getStr(props, ATTR_NAME_HIST, "").trim()))
+            .build();
+    }
+
     protected Card parseFillGapsCard(String str, Optional<File> file) {
         Map<String, List<String>> props = parseProps(str);
-        String lang = getStr(props, ATTR_NAME_LANG, "").trim();
         return Card.FillGaps.builder()
             .file(file)
-            .createdAt(
-                Optional.ofNullable(
-                        props.containsKey(ATTR_NAME_CREATED_AT)
-                            ? getStr(props, ATTR_NAME_CREATED_AT, "").trim()
-                            : null
-                    )
-                    .filter(StringUtils::isNotBlank)
-                    .map(Instant::parse)
-            )
-            .lang(lang.trim())
+            .createdAt(getInstantOpt(props, ATTR_NAME_CREATED_AT))
+            .lang(getStr(props, ATTR_NAME_LANG, "").trim())
             .descr(getStr(props, ATTR_NAME_DESCR, "").trim())
             .text(parseText(getStr(props, ATTR_NAME_TEXT, "").trim()))
             .notes(getStr(props, ATTR_NAME_NOTES, "").trim())
@@ -263,6 +338,22 @@ public class CardsImpl implements Cards {
 
     private String getStr(Map<String, List<String>> props, String propName, String defaultValue) {
         return StringUtils.join(props.computeIfAbsent(propName, _ -> List.of(defaultValue)), "\n");
+    }
+
+    private boolean getBool(Map<String, List<String>> props, String propName, boolean defaultValue) {
+        return Boolean.parseBoolean(
+            StringUtils.join(props.computeIfAbsent(propName, _ -> List.of(defaultValue + "")), "\n").trim()
+        );
+    }
+
+    private Optional<Instant> getInstantOpt(Map<String, List<String>> props, String propName) {
+        return Optional.ofNullable(
+                props.containsKey(propName)
+                    ? getStr(props, propName, "").trim()
+                    : null
+            )
+            .filter(StringUtils::isNotBlank)
+            .map(Instant::parse);
     }
 
     protected List<HistRec> parseHistory(String str) {

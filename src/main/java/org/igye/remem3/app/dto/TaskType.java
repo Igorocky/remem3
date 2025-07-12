@@ -26,4 +26,27 @@ public sealed interface TaskType {
             return code;
         }
     }
+
+    @EqualsAndHashCode
+    @ToString
+    final class Translate implements TaskType {
+        @Getter
+        private final String langFrom;
+        @Getter
+        private final String langTo;
+        private String code;
+
+        public Translate(String langFrom, String langTo) {
+            this.langFrom = langFrom;
+            this.langTo = langTo;
+        }
+
+        @Override
+        public String getCode() {
+            if (code == null) {
+                code = String.format("translate:%s->%s", langFrom, langTo);
+            }
+            return code;
+        }
+    }
 }

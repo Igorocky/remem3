@@ -3,7 +3,8 @@ package org.igye.remem3.app.dto;
 import org.igye.remem3.utils.Exn;
 
 public enum CardType {
-    FILL_GAPS("fill_gaps", "Fill Gaps");
+    FILL_GAPS("fill_gaps", "Fill Gaps"),
+    TRANSLATE("translate", "Translate");
 
     private final String code;
     private final String displayName;
@@ -14,7 +15,7 @@ public enum CardType {
     }
 
     public String getCode() {
-        return "";
+        return code;
     }
 
     public String getDisplayName() {

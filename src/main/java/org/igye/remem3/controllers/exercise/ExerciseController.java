@@ -19,6 +19,7 @@ import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.app.task.impl.TaskStateFillGaps;
+import org.igye.remem3.app.task.impl.TaskStateTranslate;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.controllers.components.impl.RepeatStrategyCmpImpl;
@@ -278,8 +279,9 @@ public class ExerciseController extends HtmlBuilder
     }
 
     private Optional<TaskState> makeTaskState(Cards cards, Task task) {
-        return switch (task) {
-            case Task.FillGaps t -> Optional.of(new TaskStateFillGaps(cards, t));
+        return switch (task.getTaskType()) {
+            case TaskType.FillGaps _ -> Optional.of(new TaskStateFillGaps(cards, task));
+            case TaskType.Translate _ -> Optional.of(new TaskStateTranslate());
         };
     }
 

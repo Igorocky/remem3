@@ -9,6 +9,7 @@ import org.igye.remem3.app.dto.fillgaps.TextPart;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,7 +46,7 @@ public sealed interface Card {
         public void copyFrom(Card other) {
             file = other.getFile();
             createdAt = other.getCreatedAt();
-            history = other.getHistory();
+            history = new ArrayList<>(other.getHistory());
             taskTypes = null;
             tasks = null;
             childCopyFrom(other);
@@ -62,7 +63,9 @@ public sealed interface Card {
         @Override
         public List<Task> getTasks() {
             if (tasks == null) {
-                tasks = makeTasks();
+                tasks = getTaskTypes().stream()
+                    .map(taskType -> new Task(this, taskType))
+                    .toList();
             }
             return tasks;
         }
@@ -70,8 +73,6 @@ public sealed interface Card {
         abstract protected void childCopyFrom(Card other);
 
         abstract protected List<TaskType> makeTaskTypes();
-
-        abstract protected List<Task> makeTasks();
     }
 
     @SuperBuilder
@@ -104,10 +105,52 @@ public sealed interface Card {
         protected List<TaskType> makeTaskTypes() {
             return List.of(new TaskType.FillGaps(lang));
         }
+    }
+
+    @SuperBuilder
+    @ToString(callSuper = true)
+    @EqualsAndHashCode(callSuper = true)
+    final class Translate extends BaseCard {
+        @Getter
+        @Builder.Default
+        private String lang1 = "";
+        @Getter
+        @Builder.Default
+        private boolean readOnly1 = false;
+        @Getter
+        @Builder.Default
+        private String text1 = "";
+        @Getter
+        @Builder.Default
+        private String lang2 = "";
+        @Getter
+        @Builder.Default
+        private boolean readOnly2 = false;
+        @Getter
+        @Builder.Default
+        private String text2 = "";
+        @Getter
+        @Builder.Default
+        private String notes = "";
 
         @Override
-        protected List<Task> makeTasks() {
-            return List.of(new Task.FillGaps(this));
+        protected void childCopyFrom(Card card) {
+            Translate other = (Translate) card;
+            lang1 = other.getLang1();
+            readOnly1 = other.isReadOnly1();
+            text1 = other.getText1();
+            lang2 = other.getLang2();
+            readOnly2 = other.isReadOnly2();
+            text2 = other.getText2();
+            notes = other.getNotes();
+        }
+
+        @Override
+        protected List<TaskType> makeTaskTypes() {
+            return List.of(
+                new TaskType.Translate(lang1, lang2),
+                new TaskType.Translate(lang2, lang1)
+            );
         }
     }
 

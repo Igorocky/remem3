@@ -27,7 +27,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private static final String ACT_SHOW_ANS = "ACT_SHOW_ANS";
     private static final String ACT_COMPLETE_TASK = "ACT_COMPLETE_TASK";
 
-    private final Task.FillGaps task;
+    private final Task task;
     private final Card.FillGaps card;
     private List<String> cardErrors;
     private List<TextPart.Gap> gaps;
@@ -37,9 +37,9 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private boolean showHints;
     private boolean showAnswers;
 
-    public TaskStateFillGaps(Cards cards, Task.FillGaps task) {
+    public TaskStateFillGaps(Cards cards, Task task) {
         this.task = task;
-        card = task.getCard();
+        card = (Card.FillGaps) task.getCard();
         cardErrors = cards.validateCard(card);
         if (CollectionUtils.isEmpty(cardErrors)) {
             gaps = card.getText().stream()

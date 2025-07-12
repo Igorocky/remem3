@@ -6,6 +6,7 @@ import lombok.With;
 import org.igye.remem3.app.dto.CardType;
 
 import static org.igye.remem3.app.dto.CardType.FILL_GAPS;
+import static org.igye.remem3.app.dto.CardType.TRANSLATE;
 
 public sealed interface CardDto {
     CardType getType();
@@ -21,6 +22,24 @@ public sealed interface CardDto {
         @Override
         public CardType getType() {
             return FILL_GAPS;
+        }
+    }
+
+    @Builder
+    @Getter
+    @With
+    final class Translate implements CardDto {
+        private String lang1;
+        private boolean readOnly1;
+        private String text1;
+        private String lang2;
+        private boolean readOnly2;
+        private String text2;
+        private String notes;
+
+        @Override
+        public CardType getType() {
+            return TRANSLATE;
         }
     }
 }

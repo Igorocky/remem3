@@ -117,6 +117,10 @@ public class HtmlBuilder {
         return h6(childrenArrayToList(content));
     }
 
+    protected HtmlTag br() {
+        return h("br");
+    }
+
     protected HtmlTag pre(List<? extends HtmlElem> content) {
         return h("pre", content);
     }
