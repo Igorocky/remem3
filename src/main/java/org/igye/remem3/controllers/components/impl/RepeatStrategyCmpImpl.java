@@ -13,8 +13,9 @@ import org.igye.remem3.web.RequestParams;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
-import static org.igye.remem3.app.impl.RepeatStrategyCircle.DEFAULT_MAX_NUM_OF_CIRCLES;
+import static org.igye.remem3.app.impl.RepeatStrategyCircle.MAX_NUM_OF_ROUNDS;
 
 public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategyCmp {
 
@@ -26,14 +27,14 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private final String parCircleRndFactor;
     private double valCircleRndFactor;
 
-    private final String parCircleMaxNumOfCircles;
-    private int valCircleMaxNumOfCircles;
+    private final String parCircleNumOfRounds;
+    private Optional<Integer> valCircleNumOfRounds;
 
     public RepeatStrategyCmpImpl(String baseParamName, RequestParams params) {
         this.baseParamName = baseParamName;
         parStrategyType = makeParamName("TYPE");
         parCircleRndFactor = makeParamName("CIRCLE_RANDOMNESS_FACTOR");
-        parCircleMaxNumOfCircles = makeParamName("CIRCLE_MAX_NUMBER_OF_CIRCLES");
+        parCircleNumOfRounds = makeParamName("CIRCLE_NUMBER_OF_ROUNDS");
 
         valStrategyType = params.hasParam(parStrategyType)
             ? RepeatStrategyType.valueOf(params.getParam(parStrategyType))
@@ -44,9 +45,9 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valCircleRndFactor = params.hasParam(parCircleRndFactor)
                     ? parseCircleRandomnessFactor(params.getParam(parCircleRndFactor))
                     : 0.3;
-                valCircleMaxNumOfCircles = params.hasParam(parCircleMaxNumOfCircles)
-                    ? parseCircleMaxNumOfCircles(params.getParam(parCircleMaxNumOfCircles))
-                    : DEFAULT_MAX_NUM_OF_CIRCLES;
+                valCircleNumOfRounds = params.hasParam(parCircleNumOfRounds)
+                    ? parseCircleNumOfRounds(params.getParam(parCircleNumOfRounds))
+                    : Optional.empty();
             }
         }
     }
@@ -80,7 +81,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     @Override
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
         return switch (valStrategyType) {
-            case CIRCLE -> new RepeatStrategyCircle(tasks, Instant.now(), valCircleRndFactor, valCircleMaxNumOfCircles);
+            case CIRCLE -> new RepeatStrategyCircle(tasks, Instant.now(), valCircleRndFactor, valCircleNumOfRounds);
         };
     }
 
@@ -92,16 +93,16 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             ),
             List.of(
                 text("Rounds"),
-                inpText(parCircleMaxNumOfCircles, String.valueOf(valCircleMaxNumOfCircles), null)
+                inpText(parCircleNumOfRounds, valCircleNumOfRounds.map(String::valueOf).orElse(""), null)
             )
         ));
     }
 
-    private int parseCircleMaxNumOfCircles(String intStr) {
+    private Optional<Integer> parseCircleNumOfRounds(String intStr) {
         try {
-            return Math.max(1, Math.min(Integer.parseInt(intStr), DEFAULT_MAX_NUM_OF_CIRCLES));
+            return Optional.of(Math.max(1, Math.min(Integer.parseInt(intStr), MAX_NUM_OF_ROUNDS)));
         } catch (NumberFormatException e) {
-            return DEFAULT_MAX_NUM_OF_CIRCLES;
+            return Optional.empty();
         }
     }
 

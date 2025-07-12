@@ -23,19 +23,19 @@ import java.util.stream.Collectors;
 
 public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy {
 
-    public static final int DEFAULT_MAX_NUM_OF_CIRCLES = 1000_000;
+    public static final int MAX_NUM_OF_ROUNDS = 1000_000;
 
     private final List<Task> allTasks;
     private final Instant startTime;
     private final double randomnessFactor;
-    private final int maxNumOfRounds;
+    private final Optional<Integer> numOfRounds;
     private final Random rnd;
 
     public RepeatStrategyCircle(
         List<Task> allTasks,
         Instant startTime,
         double randomnessFactor,
-        int maxNumOfRounds
+        Optional<Integer> numOfRounds
     ) {
         if (CollectionUtils.isEmpty(allTasks)) {
             throw new Exn("allTasks cannot be empty.");
@@ -43,7 +43,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         this.allTasks = Collections.unmodifiableList(allTasks);
         this.startTime = startTime;
         this.randomnessFactor = Math.max(0, Math.min(randomnessFactor, 1));
-        this.maxNumOfRounds = Math.max(1, Math.min(maxNumOfRounds, DEFAULT_MAX_NUM_OF_CIRCLES));
+        this.numOfRounds = numOfRounds.map(n -> Math.max(1, Math.min(n, MAX_NUM_OF_ROUNDS)));
         rnd = new Random();
     }
 
@@ -82,7 +82,9 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         return frag(
             div("", text(String.format("Total number of tasks: %s", allTasks.size()))),
             div("", text(String.format("Randomness: %s", randomnessFactor))),
-            div("", text(String.format("Round: %s/%s", round, maxNumOfRounds))),
+            numOfRounds.isPresent()
+                ? div("", text(String.format("Round: %s/%s", round, numOfRounds.get())))
+                : div("", text(String.format("Round: %s", round))),
             div("", text(String.format("Round progress: %s/%s", roundProgress, allTasks.size())))
         );
     }
@@ -106,7 +108,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         Set<String> taskIdsWithMinCnt = counts.entrySet().stream()
             .filter(e -> {
                 int cnt = counts.get(e.getKey());
-                return cnt < maxNumOfRounds && cnt == minCnt;
+                return numOfRounds.map(nr -> cnt < nr).orElse(true) && cnt == minCnt;
             })
             .map(Map.Entry::getKey)
             .collect(Collectors.toSet());
