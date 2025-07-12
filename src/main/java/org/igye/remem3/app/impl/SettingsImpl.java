@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 public class SettingsImpl implements Settings {
     private static final String PROP_DIRECTORIES_WITH_CARDS = "directories_with_cards";
     private static final String PROP_LANGUAGES = "languages";
+    private static final String PROP_CACHE_FILE = "cache_file";
+    private static final String PROP_CARD_EDITOR = "card_editor";
 
     @Builder.Default
     private List<String> languages = Collections.emptyList();
@@ -25,6 +27,8 @@ public class SettingsImpl implements Settings {
     private List<String> directoriesWithCards = Collections.emptyList();
     @Builder.Default
     private String cacheFile = "";
+    @Builder.Default
+    private String cardEditor = "";
 
     public static Settings load(App app) {
         List<String> languages = trimAndSkipEmpty(Collections.unmodifiableList(app.getPropList(PROP_LANGUAGES)));
@@ -47,13 +51,26 @@ public class SettingsImpl implements Settings {
         return SettingsImpl.builder()
             .languages(languages)
             .directoriesWithCards(directoriesWithCards)
-            .cacheFile(app.getPropStr("cache_file"))
+            .cacheFile(getNotBlankProp(app, PROP_CACHE_FILE))
+            .cardEditor(getNotBlankProp(app, PROP_CARD_EDITOR))
             .build();
+    }
+
+    private static String getNotBlankProp(App app, String propName) {
+        String value = app.getPropStr(propName);
+        checkNotBlank(value, propName);
+        return value;
     }
 
     private static void checkNotEmpty(List<String> values, String propName) {
         if (CollectionUtils.isEmpty(values)) {
             throw new Exn(String.format("Property '%s' is empty", propName));
+        }
+    }
+
+    private static void checkNotBlank(String value, String propName) {
+        if (StringUtils.isBlank(value)) {
+            throw new Exn(String.format("The '%s' property must not be blank.", propName));
         }
     }
 

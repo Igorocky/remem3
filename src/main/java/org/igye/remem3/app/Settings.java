@@ -8,4 +8,6 @@ public interface Settings {
     List<String> getLanguages();
 
     List<String> getDirectoriesWithCards();
+
+    String getCardEditor();
 }

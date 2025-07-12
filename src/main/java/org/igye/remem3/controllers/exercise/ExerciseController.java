@@ -1,6 +1,7 @@
 package org.igye.remem3.controllers.exercise;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
@@ -57,6 +58,7 @@ public class ExerciseController extends HtmlBuilder
     private static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
     private static final String ACT_SKIP_TASK = "ACT_SKIP_TASK";
     private static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "ACT_COPY_CARD_PATH_TO_CLIPBOARD";
+    private static final String ACT_OPEN_CARD = "ACT_OPEN_CARD";
 
     private final App app;
     private final Utils utils;
@@ -89,7 +91,11 @@ public class ExerciseController extends HtmlBuilder
                 return makeSetParamsState(settings, cache, params);
             } catch (Exception ex2) {
                 return ExerciseState.SetParams.builder()
-                    .errors(List.of(ex1.getMessage(), ex2.getMessage()))
+                    .errors(
+                        List.of(ex1.getMessage(), ex2.getMessage()).stream()
+                            .distinct()
+                            .toList()
+                    )
                     .build();
             }
         }
@@ -119,6 +125,9 @@ public class ExerciseController extends HtmlBuilder
                 }
                 if (params.hasParam(ACT_COPY_CARD_PATH_TO_CLIPBOARD)) {
                     yield Optional.of(() -> actCopyCardPathToClipboard(st));
+                }
+                if (params.hasParam(ACT_OPEN_CARD)) {
+                    yield Optional.of(() -> actOpenCard(st));
                 }
                 if (st.getTaskState().isPresent()) {
                     for (TaskResult taskRes : st.getTaskState().get().processUserInput(params)) {
@@ -153,8 +162,7 @@ public class ExerciseController extends HtmlBuilder
     @Override
     public String renderState(ExerciseState state) {
         return simplePageWithTitle("Exercise",
-            rndErrors(state.getErrors()),
-            form(
+            CollectionUtils.isNotEmpty(state.getErrors()) ? rndErrors(state.getErrors()) : form(
                 rndStage(state),
                 switch (state) {
                     case ExerciseState.SetParams st -> rndParams(st);
@@ -169,6 +177,15 @@ public class ExerciseController extends HtmlBuilder
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(stringSelection, null);
         return st.withCardPathCopied(true);
+    }
+
+    @SneakyThrows
+    private ExerciseState actOpenCard(ExerciseState.Started st) {
+        new ProcessBuilder(
+            st.getSettings().getCardEditor(),
+            getCurrentCardFileExn(st).getAbsolutePath()
+        ).start();
+        return st;
     }
 
     private ExerciseState actGoToNextTask(ExerciseState.Started st) {
@@ -308,7 +325,8 @@ public class ExerciseController extends HtmlBuilder
                         "Current card: %s ",
                         getCurrentCardFile(st).map(File::getAbsolutePath).orElse("not available")
                     )),
-                    inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy")
+                    inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy"),
+                    inpSubmit(ACT_OPEN_CARD, "open")
                 )),
                 div("", text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),
                 h("br"),
