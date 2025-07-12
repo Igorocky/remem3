@@ -1,4 +1,4 @@
 package org.igye.remem3.html;
 
-public interface HtmlElem {
+public sealed interface HtmlElem permits HtmlFragment, HtmlTag, HtmlText {
 }

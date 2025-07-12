@@ -11,6 +11,7 @@ import org.igye.remem3.utils.Exn;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Getter
@@ -20,6 +21,7 @@ public class SettingsImpl implements Settings {
     private static final String PROP_LANGUAGES = "languages";
     private static final String PROP_CACHE_FILE = "cache_file";
     private static final String PROP_CARD_EDITOR = "card_editor";
+    private static final Pattern SPACE_PAT = Pattern.compile("\\s");
 
     @Builder.Default
     private List<String> languages = Collections.emptyList();
@@ -35,6 +37,11 @@ public class SettingsImpl implements Settings {
         checkNotEmpty(languages, PROP_LANGUAGES);
         if (languages.contains("_")) {
             throw new Exn("The underscore symbol '_' cannot be used as a language name.");
+        }
+        for (String language : languages) {
+            if (SPACE_PAT.matcher(language).find()) {
+                throw new Exn("Language names cannot contains whitespaces.");
+            }
         }
         List<String> directoriesWithCards = trimAndSkipEmpty(
             Collections.unmodifiableList(app.getPropList(PROP_DIRECTORIES_WITH_CARDS))

@@ -282,4 +282,23 @@ class CardsImplTest {
             cards.validateCard(card)
         );
     }
+
+    @Test
+    void histRecToStr() {
+        CardsImpl cards = new CardsImpl(
+            new UtilsImpl(new ObjectMapper()),
+            SettingsImpl.builder().languages(List.of("EN")).build()
+        );
+        Assertions.assertEquals(
+            "2025-07-04T14:14:08Z task-type-123 0.5 NOTES-ABC",
+            cards.histRecToStr(
+                HistRec.builder()
+                    .time(Instant.parse("2025-07-04T14:14:08.038Z"))
+                    .taskType("task-type-123")
+                    .mark(0.5)
+                    .notes("NOTES-ABC")
+                    .build()
+            )
+        );
+    }
 }

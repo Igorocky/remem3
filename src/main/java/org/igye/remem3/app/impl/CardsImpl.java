@@ -18,6 +18,8 @@ import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,6 +45,9 @@ public class CardsImpl implements Cards {
     private static final String ATTR_NAME_CREATED_AT = "###created_at";
     private static final String CARD_EXTENSION = ".card";
     public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg" + CARD_EXTENSION;
+    public static final DateTimeFormatter HIST_TIME_FORMATTER = DateTimeFormatter.ofPattern(
+        "yyyy-MM-dd'T'HH:mm:ss'Z'"
+    );
 
     private final Utils utils;
     private final Settings settings;
@@ -172,7 +177,7 @@ public class CardsImpl implements Cards {
         appendText(sb, card.getText());
         sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
         sb.append("\n\n").append(ATTR_NAME_CREATED_AT).append("\n").append(
-            card.getCreatedAt().map(Instant::toString).orElse("")
+            card.getCreatedAt().map(this::instantToStr).orElse("")
         );
         sb.append("\n\n").append(ATTR_NAME_HIST);
         appendHistory(sb, card.getHistory());
@@ -217,9 +222,13 @@ public class CardsImpl implements Cards {
         history.forEach(histRec -> sb.append("\n").append(histRecToStr(histRec)));
     }
 
-    private String histRecToStr(HistRec histRec) {
+    private String instantToStr(Instant inst) {
+        return HIST_TIME_FORMATTER.format(inst.atOffset(ZoneOffset.UTC));
+    }
+
+    protected String histRecToStr(HistRec histRec) {
         StringBuilder sb = new StringBuilder();
-        sb.append(histRec.getTime().toString())
+        sb.append(instantToStr(histRec.getTime()))
             .append(" ").append(histRec.getTaskType())
             .append(" ").append(histRec.getMark())
             .append(" ").append(histRec.getNotes());

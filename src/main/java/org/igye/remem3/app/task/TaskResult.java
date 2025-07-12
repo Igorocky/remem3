@@ -1,26 +1,12 @@
 package org.igye.remem3.app.task;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Data;
 import org.igye.remem3.app.dto.HistRec;
 
-public sealed interface TaskResult {
+import java.util.Optional;
 
-    @Getter
-    @EqualsAndHashCode
-    @ToString
-    final class SaveHistRec implements TaskResult {
-        private final HistRec histRec;
-
-        public SaveHistRec(HistRec histRec) {
-            this.histRec = histRec;
-        }
-    }
-
-    @Getter
-    @EqualsAndHashCode
-    @ToString
-    final class Completed implements TaskResult {
-    }
+@Data
+public class TaskResult {
+    private Optional<HistRec> histRec = Optional.empty();
+    private Optional<Boolean> completed = Optional.empty();
 }

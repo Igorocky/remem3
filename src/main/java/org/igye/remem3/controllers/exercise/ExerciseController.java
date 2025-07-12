@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class ExerciseController extends HtmlBuilder
-    implements StatefulWebController<ExerciseState, Supplier<ExerciseState>> {
+    implements StatefulWebController<ExerciseState, Supplier<? extends ExerciseState>> {
 
     private static final String PAR_EXERCISE_STAGE = "PAR_EXERCISE_STAGE";
     private static final String PAR_DIR_TO_READ_TASKS_FROM = "PAR_DIR_TO_READ_TASKS_FROM";
@@ -102,7 +102,7 @@ public class ExerciseController extends HtmlBuilder
     }
 
     @Override
-    public Optional<Supplier<ExerciseState>> decodeAction(RequestParams params, ExerciseState state) {
+    public Optional<Supplier<? extends ExerciseState>> decodeAction(RequestParams params, ExerciseState state) {
         if (CollectionUtils.isNotEmpty(state.getErrors())) {
             return Optional.empty();
         }
@@ -130,16 +130,9 @@ public class ExerciseController extends HtmlBuilder
                     yield Optional.of(() -> actOpenCard(st));
                 }
                 if (st.getTaskState().isPresent()) {
-                    for (TaskResult taskRes : st.getTaskState().get().processUserInput(params)) {
-                        switch (taskRes) {
-                            case TaskResult.SaveHistRec hist -> {
-                                File file = getCurrentCardFileExn(st);
-                                st.getCards().appendHistRecToFile(file, hist.getHistRec());
-                                getCurrentCardExn(st).copyFrom(st.getCards().loadCard(file));
-                            }
-                            case TaskResult.Completed _ -> actGoToNextTask(st);
-                        }
-                    }
+                    yield Optional.of(() ->
+                        actProcessTaskResults(st, st.getTaskState().get().processUserInput(params))
+                    );
                 }
                 yield Optional.empty();
             }
@@ -147,7 +140,7 @@ public class ExerciseController extends HtmlBuilder
     }
 
     @Override
-    public ExerciseState updateState(ExerciseState state, Supplier<ExerciseState> action) {
+    public ExerciseState updateState(ExerciseState state, Supplier<? extends ExerciseState> action) {
         return action.get();
     }
 
@@ -172,6 +165,18 @@ public class ExerciseController extends HtmlBuilder
         ).toString();
     }
 
+    private ExerciseState actProcessTaskResults(ExerciseState.Started st, TaskResult taskResult) {
+        if (taskResult.getHistRec().isPresent()) {
+            File file = getCurrentCardFileExn(st);
+            st.getCards().appendHistRecToFile(file, taskResult.getHistRec().get());
+            getCurrentCardExn(st).copyFrom(st.getCards().loadCard(file));
+        }
+        if (taskResult.getCompleted().orElse(false)) {
+            return actGoToNextTask(st);
+        }
+        return st;
+    }
+
     private ExerciseState actCopyCardPathToClipboard(ExerciseState.Started st) {
         StringSelection stringSelection = new StringSelection(getCurrentCardFileExn(st).getAbsolutePath());
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -188,7 +193,10 @@ public class ExerciseController extends HtmlBuilder
         return st;
     }
 
-    private ExerciseState actGoToNextTask(ExerciseState.Started st) {
+    private ExerciseState.Started actGoToNextTask(ExerciseState.Started st) {
+        getCurrentCard(st).ifPresent(card ->
+            card.copyFrom(st.getCards().loadCard(getCurrentCardFileExn(st)))
+        );
         Optional<List<Task>> nextTasksOpt = st.getNextTasks().flatMap(tasks -> {
             if (tasks.size() < 2) {
                 return st.getRepeatStrategy().getNextTasks();
@@ -206,7 +214,7 @@ public class ExerciseController extends HtmlBuilder
         Task nextTask = nextTasksOpt.get().getFirst();
         return st
             .withNextTasks(nextTasksOpt)
-            .withTaskState(makeTaskState(nextTask));
+            .withTaskState(makeTaskState(st.getCards(), nextTask));
     }
 
     private Optional<Card> getCurrentCard(ExerciseState.Started st) {
@@ -263,13 +271,15 @@ public class ExerciseController extends HtmlBuilder
             .repeatStrategy(repeatStrategy)
             .showParams(st.getCache().getBool(PAR_SHOW_EXERCISE_PARAMS, false))
             .nextTasks(nextTasks)
-            .taskState(nextTasks.flatMap(nt -> nt.isEmpty() ? Optional.empty() : makeTaskState(nt.getFirst())))
+            .taskState(nextTasks.flatMap(nt ->
+                nt.isEmpty() ? Optional.empty() : makeTaskState(st.getCards(), nt.getFirst())
+            ))
             .build();
     }
 
-    private Optional<TaskState> makeTaskState(Task task) {
+    private Optional<TaskState> makeTaskState(Cards cards, Task task) {
         return switch (task) {
-            case Task.FillGaps t -> Optional.of(new TaskStateFillGaps(t));
+            case Task.FillGaps t -> Optional.of(new TaskStateFillGaps(cards, t));
         };
     }
 
@@ -317,16 +327,16 @@ public class ExerciseController extends HtmlBuilder
                 ? "All available in the directory"
                 : st.getTaskTypes().stream().sorted().collect(Collectors.joining(", "));
             Boolean historyUpdated = st.getTaskState().map(TaskState::isHistoryUpdated).orElse(false);
+            Optional<String> cardPath = getCurrentCardFile(st).map(File::getAbsolutePath);
             params = frag(
                 div("", text(String.format("Directory: %s", st.getDir()))),
                 div("", text(String.format("Task types: %s", taskTypesStr))),
                 div("", frag(
-                    text(String.format(
-                        "Current card: %s ",
-                        getCurrentCardFile(st).map(File::getAbsolutePath).orElse("not available")
-                    )),
-                    inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy path"),
-                    inpSubmit(ACT_OPEN_CARD, "open")
+                    text(String.format("Current card: %s ", cardPath.orElse("not available"))),
+                    cardPath.isEmpty() ? null : frag(
+                        inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy path"),
+                        inpSubmit(ACT_OPEN_CARD, "open")
+                    )
                 )),
                 div("", text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),
                 h("br"),

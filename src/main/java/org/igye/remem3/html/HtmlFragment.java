@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class HtmlFragment implements HtmlElem {
+public final class HtmlFragment implements HtmlElem {
     private final List<? extends HtmlElem> children;
 
     public HtmlFragment(List<? extends HtmlElem> children) {
