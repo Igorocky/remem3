@@ -8,5 +8,7 @@ import java.util.List;
 public interface TaskState {
     List<TaskResult> processUserInput(RequestParams params);
 
+    boolean isHistoryUpdated();
+
     HtmlElem render();
 }

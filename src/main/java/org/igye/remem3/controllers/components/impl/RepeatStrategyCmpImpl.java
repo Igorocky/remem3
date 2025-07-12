@@ -52,6 +52,11 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     }
 
     @Override
+    public RepeatStrategyType getStrategyType() {
+        return valStrategyType;
+    }
+
+    @Override
     public HtmlElem render() {
         return frag(
             table(List.of(List.of(

@@ -30,6 +30,11 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     }
 
     @Override
+    public boolean isHistoryUpdated() {
+        return histRecOpt.isPresent();
+    }
+
+    @Override
     public HtmlElem render() {
         return frag(
             h6(text(String.format("Fill gaps in %s language", card.getLang()))),

@@ -11,6 +11,7 @@ import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -49,6 +50,34 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
 
     @Override
     public Optional<List<Task>> getNextTasks() {
+        Stats stats = getStats();
+        Map<String, Instant> taskLastTime = stats.getHist().entrySet().stream()
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                ent -> ent.getValue().isEmpty() ? startTime : ent.getValue().getLast().getTime()
+            ));
+        List<Task> tasksToSelectFrom = allTasks.stream()
+            .filter(task -> stats.getTaskIdsWithMinCnt().contains(task.getId()))
+            .sorted(Comparator.comparing(task -> taskLastTime.get(task.getId())))
+            .limit(Math.max(1L, Math.round(allTasks.size() * randomnessFactor)))
+            .toList();
+        if (tasksToSelectFrom.isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(List.of(tasksToSelectFrom.get(rnd.nextInt(tasksToSelectFrom.size()))));
+        }
+    }
+
+    @Override
+    public HtmlElem renderParams() {
+        Stats stats = getStats();
+        return frag(
+            div("", text(String.format("Total number of tasks: %s", allTasks.size()))),
+            div("", text(String.format("Start time: %s", startTime.atZone(ZoneId.systemDefault()))))
+        );
+    }
+
+    private Stats getStats() {
         Map<String, List<HistRec>> hist = allTasks.stream()
             .collect(Collectors.toMap(
                 Task::getId,
@@ -71,31 +100,20 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             })
             .map(Map.Entry::getKey)
             .collect(Collectors.toSet());
-        Map<String, Instant> taskLastTime = hist.entrySet().stream()
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                ent -> ent.getValue().isEmpty() ? startTime : ent.getValue().getLast().getTime()
-            ));
-        List<Task> tasksToSelectFrom = allTasks.stream()
-            .filter(task -> taskIdsWithMinCnt.contains(task.getId()))
-            .sorted(Comparator.comparing(task -> taskLastTime.get(task.getId())))
-            .limit(Math.max(1L, Math.round(allTasks.size() * randomnessFactor)))
-            .toList();
-        if (tasksToSelectFrom.isEmpty()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(List.of(tasksToSelectFrom.get(rnd.nextInt(tasksToSelectFrom.size()))));
-        }
-    }
-
-    @Override
-    public HtmlElem renderStats() {
-        return text(String.format("Total number of tasks: %s", allTasks.size()));
+        return Stats.builder()
+            .hist(hist)
+            .counts(counts)
+            .minCnt(minCnt)
+            .taskIdsWithMinCnt(taskIdsWithMinCnt)
+            .build();
     }
 
     @Getter
     @Builder
     private static class Stats {
         private Map<String, List<HistRec>> hist;
+        private Map<String, Integer> counts;
+        private int minCnt;
+        private Set<String> taskIdsWithMinCnt;
     }
 }

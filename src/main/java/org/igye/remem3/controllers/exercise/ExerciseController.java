@@ -15,6 +15,7 @@ import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
+import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.app.task.impl.TaskStateFillGaps;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
@@ -107,8 +108,25 @@ public class ExerciseController extends HtmlBuilder
                 if (params.hasParam(ACT_TOGGLE_SHOW_EXERCISE_PARAMS)) {
                     yield Optional.of(() -> actToggleShowParams(st));
                 }
-                if (params.hasParam(ACT_SKIP_TASK)) {
+                if (params.hasParam(ACT_SKIP_TASK) || params.hasParam(ACT_REFRESH_EXERCISE)) {
                     yield Optional.of(() -> actGoToNextTask(st));
+                }
+                if (st.getTaskState().isPresent()) {
+                    for (TaskResult taskRes : st.getTaskState().get().processUserInput(params)) {
+                        switch (taskRes) {
+                            case TaskResult.SaveHistRec hist -> {
+                                Card card = getCurrentCardExn(st);
+                                Optional<File> fileOpt = card.getFile();
+                                if (fileOpt.isEmpty()) {
+                                    throw new Exn("Cannot determine the file for the current task.");
+                                }
+                                File file = fileOpt.get();
+                                st.getCards().appendHistRecToFile(file, hist.getHistRec());
+                                card.copyFrom(st.getCards().loadCard(file));
+                            }
+                            case TaskResult.Completed _ -> actGoToNextTask(st);
+                        }
+                    }
                 }
                 yield Optional.empty();
             }
@@ -144,9 +162,7 @@ public class ExerciseController extends HtmlBuilder
 
     private ExerciseState actGoToNextTask(ExerciseState.Started st) {
         Optional<List<Task>> nextTasksOpt = st.getNextTasks().flatMap(tasks -> {
-            if (tasks.isEmpty()) {
-                throw new Exn("tasks.isEmpty()");
-            } else if (tasks.size() == 1) {
+            if (tasks.size() < 2) {
                 return st.getRepeatStrategy().getNextTasks();
             } else {
                 ArrayList<Task> tail = new ArrayList<>(tasks);
@@ -165,11 +181,21 @@ public class ExerciseController extends HtmlBuilder
             .withTaskState(makeTaskState(nextTask));
     }
 
-    private Optional<File> getCurrentCardFile(ExerciseState.Started st) {
+    private Optional<Card> getCurrentCard(ExerciseState.Started st) {
+        return st.getNextTasks()
+            .flatMap(nextTasks -> nextTasks.isEmpty() ? Optional.empty() : Optional.of(nextTasks.getFirst()))
+            .map(Task::getCard);
+    }
+
+    private Card getCurrentCardExn(ExerciseState.Started st) {
         return st.getNextTasks()
             .flatMap(nextTasks -> nextTasks.isEmpty() ? Optional.empty() : Optional.of(nextTasks.getFirst()))
             .map(Task::getCard)
-            .flatMap(Card::getFile);
+            .orElseThrow(() -> new Exn("Cannot get the card for the curent task."));
+    }
+
+    private Optional<File> getCurrentCardFile(ExerciseState.Started st) {
+        return getCurrentCard(st).flatMap(Card::getFile);
     }
 
     private ExerciseState actToggleShowParams(ExerciseState.Started st) {
@@ -265,14 +291,20 @@ public class ExerciseController extends HtmlBuilder
                     "Current card: %s",
                     getCurrentCardFile(st).map(File::getAbsolutePath).orElse("not available")
                 ))),
-                div("", st.getRepeatStrategy().renderStats())
+                div("", text(String.format(
+                    "History updated: %s",
+                    st.getTaskState().map(ts -> ts.isHistoryUpdated() ? "Yes" : "No").orElse("No")
+                ))),
+                div("", text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
+                h("br"),
+                div("", st.getRepeatStrategy().renderParams())
             );
         } else {
             params = null;
         }
-        boolean completed = st.getNextTasks().isEmpty();
+        boolean exerciseCompleted = st.getNextTasks().isEmpty();
         HtmlElem taskContent;
-        if (completed) {
+        if (exerciseCompleted) {
             taskContent = frag(
                 text("You have completed this exercise. "),
                 inpSubmit(ACT_CANCEL_EXERCISE, "Done")
@@ -288,12 +320,12 @@ public class ExerciseController extends HtmlBuilder
         return frag(
             h4(text("Exercise")),
             inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS, st.isShowParams() ? "Hide parameters" : "Show parameters"),
-            inpSubmit(ACT_SKIP_TASK, "Skip this task"),
+            st.getTaskState().isPresent() ? inpSubmit(ACT_SKIP_TASK, "Skip this task") : null,
             params,
             h("hr"),
             taskContent,
             h("hr"),
-            completed ? null : inpSubmit(ACT_CANCEL_EXERCISE, "Cancel")
+            exerciseCompleted ? null : inpSubmit(ACT_CANCEL_EXERCISE, "Cancel")
         );
     }
 

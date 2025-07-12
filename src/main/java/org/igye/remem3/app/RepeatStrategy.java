@@ -9,5 +9,5 @@ import java.util.Optional;
 public interface RepeatStrategy {
     Optional<List<Task>> getNextTasks();
 
-    HtmlElem renderStats();
+    HtmlElem renderParams();
 }
