@@ -89,15 +89,15 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             ? text(card.getDescr())
             : text(String.format("Fill gaps in %s language", card.getLang()));
         return frag(
-            descr,
+            div(descr),
             h("br"),
-            rndTextWithGaps(),
+            div(rndTextWithGaps()),
             h("br"),
-            rndButtons(),
+            div(rndButtons()),
             h("br"),
-            rndAnswers(),
+            div(rndAnswers()),
             h("br"),
-            rndNote()
+            div(rndNote())
         );
     }
 
@@ -112,10 +112,12 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         ArrayList<List<? extends HtmlElem>> rows = new ArrayList<>();
         for (int i = 0; i < gaps.size(); i++) {
             TextPart.Gap gap = gaps.get(i);
+            if (StringUtils.isBlank(gap.getHint()) && StringUtils.isBlank(gap.getHint())) {
+                continue;
+            }
             String userAns = userAnswers.get(i);
             ArrayList<HtmlElem> row = new ArrayList<>();
             rows.add(row);
-            row.add(text((i + 1) + ")"));
             boolean ansIsCorrect = gap.getAnswer().equals(userAns);
             if (ansIsCorrect || showAnswers) {
                 row.add(h("b", text(gap.getAnswer())));
@@ -149,19 +151,15 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         if (showAnswers || allAnsAreCorrect) {
             showAnswerBtn.addAttr("disabled", "");
         }
-        HtmlTag nextTaskBtn = inpSubmit(ACT_COMPLETE_TASK, "Next task");
-        if (!allAnsAreCorrect) {
-            nextTaskBtn.addAttr("disabled", "");
-        }
 
         return frag(
             submitAnswersBtn,
             showHintBtn,
             showAnswerBtn,
-            nextTaskBtn,
-            allAnsAreCorrect
-                ? inpText("", "", ACT_COMPLETE_TASK).addAttr("size", "1")
-                : null
+            !allAnsAreCorrect ? null : frag(
+                inpSubmit(ACT_COMPLETE_TASK, "Next task").addAttr("style", "background-color: green;"),
+                inpText("", "", ACT_COMPLETE_TASK).addAttr("size", "1")
+            )
         );
     }
 

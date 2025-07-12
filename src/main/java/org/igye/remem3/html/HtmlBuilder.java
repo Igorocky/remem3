@@ -57,6 +57,7 @@ public class HtmlBuilder {
     protected HtmlTag simplePageWithTitle(String title, List<? extends HtmlElem> children) {
         return h("html",
             h("head",
+                h("meta", Map.of("charset", "UTF-8")),
                 h("title", text(title)),
                 h("script", Map.of("type", "text/javascript", "src", contextPath + "/remem-utils.js"), text(""))
             ),
@@ -130,6 +131,14 @@ public class HtmlBuilder {
 
     protected HtmlTag div(String style, HtmlElem... content) {
         return div(style, childrenArrayToList(content));
+    }
+
+    protected HtmlTag div(List<? extends HtmlElem> children) {
+        return div("", children);
+    }
+
+    protected HtmlTag div(HtmlElem... content) {
+        return div("", content);
     }
 
     protected HtmlTag table(List<? extends List<? extends HtmlElem>> tableData) {

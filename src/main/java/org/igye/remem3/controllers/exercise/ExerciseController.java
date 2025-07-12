@@ -329,19 +329,19 @@ public class ExerciseController extends HtmlBuilder
             Boolean historyUpdated = st.getTaskState().map(TaskState::isHistoryUpdated).orElse(false);
             Optional<String> cardPath = getCurrentCardFile(st).map(File::getAbsolutePath);
             params = frag(
-                div("", text(String.format("Directory: %s", st.getDir()))),
-                div("", text(String.format("Task types: %s", taskTypesStr))),
-                div("", frag(
+                div(text(String.format("Directory: %s", st.getDir()))),
+                div(text(String.format("Task types: %s", taskTypesStr))),
+                div(frag(
                     text(String.format("Current card: %s ", cardPath.orElse("not available"))),
                     cardPath.isEmpty() ? null : frag(
                         inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy path"),
                         inpSubmit(ACT_OPEN_CARD, "open")
                     )
                 )),
-                div("", text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),
+                div(text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),
                 h("br"),
-                div("", text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
-                div("", st.getRepeatStrategy().renderParams(historyUpdated))
+                div(text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
+                div(st.getRepeatStrategy().renderParams(historyUpdated))
             );
         } else {
             params = null;

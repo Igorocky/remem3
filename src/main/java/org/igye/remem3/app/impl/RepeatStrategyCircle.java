@@ -80,12 +80,12 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             roundProgress = allTasks.size() - numOfTasksWithMinCnt + (historyUpdated ? 0 : 1);
         }
         return frag(
-            div("", text(String.format("Total number of tasks: %s", allTasks.size()))),
-            div("", text(String.format("Randomness: %s", randomnessFactor))),
+            div(text(String.format("Total number of tasks: %s", allTasks.size()))),
+            div(text(String.format("Randomness: %s", randomnessFactor))),
             numOfRounds.isPresent()
-                ? div("", text(String.format("Round: %s/%s", round, numOfRounds.get())))
-                : div("", text(String.format("Round: %s", round))),
-            div("", text(String.format("Round progress: %s/%s", roundProgress, allTasks.size())))
+                ? div(text(String.format("Round: %s/%s", round, numOfRounds.get())))
+                : div(text(String.format("Round: %s", round))),
+            div(text(String.format("Round progress: %s/%s", roundProgress, allTasks.size())))
         );
     }
 
