@@ -150,6 +150,7 @@ class CardsImplTest {
         Card.FillGaps card = Card.FillGaps.builder()
             .createdAt(Optional.of(Instant.now()))
             .lang("Lang1")
+            .descr("Description")
             .text(
                 List.of(
                     TextPart.Text.builder().text("abc").build(),

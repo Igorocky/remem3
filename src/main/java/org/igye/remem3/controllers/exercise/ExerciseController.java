@@ -325,7 +325,7 @@ public class ExerciseController extends HtmlBuilder
                         "Current card: %s ",
                         getCurrentCardFile(st).map(File::getAbsolutePath).orElse("not available")
                     )),
-                    inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy"),
+                    inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy path"),
                     inpSubmit(ACT_OPEN_CARD, "open")
                 )),
                 div("", text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),

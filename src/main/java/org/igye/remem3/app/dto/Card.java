@@ -83,6 +83,9 @@ public sealed interface Card {
         private String lang = "";
         @Getter
         @Builder.Default
+        private String descr = "";
+        @Getter
+        @Builder.Default
         private List<TextPart> text = List.of();
         @Getter
         @Builder.Default
@@ -92,6 +95,7 @@ public sealed interface Card {
         protected void childCopyFrom(Card card) {
             FillGaps other = (FillGaps) card;
             lang = other.getLang();
+            descr = other.getDescr();
             text = other.getText();
             notes = other.getNotes();
         }

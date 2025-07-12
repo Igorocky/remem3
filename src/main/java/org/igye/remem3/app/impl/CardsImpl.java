@@ -36,6 +36,7 @@ public class CardsImpl implements Cards {
         "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
     );
     private static final String ATTR_NAME_LANG = "###lang";
+    private static final String ATTR_NAME_DESCR = "###descr";
     private static final String ATTR_NAME_TEXT = "###text";
     private static final String ATTR_NAME_NOTES = "###notes";
     private static final String ATTR_NAME_HIST = "###hist";
@@ -166,6 +167,7 @@ public class CardsImpl implements Cards {
     protected String fillGapsCardToString(Card.FillGaps card) {
         StringBuilder sb = new StringBuilder();
         sb.append(ATTR_NAME_LANG).append("\n").append(card.getLang());
+        sb.append("\n\n").append(ATTR_NAME_DESCR).append("\n").append(card.getDescr());
         sb.append("\n\n").append(ATTR_NAME_TEXT).append("\n");
         appendText(sb, card.getText());
         sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
@@ -229,23 +231,29 @@ public class CardsImpl implements Cards {
     }
 
     protected Card parseFillGapsCard(String str, Optional<File> file) {
-        Map<String, String> props = parseProps(str);
-        String lang = props.get(ATTR_NAME_LANG);
-        if (StringUtils.isBlank(lang)) {
-            lang = "";
-        }
+        Map<String, List<String>> props = parseProps(str);
+        String lang = getStr(props, ATTR_NAME_LANG, "").trim();
         return Card.FillGaps.builder()
             .file(file)
             .createdAt(
-                Optional.ofNullable(props.get(ATTR_NAME_CREATED_AT))
+                Optional.ofNullable(
+                        props.containsKey(ATTR_NAME_CREATED_AT)
+                            ? getStr(props, ATTR_NAME_CREATED_AT, "").trim()
+                            : null
+                    )
                     .filter(StringUtils::isNotBlank)
                     .map(Instant::parse)
             )
             .lang(lang.trim())
-            .text(parseText(props.computeIfAbsent(ATTR_NAME_TEXT, _ -> "")))
-            .notes(props.computeIfAbsent(ATTR_NAME_NOTES, _ -> "").trim())
-            .history(parseHistory(props.computeIfAbsent(ATTR_NAME_HIST, _ -> "")))
+            .descr(getStr(props, ATTR_NAME_DESCR, "").trim())
+            .text(parseText(getStr(props, ATTR_NAME_TEXT, "").trim()))
+            .notes(getStr(props, ATTR_NAME_NOTES, "").trim())
+            .history(parseHistory(getStr(props, ATTR_NAME_HIST, "").trim()))
             .build();
+    }
+
+    private String getStr(Map<String, List<String>> props, String propName, String defaultValue) {
+        return StringUtils.join(props.computeIfAbsent(propName, _ -> List.of(defaultValue)), "\n");
     }
 
     protected List<HistRec> parseHistory(String str) {
@@ -308,18 +316,14 @@ public class CardsImpl implements Cards {
         return gapParts[i].trim();
     }
 
-    private Map<String, String> parseProps(String str) {
-        HashMap<String, String> res = new HashMap<>();
+    private Map<String, List<String>> parseProps(String str) {
+        HashMap<String, List<String>> res = new HashMap<>();
         List<String> buf = null;
         String key = null;
-        List<String> lines = Arrays.stream(str.split("[\\n\\r]+"))
-            .filter(StringUtils::isNotBlank)
-            .map(String::trim)
-            .toList();
-        for (String line : lines) {
+        for (String line : str.split("[\\n\\r]+")) {
             if (line.startsWith("###")) {
                 if (key != null) {
-                    res.put(key, StringUtils.join(buf, "\n"));
+                    res.put(key, buf);
                 }
                 key = line.trim();
                 buf = new ArrayList<>();
@@ -330,7 +334,7 @@ public class CardsImpl implements Cards {
             }
         }
         if (key != null) {
-            res.put(key, StringUtils.join(buf, "\n"));
+            res.put(key, buf);
         }
         return res;
     }
