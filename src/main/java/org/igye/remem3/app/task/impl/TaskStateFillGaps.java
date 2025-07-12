@@ -109,33 +109,35 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     }
 
     private HtmlElem rndAnswers() {
-        ArrayList<List<? extends HtmlElem>> rows = new ArrayList<>();
+        ArrayList<HtmlElem> items = new ArrayList<>();
+        boolean nothingToShow = true;
         for (int i = 0; i < gaps.size(); i++) {
             TextPart.Gap gap = gaps.get(i);
-            if (StringUtils.isBlank(gap.getHint()) && StringUtils.isBlank(gap.getHint())) {
-                continue;
-            }
             String userAns = userAnswers.get(i);
-            ArrayList<HtmlElem> row = new ArrayList<>();
-            rows.add(row);
+            ArrayList<HtmlElem> listItem = new ArrayList<>();
             boolean ansIsCorrect = gap.getAnswer().equals(userAns);
             if (ansIsCorrect || showAnswers) {
-                row.add(h("b", text(gap.getAnswer())));
-            } else {
-                row.add(text(""));
+                listItem.add(h("b", text(gap.getAnswer())));
+                nothingToShow = false;
             }
-            if (ansIsCorrect || showHints) {
-                row.add(text(gap.getHint()));
-            } else {
-                row.add(text(""));
+            if (StringUtils.isNotBlank(gap.getHint()) && (ansIsCorrect || showHints)) {
+                if (!listItem.isEmpty()) {
+                    listItem.add(h("br"));
+                }
+                listItem.add(text(gap.getHint()));
+                nothingToShow = false;
             }
-            if (ansIsCorrect) {
-                row.add(text(gap.getNotes()));
-            } else {
-                row.add(text(""));
+            if (StringUtils.isNotBlank(gap.getNotes()) && ansIsCorrect) {
+                listItem.add(h("br"));
+                listItem.add(text(gap.getNotes()));
+                nothingToShow = false;
             }
+            items.add(frag(listItem));
         }
-        return table(rows);
+        if (nothingToShow) {
+            return null;
+        }
+        return ol(items);
     }
 
     private HtmlElem rndButtons() {
