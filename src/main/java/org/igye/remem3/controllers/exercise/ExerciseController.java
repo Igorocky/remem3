@@ -284,6 +284,7 @@ public class ExerciseController extends HtmlBuilder
             String taskTypesStr = st.getTaskTypes().isEmpty()
                 ? "All available in the directory"
                 : st.getTaskTypes().stream().sorted().collect(Collectors.joining(", "));
+            Boolean historyUpdated = st.getTaskState().map(TaskState::isHistoryUpdated).orElse(false);
             params = frag(
                 div("", text(String.format("Directory: %s", st.getDir()))),
                 div("", text(String.format("Task types: %s", taskTypesStr))),
@@ -291,13 +292,10 @@ public class ExerciseController extends HtmlBuilder
                     "Current card: %s",
                     getCurrentCardFile(st).map(File::getAbsolutePath).orElse("not available")
                 ))),
-                div("", text(String.format(
-                    "History updated: %s",
-                    st.getTaskState().map(ts -> ts.isHistoryUpdated() ? "Yes" : "No").orElse("No")
-                ))),
-                div("", text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
+                div("", text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),
                 h("br"),
-                div("", st.getRepeatStrategy().renderParams())
+                div("", text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
+                div("", st.getRepeatStrategy().renderParams(historyUpdated))
             );
         } else {
             params = null;

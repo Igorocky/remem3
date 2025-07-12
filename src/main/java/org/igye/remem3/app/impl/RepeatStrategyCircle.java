@@ -11,7 +11,6 @@ import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -29,14 +28,14 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     private final List<Task> allTasks;
     private final Instant startTime;
     private final double randomnessFactor;
-    private final int maxNumOfCircles;
+    private final int maxNumOfRounds;
     private final Random rnd;
 
     public RepeatStrategyCircle(
         List<Task> allTasks,
         Instant startTime,
         double randomnessFactor,
-        int maxNumOfCircles
+        int maxNumOfRounds
     ) {
         if (CollectionUtils.isEmpty(allTasks)) {
             throw new Exn("allTasks cannot be empty.");
@@ -44,7 +43,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         this.allTasks = Collections.unmodifiableList(allTasks);
         this.startTime = startTime;
         this.randomnessFactor = Math.max(0, Math.min(randomnessFactor, 1));
-        this.maxNumOfCircles = Math.max(1, Math.min(maxNumOfCircles, DEFAULT_MAX_NUM_OF_CIRCLES));
+        this.maxNumOfRounds = Math.max(1, Math.min(maxNumOfRounds, DEFAULT_MAX_NUM_OF_CIRCLES));
         rnd = new Random();
     }
 
@@ -69,11 +68,22 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     }
 
     @Override
-    public HtmlElem renderParams() {
+    public HtmlElem renderParams(boolean historyUpdated) {
         Stats stats = getStats();
+        int minCnt = stats.getMinCnt();
+        int numOfTasksWithMinCnt = stats.getTaskIdsWithMinCnt().size();
+        int round = historyUpdated && numOfTasksWithMinCnt == allTasks.size() ? minCnt : minCnt + 1;
+        int roundProgress;
+        if (numOfTasksWithMinCnt == allTasks.size()) {
+            roundProgress = historyUpdated ? allTasks.size() : 1;
+        } else {
+            roundProgress = allTasks.size() - numOfTasksWithMinCnt + (historyUpdated ? 0 : 1);
+        }
         return frag(
             div("", text(String.format("Total number of tasks: %s", allTasks.size()))),
-            div("", text(String.format("Start time: %s", startTime.atZone(ZoneId.systemDefault()))))
+            div("", text(String.format("Randomness: %s", randomnessFactor))),
+            div("", text(String.format("Round: %s/%s", round, maxNumOfRounds))),
+            div("", text(String.format("Round progress: %s/%s", roundProgress, allTasks.size())))
         );
     }
 
@@ -96,7 +106,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         Set<String> taskIdsWithMinCnt = counts.entrySet().stream()
             .filter(e -> {
                 int cnt = counts.get(e.getKey());
-                return cnt < maxNumOfCircles && cnt == minCnt;
+                return cnt < maxNumOfRounds && cnt == minCnt;
             })
             .map(Map.Entry::getKey)
             .collect(Collectors.toSet());

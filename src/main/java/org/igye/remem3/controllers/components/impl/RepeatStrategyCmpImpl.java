@@ -87,11 +87,11 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private HtmlElem rndCircleParams() {
         return table(List.of(
             List.of(
-                text("Randomness factor"),
+                text("Randomness"),
                 inpText(parCircleRndFactor, String.valueOf(valCircleRndFactor), null)
             ),
             List.of(
-                text("Number of circles"),
+                text("Rounds"),
                 inpText(parCircleMaxNumOfCircles, String.valueOf(valCircleMaxNumOfCircles), null)
             )
         ));
