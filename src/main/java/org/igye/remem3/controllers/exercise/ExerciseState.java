@@ -55,5 +55,6 @@ public sealed interface ExerciseState {
         private boolean showParams;
         private Optional<List<Task>> nextTasks;
         private Optional<TaskState> taskState;
+        private boolean cardPathCopied;
     }
 }

@@ -29,6 +29,9 @@ import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,12 +50,13 @@ public class ExerciseController extends HtmlBuilder
     private static final String PAR_EXERCISE_STAGE = "PAR_EXERCISE_STAGE";
     private static final String PAR_DIR_TO_READ_TASKS_FROM = "PAR_DIR_TO_READ_TASKS_FROM";
     private static final String PAR_TASK_TYPE = "PAR_TASK_TYPE";
+    private static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
     private static final String ACT_START_EXERCISE = "ACT_START_EXERCISE";
     private static final String ACT_CANCEL_EXERCISE = "ACT_CANCEL_EXERCISE";
     private static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
     private static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
     private static final String ACT_SKIP_TASK = "ACT_SKIP_TASK";
-    private static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
+    private static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "ACT_COPY_CARD_PATH_TO_CLIPBOARD";
 
     private final App app;
     private final Utils utils;
@@ -74,7 +78,9 @@ public class ExerciseController extends HtmlBuilder
                 : ExerciseStage.SET_PARAMS;
             return switch (stage) {
                 case SET_PARAMS -> makeSetParamsState(settings, cache, params);
-                case STARTED -> startedState != null ? startedState : makeSetParamsState(settings, cache, params);
+                case STARTED -> startedState != null
+                    ? startedState.withCardPathCopied(false)
+                    : makeSetParamsState(settings, cache, params);
             };
         } catch (Exception ex1) {
             try {
@@ -111,18 +117,16 @@ public class ExerciseController extends HtmlBuilder
                 if (params.hasParam(ACT_SKIP_TASK) || params.hasParam(ACT_REFRESH_EXERCISE)) {
                     yield Optional.of(() -> actGoToNextTask(st));
                 }
+                if (params.hasParam(ACT_COPY_CARD_PATH_TO_CLIPBOARD)) {
+                    yield Optional.of(() -> actCopyCardPathToClipboard(st));
+                }
                 if (st.getTaskState().isPresent()) {
                     for (TaskResult taskRes : st.getTaskState().get().processUserInput(params)) {
                         switch (taskRes) {
                             case TaskResult.SaveHistRec hist -> {
-                                Card card = getCurrentCardExn(st);
-                                Optional<File> fileOpt = card.getFile();
-                                if (fileOpt.isEmpty()) {
-                                    throw new Exn("Cannot determine the file for the current task.");
-                                }
-                                File file = fileOpt.get();
+                                File file = getCurrentCardFileExn(st);
                                 st.getCards().appendHistRecToFile(file, hist.getHistRec());
-                                card.copyFrom(st.getCards().loadCard(file));
+                                getCurrentCardExn(st).copyFrom(st.getCards().loadCard(file));
                             }
                             case TaskResult.Completed _ -> actGoToNextTask(st);
                         }
@@ -158,6 +162,13 @@ public class ExerciseController extends HtmlBuilder
                 }
             )
         ).toString();
+    }
+
+    private ExerciseState actCopyCardPathToClipboard(ExerciseState.Started st) {
+        StringSelection stringSelection = new StringSelection(getCurrentCardFileExn(st).getAbsolutePath());
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
+        return st.withCardPathCopied(true);
     }
 
     private ExerciseState actGoToNextTask(ExerciseState.Started st) {
@@ -196,6 +207,10 @@ public class ExerciseController extends HtmlBuilder
 
     private Optional<File> getCurrentCardFile(ExerciseState.Started st) {
         return getCurrentCard(st).flatMap(Card::getFile);
+    }
+
+    private File getCurrentCardFileExn(ExerciseState.Started st) {
+        return getCurrentCardFile(st).orElseThrow(() -> new Exn("Cannot determine the file for the current task."));
     }
 
     private ExerciseState actToggleShowParams(ExerciseState.Started st) {
@@ -288,10 +303,13 @@ public class ExerciseController extends HtmlBuilder
             params = frag(
                 div("", text(String.format("Directory: %s", st.getDir()))),
                 div("", text(String.format("Task types: %s", taskTypesStr))),
-                div("", text(String.format(
-                    "Current card: %s",
-                    getCurrentCardFile(st).map(File::getAbsolutePath).orElse("not available")
-                ))),
+                div("", frag(
+                    text(String.format(
+                        "Current card: %s ",
+                        getCurrentCardFile(st).map(File::getAbsolutePath).orElse("not available")
+                    )),
+                    inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy")
+                )),
                 div("", text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),
                 h("br"),
                 div("", text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
