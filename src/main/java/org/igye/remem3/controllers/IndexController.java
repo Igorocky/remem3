@@ -46,7 +46,7 @@ public class IndexController extends HtmlBuilder implements StatefulWebControlle
             "Example Web App Index",
             paths.stream()
                 .map(path -> frag(
-                    h("br"),
+                    br(),
                     h("a", Map.of("href", path), text(path))
                 ))
                 .toList()

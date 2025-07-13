@@ -315,9 +315,9 @@ public class ExerciseController extends HtmlBuilder
             h4(text("Select exercise")),
             rndDirSelector(st),
             rndTaskTypes(st),
-            h("br"),
+            br(),
             st.getRepeatStrategyCmp().render(),
-            h("br"),
+            br(),
             inpSubmit(ACT_START_EXERCISE, "Start")
         );
     }
@@ -341,7 +341,7 @@ public class ExerciseController extends HtmlBuilder
                     )
                 )),
                 div(text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),
-                h("br"),
+                br(),
                 div(text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
                 div(st.getRepeatStrategy().renderParams(historyUpdated))
             );

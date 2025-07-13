@@ -94,13 +94,13 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             : text(String.format("Fill gaps in %s language", card.getLang()));
         return frag(
             div(descr),
-            h("br"),
+            br(),
             div(rndTextWithGaps()),
-            h("br"),
+            br(),
             div(rndButtons()),
-            h("br"),
+            br(),
             div(rndAnswers()),
-            h("br"),
+            br(),
             div(rndNote())
         );
     }
@@ -126,13 +126,13 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             }
             if (StringUtils.isNotBlank(gap.getHint()) && (ansIsCorrect || showHints)) {
                 if (!listItem.isEmpty()) {
-                    listItem.add(h("br"));
+                    listItem.add(br());
                 }
                 listItem.add(text(gap.getHint()));
                 nothingToShow = false;
             }
             if (StringUtils.isNotBlank(gap.getNotes()) && ansIsCorrect) {
-                listItem.add(h("br"));
+                listItem.add(br());
                 listItem.add(text(gap.getNotes()));
                 nothingToShow = false;
             }

@@ -234,10 +234,10 @@ public class CardsImpl implements Cards {
     protected String translateCardToString(Card.Translate card) {
         StringBuilder sb = new StringBuilder();
         sb.append(ATTR_NAME_LANG_1).append("\n").append(card.getLang1());
-        sb.append("\n\n").append(ATTR_NAME_READONLY_1).append("\n").append(card.isReadOnly1());
+        sb.append("\n\n").append(ATTR_NAME_READONLY_1).append("\n").append(card.isReadOnly1() ? "y" : "n");
         sb.append("\n\n").append(ATTR_NAME_TEXT_1).append("\n").append(card.getText1());
         sb.append("\n\n").append(ATTR_NAME_LANG_2).append("\n").append(card.getLang2());
-        sb.append("\n\n").append(ATTR_NAME_READONLY_2).append("\n").append(card.isReadOnly2());
+        sb.append("\n\n").append(ATTR_NAME_READONLY_2).append("\n").append(card.isReadOnly2() ? "y" : "n");
         sb.append("\n\n").append(ATTR_NAME_TEXT_2).append("\n").append(card.getText2());
         sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
         appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
@@ -345,9 +345,19 @@ public class CardsImpl implements Cards {
     }
 
     private boolean getBool(Map<String, List<String>> props, String propName, boolean defaultValue) {
-        return Boolean.parseBoolean(
-            StringUtils.join(props.computeIfAbsent(propName, _ -> List.of(defaultValue + "")), "\n").trim()
-        );
+        String boolStr = StringUtils.join(
+            props.computeIfAbsent(propName, _ -> List.of(defaultValue + "")),
+            "\n"
+        ).trim();
+        if (StringUtils.isEmpty(boolStr)) {
+            return defaultValue;
+        } else if ("y".equalsIgnoreCase(boolStr) || "true".equalsIgnoreCase(boolStr)) {
+            return true;
+        } else if ("n".equalsIgnoreCase(boolStr) || "false".equalsIgnoreCase(boolStr)) {
+            return false;
+        } else {
+            throw new Exn(String.format("Cannot parse a boolean value '%s'.", boolStr));
+        }
     }
 
     private Optional<Instant> getInstantOpt(Map<String, List<String>> props, String propName) {
