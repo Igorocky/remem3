@@ -1,6 +1,7 @@
 package org.igye.remem3.app.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.igye.remem3.app.App;
 import org.igye.remem3.controllers.IndexController;
@@ -17,6 +18,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.io.File;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +32,10 @@ import java.util.stream.Stream;
 
 public class AppImpl implements App {
 
-    private Utils utils;
+    @Getter
+    private final Clock clock;
+    @Getter
+    private final Utils utils;
     private final Context context;
     private final List<PropertyFileReader> propFiles = new ArrayList<>();
     private final Map<String, StatefulWebController> controllers;
@@ -40,7 +45,8 @@ public class AppImpl implements App {
     }
 
     @SneakyThrows
-    public AppImpl() {
+    public AppImpl(Clock clock) {
+        this.clock = clock;
         this.utils = new UtilsImpl(new ObjectMapper());
         this.context = InitialContext.doLookup("java:comp/env");
         reloadProperties();
@@ -141,11 +147,6 @@ public class AppImpl implements App {
         return Optional.ofNullable(controllers.get(path));
     }
 
-    @Override
-    public Utils getUtils() {
-        return this.utils;
-    }
-
     private String getProp(String propName) {
         try {
             Object valueFromContext = context.lookup(propName);
@@ -171,6 +172,6 @@ public class AppImpl implements App {
     }
 
     private static final class AppHolder {
-        private static final App app = new AppImpl();
+        private static final App app = new AppImpl(Clock.systemDefaultZone());
     }
 }

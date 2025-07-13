@@ -283,7 +283,7 @@ public class ExerciseController extends HtmlBuilder
             case TaskType.FillGaps t ->
                 Optional.of(new TaskStateFillGaps(utils, cards, (Card.FillGaps) task.getCard(), t));
             case TaskType.Translate t ->
-                Optional.of(new TaskStateTranslate(utils, cards, (Card.Translate) task.getCard(), t));
+                Optional.of(new TaskStateTranslate(app.getClock(), utils, cards, (Card.Translate) task.getCard(), t));
         };
     }
 

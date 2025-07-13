@@ -225,7 +225,7 @@ public class HtmlBuilder {
                     Map<String, String> optionAttrs = new HashMap<>();
                     optionAttrs.put("value", option.getLeft());
                     if (option.getLeft().equals(selected)) {
-                        optionAttrs.put("selected", "selected");
+                        optionAttrs.put("selected", "");
                     }
                     return h("option", optionAttrs, option.getRight());
                 })

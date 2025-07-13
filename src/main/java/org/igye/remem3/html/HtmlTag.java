@@ -1,5 +1,6 @@
 package org.igye.remem3.html;
 
+import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.HashMap;
@@ -9,8 +10,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class HtmlTag implements HtmlElem {
+    @Getter
     private final String name;
+    @Getter
     private Map<String, String> attrs;
+    @Getter
     private final List<? extends HtmlElem> children;
 
     public HtmlTag(String name, Map<String, String> attrs, List<? extends HtmlElem> children) {
@@ -24,9 +28,9 @@ public final class HtmlTag implements HtmlElem {
         StringBuilder sb = new StringBuilder();
         sb.append("<").append(name);
         if (attrs != null && !attrs.isEmpty()) {
-            attrs.forEach((attrName, attrValue) -> {
-                sb.append(" ").append(attrName).append("='").append(attrValue).append("'");
-            });
+            attrs.forEach((attrName, attrValue) ->
+                sb.append(" ").append(attrName).append("='").append(attrValue).append("'")
+            );
         }
         if (CollectionUtils.isEmpty(children)) {
             sb.append("/>");

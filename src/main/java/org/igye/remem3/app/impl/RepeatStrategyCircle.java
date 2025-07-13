@@ -11,6 +11,7 @@ import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -55,8 +56,14 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
                 Map.Entry::getKey,
                 ent -> ent.getValue().isEmpty() ? startTime : ent.getValue().getLast().getTime()
             ));
-        List<Task> tasksToSelectFrom = allTasks.stream()
-            .filter(task -> stats.getTaskIdsWithMinCnt().contains(task.getId()))
+        Set<String> taskIdsWithMinCnt = stats.getTaskIdsWithMinCnt();
+        List<Task> tasksWithMinCnt = new ArrayList<>(
+            allTasks.stream()
+                .filter(task -> taskIdsWithMinCnt.contains(task.getId()))
+                .toList()
+        );
+        Collections.shuffle(tasksWithMinCnt);
+        List<Task> tasksToSelectFrom = tasksWithMinCnt.stream()
             .sorted(Comparator.comparing(task -> taskLastTime.get(task.getId())))
             .limit(Math.max(1L, Math.round(allTasks.size() * randomnessFactor)))
             .toList();

@@ -3,6 +3,7 @@ package org.igye.remem3.app;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.StatefulWebController;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,8 @@ public interface App {
     List<String> getPropList(String propName);
 
     Optional<StatefulWebController> lookupController(String path);
+
+    Clock getClock();
 
     Utils getUtils();
 }
