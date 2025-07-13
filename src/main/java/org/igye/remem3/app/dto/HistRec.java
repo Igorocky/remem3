@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Builder
@@ -14,6 +15,6 @@ import java.time.Instant;
 public class HistRec {
     private Instant time;
     private String taskType;
-    private Double mark;
+    private BigDecimal mark;
     private String notes;
 }

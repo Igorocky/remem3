@@ -8,5 +8,5 @@ import java.util.Optional;
 @Data
 public class TaskResult {
     private Optional<HistRec> histRec = Optional.empty();
-    private Optional<Boolean> completed = Optional.empty();
+    private boolean completed;
 }

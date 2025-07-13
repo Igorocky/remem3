@@ -15,6 +15,7 @@ import org.igye.remem3.utils.Utils;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -213,6 +214,9 @@ public class CardsImpl implements Cards {
         if (StringUtils.isBlank(text2)) {
             res.add("Text2 is not set.");
         }
+        if (lang1.equals(lang2)) {
+            res.add("Languages must be different.");
+        }
         return res;
     }
 
@@ -373,7 +377,7 @@ public class CardsImpl implements Cards {
         return HistRec.builder()
             .time(Instant.parse(matcher.group(1)))
             .taskType(matcher.group(2))
-            .mark(Double.parseDouble(matcher.group(3)))
+            .mark(new BigDecimal(matcher.group(3)))
             .notes(StringUtils.isNotBlank(notes) ? notes.trim() : "")
             .build();
     }

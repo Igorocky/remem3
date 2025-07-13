@@ -15,7 +15,7 @@ public final class HtmlFragment implements HtmlElem {
 
     @Override
     public String toString() {
-        if (!CollectionUtils.isEmpty(children)) {
+        if (CollectionUtils.isNotEmpty(children)) {
             return children.stream()
                 .filter(Objects::nonNull)
                 .map(HtmlElem::toString)

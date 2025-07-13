@@ -5,7 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.Cards;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
-import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
@@ -15,6 +15,7 @@ import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.web.RequestParams;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,31 +28,34 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private static final String ACT_SHOW_ANS = "ACT_SHOW_ANS";
     private static final String ACT_COMPLETE_TASK = "ACT_COMPLETE_TASK";
 
-    private final Task task;
     private final Card.FillGaps card;
-    private List<String> cardErrors;
-    private List<TextPart.Gap> gaps;
+    private final TaskType.FillGaps taskType;
+    private final List<String> cardErrors;
+    private final List<TextPart.Gap> gaps;
+
     private List<String> userAnswers;
     private boolean allAnsAreCorrect;
     private Optional<HistRec> histRec = Optional.empty();
     private boolean showHints;
     private boolean showAnswers;
 
-    public TaskStateFillGaps(Cards cards, Task task) {
-        this.task = task;
-        card = (Card.FillGaps) task.getCard();
+    public TaskStateFillGaps(Cards cards, Card.FillGaps card, TaskType.FillGaps taskType) {
+        this.card = card;
+        this.taskType = taskType;
         cardErrors = cards.validateCard(card);
-        if (CollectionUtils.isEmpty(cardErrors)) {
-            gaps = card.getText().stream()
-                .filter(p -> p instanceof TextPart.Gap)
-                .map(p -> (TextPart.Gap) p)
-                .toList();
+        if (CollectionUtils.isNotEmpty(cardErrors)) {
+            gaps = null;
+            return;
         }
+        gaps = card.getText().stream()
+            .filter(p -> p instanceof TextPart.Gap)
+            .map(p -> (TextPart.Gap) p)
+            .toList();
     }
 
     @Override
     public TaskResult processUserInput(RequestParams params) {
-        if (!CollectionUtils.isEmpty(cardErrors)) {
+        if (CollectionUtils.isNotEmpty(cardErrors)) {
             return new TaskResult();
         }
         readUserAnswers(Optional.of(params));
@@ -61,7 +65,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             res.setHistRec(histRec);
         }
         if (params.hasParam(ACT_COMPLETE_TASK)) {
-            res.setCompleted(Optional.of(true));
+            res.setCompleted(true);
         }
         if (params.hasParam(ACT_SHOW_HINT)) {
             showHints = true;
@@ -79,7 +83,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
 
     @Override
     public HtmlElem render() {
-        if (!CollectionUtils.isEmpty(cardErrors)) {
+        if (CollectionUtils.isNotEmpty(cardErrors)) {
             return rndErrors(cardErrors);
         }
         if (CollectionUtils.isEmpty(userAnswers)) {
@@ -176,8 +180,8 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         }
         return HistRec.builder()
             .time(Instant.now())
-            .taskType(task.getTaskType().getCode())
-            .mark(allAnsAreCorrect ? 1.0 : 0.0)
+            .taskType(taskType.getCode())
+            .mark(allAnsAreCorrect ? BigDecimal.ONE : BigDecimal.ZERO)
             .notes(note.toString().trim())
             .build();
     }

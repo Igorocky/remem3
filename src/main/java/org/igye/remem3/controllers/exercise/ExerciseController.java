@@ -172,7 +172,7 @@ public class ExerciseController extends HtmlBuilder
             st.getCards().appendHistRecToFile(file, taskResult.getHistRec().get());
             getCurrentCardExn(st).copyFrom(st.getCards().loadCard(file));
         }
-        if (taskResult.getCompleted().orElse(false)) {
+        if (taskResult.isCompleted()) {
             return actGoToNextTask(st);
         }
         return st;
@@ -280,8 +280,8 @@ public class ExerciseController extends HtmlBuilder
 
     private Optional<TaskState> makeTaskState(Cards cards, Task task) {
         return switch (task.getTaskType()) {
-            case TaskType.FillGaps _ -> Optional.of(new TaskStateFillGaps(cards, task));
-            case TaskType.Translate _ -> Optional.of(new TaskStateTranslate());
+            case TaskType.FillGaps t -> Optional.of(new TaskStateFillGaps(cards, (Card.FillGaps) task.getCard(), t));
+            case TaskType.Translate t -> Optional.of(new TaskStateTranslate(cards, (Card.Translate) task.getCard(), t));
         };
     }
 

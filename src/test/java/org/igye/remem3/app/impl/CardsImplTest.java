@@ -8,7 +8,9 @@ import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,25 +75,25 @@ class CardsImplTest {
             HistRec.builder()
                 .time(Instant.parse("2025-07-04T14:14:08Z"))
                 .taskType("task1")
-                .mark(1.0)
+                .mark(BigDecimal.ONE)
                 .notes("notes")
                 .build(),
-            cards.parseHistoryRec("2025-07-04T14:14:08Z task1 1.0 notes")
+            cards.parseHistoryRec("2025-07-04T14:14:08Z task1 1 notes")
         );
         Assertions.assertEquals(
             HistRec.builder()
                 .time(Instant.parse("2025-07-04T14:14:08Z"))
                 .taskType("task1")
-                .mark(1.0)
+                .mark(BigDecimal.ONE)
                 .notes("")
                 .build(),
-            cards.parseHistoryRec("2025-07-04T14:14:08Z task1 1.0 ")
+            cards.parseHistoryRec("2025-07-04T14:14:08Z task1 1 ")
         );
         Assertions.assertEquals(
             HistRec.builder()
                 .time(Instant.parse("2025-07-04T14:14:08Z"))
                 .taskType("task1")
-                .mark(0.0)
+                .mark(BigDecimal.ZERO)
                 .notes("")
                 .build(),
             cards.parseHistoryRec("2025-07-04T14:14:08Z task1 0 ")
@@ -106,40 +108,40 @@ class CardsImplTest {
                 HistRec.builder()
                     .time(Instant.parse("2025-07-04T14:14:08Z"))
                     .taskType("task1")
-                    .mark(1.0)
+                    .mark(BigDecimal.ONE)
                     .notes("notes")
                     .build()
             ),
-            cards.parseHistory("2025-07-04T14:14:08Z task1 1.0 notes")
+            cards.parseHistory("2025-07-04T14:14:08Z task1 1 notes")
         );
         Assertions.assertEquals(
             List.of(
                 HistRec.builder()
                     .time(Instant.parse("2025-07-04T14:14:08Z"))
                     .taskType("task1")
-                    .mark(1.0)
+                    .mark(BigDecimal.ONE)
                     .notes("notes")
                     .build()
             ),
-            cards.parseHistory("\r\n\n2025-07-04T14:14:08Z task1 1.0 notes\r\n\r\n")
+            cards.parseHistory("\r\n\n2025-07-04T14:14:08Z task1 1 notes\r\n\r\n")
         );
         Assertions.assertEquals(
             List.of(
                 HistRec.builder()
                     .time(Instant.parse("2025-07-03T14:14:08Z"))
                     .taskType("task1")
-                    .mark(0.0)
+                    .mark(BigDecimal.ZERO)
                     .notes("notes")
                     .build(),
                 HistRec.builder()
                     .time(Instant.parse("2025-07-04T14:14:08Z"))
                     .taskType("task1")
-                    .mark(1.0)
+                    .mark(BigDecimal.ONE)
                     .notes("notes")
                     .build()
             ),
             cards.parseHistory(
-                "\r\n\n2025-07-03T14:14:08Z task1 0.0 notes\r\n\n2025-07-04T14:14:08Z task1 1.0 notes\r\n\r\n"
+                "\r\n\n2025-07-03T14:14:08Z task1 0 notes\r\n\n2025-07-04T14:14:08Z task1 1 notes\r\n\r\n"
             )
         );
     }
@@ -148,7 +150,7 @@ class CardsImplTest {
     void parseFillGapsCard_full() {
         CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Card.FillGaps card = Card.FillGaps.builder()
-            .createdAt(Optional.of(Instant.now()))
+            .createdAt(Optional.of(Instant.now().truncatedTo(ChronoUnit.SECONDS)))
             .lang("Lang1")
             .descr("Description")
             .text(
@@ -166,13 +168,13 @@ class CardsImplTest {
                     HistRec.builder()
                         .time(Instant.parse("2025-07-03T14:14:08Z"))
                         .taskType("task1")
-                        .mark(0.0)
+                        .mark(BigDecimal.ZERO)
                         .notes("notes")
                         .build(),
                     HistRec.builder()
                         .time(Instant.parse("2025-07-04T14:14:08Z"))
                         .taskType("task1")
-                        .mark(1.0)
+                        .mark(BigDecimal.ONE)
                         .notes("notes")
                         .build()
                 )
@@ -295,7 +297,7 @@ class CardsImplTest {
                 HistRec.builder()
                     .time(Instant.parse("2025-07-04T14:14:08.038Z"))
                     .taskType("task-type-123")
-                    .mark(0.5)
+                    .mark(new BigDecimal("0.5"))
                     .notes("NOTES-ABC")
                     .build()
             )
