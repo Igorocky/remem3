@@ -43,10 +43,10 @@ public class NewCardController extends HtmlBuilder
     private static final String PAR_CARD_FILL_GAPS_NOTES = "PAR_CARD_FILL_GAPS_NOTES";
 
     private static final String PAR_CARD_TRANSLATE_LANG_1 = "PAR_CARD_TRANSLATE_LANG_1";
-    private static final String PAR_CARD_TRANSLATE_READONLY_1 = "PAR_CARD_TRANSLATE_READONLY_1";
+    private static final String PAR_CARD_TRANSLATE_EXACT_MATCH_1 = "PAR_CARD_TRANSLATE_EXACT_MATCH_1";
     private static final String PAR_CARD_TRANSLATE_TEXT_1 = "PAR_CARD_TRANSLATE_TEXT_1";
     private static final String PAR_CARD_TRANSLATE_LANG_2 = "PAR_CARD_TRANSLATE_LANG_2";
-    private static final String PAR_CARD_TRANSLATE_READONLY_2 = "PAR_CARD_TRANSLATE_READONLY_2";
+    private static final String PAR_CARD_TRANSLATE_EXACT_MATCH_2 = "PAR_CARD_TRANSLATE_EXACT_MATCH_2";
     private static final String PAR_CARD_TRANSLATE_TEXT_2 = "PAR_CARD_TRANSLATE_TEXT_2";
     private static final String PAR_CARD_TRANSLATE_NOTES = "PAR_CARD_TRANSLATE_NOTES";
 
@@ -214,8 +214,8 @@ public class NewCardController extends HtmlBuilder
                 rndAvailableLanguages(st.getSettings(), card.getLang1(), PAR_CARD_TRANSLATE_LANG_1)
             ),
             List.of(
-                text("Read only 1"),
-                inpCheckbox(PAR_CARD_TRANSLATE_READONLY_1, "true", card.isReadOnly1())
+                text("Exact match 1"),
+                inpCheckbox(PAR_CARD_TRANSLATE_EXACT_MATCH_1, "true", card.isExactMatch1())
             ),
             List.of(
                 text("Text 1"),
@@ -230,8 +230,8 @@ public class NewCardController extends HtmlBuilder
                 rndAvailableLanguages(st.getSettings(), card.getLang2(), PAR_CARD_TRANSLATE_LANG_2)
             ),
             List.of(
-                text("Read only 2"),
-                inpCheckbox(PAR_CARD_TRANSLATE_READONLY_2, "true", card.isReadOnly2())
+                text("Exact match 2"),
+                inpCheckbox(PAR_CARD_TRANSLATE_EXACT_MATCH_2, "true", card.isExactMatch2())
             ),
             List.of(
                 text("Text 2"),
@@ -316,14 +316,14 @@ public class NewCardController extends HtmlBuilder
                 PAR_CARD_TRANSLATE_LANG_1,
                 cache.getStr(PAR_CARD_TRANSLATE_LANG_1, settings.getLanguages().getFirst())
             ))
-            .readOnly1(params.hasParam(PAR_CARD_TRANSLATE_READONLY_1))
             .text1(params.getParam(PAR_CARD_TRANSLATE_TEXT_1, ""))
+            .exactMatch1(params.hasParam(PAR_CARD_TRANSLATE_EXACT_MATCH_1))
             .lang2(params.getParam(
                 PAR_CARD_TRANSLATE_LANG_2,
                 cache.getStr(PAR_CARD_TRANSLATE_LANG_2, settings.getLanguages().getFirst())
             ))
-            .readOnly2(params.hasParam(PAR_CARD_TRANSLATE_READONLY_2))
             .text2(params.getParam(PAR_CARD_TRANSLATE_TEXT_2, ""))
+            .exactMatch2(params.hasParam(PAR_CARD_TRANSLATE_EXACT_MATCH_2))
             .notes(params.getParam(PAR_CARD_TRANSLATE_NOTES, ""))
             .build();
     }

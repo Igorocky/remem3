@@ -36,4 +36,9 @@ public class UtilsImpl implements Utils {
     public String objToJson(Object obj) {
         return objectMapper.writeValueAsString(obj);
     }
+
+    @Override
+    public String makeExpectedActualPair(String expected, String actual) {
+        return "###EXP " + expected + " ###ACT " + actual;
+    }
 }

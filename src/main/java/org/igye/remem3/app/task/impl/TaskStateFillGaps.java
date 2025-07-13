@@ -13,6 +13,7 @@ import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private static final String ACT_SHOW_ANS = "ACT_SHOW_ANS";
     private static final String ACT_COMPLETE_TASK = "ACT_COMPLETE_TASK";
 
+    private final Utils utils;
     private final Card.FillGaps card;
     private final TaskType.FillGaps taskType;
     private final List<String> cardErrors;
@@ -39,7 +41,8 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private boolean showHints;
     private boolean showAnswers;
 
-    public TaskStateFillGaps(Cards cards, Card.FillGaps card, TaskType.FillGaps taskType) {
+    public TaskStateFillGaps(Utils utils, Cards cards, Card.FillGaps card, TaskType.FillGaps taskType) {
+        this.utils = utils;
         this.card = card;
         this.taskType = taskType;
         cardErrors = cards.validateCard(card);
@@ -58,20 +61,27 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             return new TaskResult();
         }
-        readUserAnswers(Optional.of(params));
         TaskResult res = new TaskResult();
-        if (histRec.isEmpty()) {
-            histRec = Optional.of(makeHistRec());
-            res.setHistRec(histRec);
-        }
-        if (params.hasParam(ACT_COMPLETE_TASK)) {
-            res.setCompleted(true);
-        }
-        if (params.hasParam(ACT_SHOW_HINT)) {
-            showHints = true;
-        }
-        if (params.hasParam(ACT_SHOW_ANS)) {
-            showAnswers = true;
+        if (
+            params.hasParam(ACT_SUBMIT_ANSWERS)
+                || params.hasParam(ACT_SHOW_HINT)
+                || params.hasParam(ACT_SHOW_ANS)
+                || params.hasParam(ACT_COMPLETE_TASK)
+        ) {
+            readUserAnswers(Optional.of(params));
+            if (histRec.isEmpty()) {
+                histRec = Optional.of(makeHistRec());
+                res.setHistRec(histRec);
+            }
+            if (params.hasParam(ACT_COMPLETE_TASK)) {
+                res.setCompleted(true);
+            }
+            if (params.hasParam(ACT_SHOW_HINT)) {
+                showHints = true;
+            }
+            if (params.hasParam(ACT_SHOW_ANS)) {
+                showAnswers = true;
+            }
         }
         return res;
     }
@@ -147,15 +157,15 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private HtmlElem rndButtons() {
         HtmlTag submitAnswersBtn = inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answers");
         if (allAnsAreCorrect) {
-            submitAnswersBtn.addAttr("disabled", "");
+            submitAnswersBtn.attr("disabled", "");
         }
         HtmlTag showHintBtn = inpSubmit(ACT_SHOW_HINT, "Hint");
         if (showHints || allAnsAreCorrect) {
-            showHintBtn.addAttr("disabled", "");
+            showHintBtn.attr("disabled", "");
         }
         HtmlTag showAnswerBtn = inpSubmit(ACT_SHOW_ANS, "Show answer");
         if (showAnswers || allAnsAreCorrect) {
-            showAnswerBtn.addAttr("disabled", "");
+            showAnswerBtn.attr("disabled", "");
         }
 
         return frag(
@@ -163,8 +173,8 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             showHintBtn,
             showAnswerBtn,
             !allAnsAreCorrect ? null : frag(
-                inpSubmit(ACT_COMPLETE_TASK, "Next task").addAttr("style", "background-color: green;"),
-                inpText("", "", ACT_COMPLETE_TASK).addAttr("size", "1")
+                inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
+                inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
             )
         );
     }
@@ -175,7 +185,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             String userAns = userAnswers.get(i);
             String expAns = gaps.get(i).getAnswer();
             if (!expAns.equals(userAns)) {
-                note.append(" ###EXP ").append(expAns).append(" ###ACT ").append(userAns);
+                note.append(" ").append(utils.makeExpectedActualPair(expAns, userAns));
             }
         }
         return HistRec.builder()
@@ -226,11 +236,10 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
                 case TextPart.Gap gap -> {
                     String userAns = userAnswers.get(gapIdx);
                     String gapParamName = keyValueParam(PAR_USER_ANS, gapIdx);
-                    HtmlTag gapElem = inpText(gapParamName, userAns, ACT_SUBMIT_ANSWERS)
-                        .addAttr("size", "20");
+                    HtmlTag gapElem = inpText(gapParamName, userAns, ACT_SUBMIT_ANSWERS).attr("size", "20");
                     content.add(gapElem);
                     if (gap.getAnswer().equals(userAns)) {
-                        gapElem.addAttr("disabled", "");
+                        gapElem.attr("disabled", "");
                         content.add(inpHidden(gapParamName, userAns));
                     }
                     gapIdx++;

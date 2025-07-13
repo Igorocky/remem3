@@ -10,4 +10,6 @@ public interface Utils {
     <T> T parseJson(String jsonStr, Class<T> clazz);
 
     String objToJson(Object obj);
+
+    String makeExpectedActualPair(String expected, String actual);
 }

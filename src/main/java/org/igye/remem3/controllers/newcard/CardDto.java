@@ -30,11 +30,11 @@ public sealed interface CardDto {
     @With
     final class Translate implements CardDto {
         private String lang1;
-        private boolean readOnly1;
         private String text1;
+        private boolean exactMatch1;
         private String lang2;
-        private boolean readOnly2;
         private String text2;
+        private boolean exactMatch2;
         private String notes;
 
         @Override

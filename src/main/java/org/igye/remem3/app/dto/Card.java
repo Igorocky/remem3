@@ -116,19 +116,19 @@ public sealed interface Card {
         private String lang1 = "";
         @Getter
         @Builder.Default
-        private boolean readOnly1 = false;
+        private String text1 = "";
         @Getter
         @Builder.Default
-        private String text1 = "";
+        private boolean exactMatch1 = true;
         @Getter
         @Builder.Default
         private String lang2 = "";
         @Getter
         @Builder.Default
-        private boolean readOnly2 = false;
+        private String text2 = "";
         @Getter
         @Builder.Default
-        private String text2 = "";
+        private boolean exactMatch2 = true;
         @Getter
         @Builder.Default
         private String notes = "";
@@ -137,11 +137,11 @@ public sealed interface Card {
         protected void childCopyFrom(Card card) {
             Translate other = (Translate) card;
             lang1 = other.getLang1();
-            readOnly1 = other.isReadOnly1();
             text1 = other.getText1();
+            exactMatch1 = other.isExactMatch1();
             lang2 = other.getLang2();
-            readOnly2 = other.isReadOnly2();
             text2 = other.getText2();
+            exactMatch2 = other.isExactMatch2();
             notes = other.getNotes();
         }
 

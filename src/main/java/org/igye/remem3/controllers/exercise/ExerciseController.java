@@ -280,8 +280,10 @@ public class ExerciseController extends HtmlBuilder
 
     private Optional<TaskState> makeTaskState(Cards cards, Task task) {
         return switch (task.getTaskType()) {
-            case TaskType.FillGaps t -> Optional.of(new TaskStateFillGaps(cards, (Card.FillGaps) task.getCard(), t));
-            case TaskType.Translate t -> Optional.of(new TaskStateTranslate(cards, (Card.Translate) task.getCard(), t));
+            case TaskType.FillGaps t ->
+                Optional.of(new TaskStateFillGaps(utils, cards, (Card.FillGaps) task.getCard(), t));
+            case TaskType.Translate t ->
+                Optional.of(new TaskStateTranslate(utils, cards, (Card.Translate) task.getCard(), t));
         };
     }
 

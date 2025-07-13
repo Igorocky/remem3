@@ -42,7 +42,7 @@ public final class HtmlTag implements HtmlElem {
         return sb.toString();
     }
 
-    public HtmlTag addAttr(String attrName, String attrValue) {
+    public HtmlTag attr(String attrName, String attrValue) {
         if (!(attrs instanceof HashMap<String, String>)) {
             attrs = attrs == null ? new HashMap<>() : new HashMap<>(attrs);
         }

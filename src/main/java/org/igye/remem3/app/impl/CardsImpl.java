@@ -38,18 +38,18 @@ public class CardsImpl implements Cards {
     private static final Pattern HIST_PATTERN = Pattern.compile(
         "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
     );
-    private static final String ATTR_NAME_LANG = "###lang";
-    private static final String ATTR_NAME_LANG_1 = "###lang1";
-    private static final String ATTR_NAME_LANG_2 = "###lang2";
-    private static final String ATTR_NAME_READONLY_1 = "###readonly1";
-    private static final String ATTR_NAME_READONLY_2 = "###readonly2";
-    private static final String ATTR_NAME_DESCR = "###descr";
-    private static final String ATTR_NAME_TEXT = "###text";
-    private static final String ATTR_NAME_TEXT_1 = "###text1";
-    private static final String ATTR_NAME_TEXT_2 = "###text2";
-    private static final String ATTR_NAME_NOTES = "###notes";
-    private static final String ATTR_NAME_HIST = "###hist";
-    private static final String ATTR_NAME_CREATED_AT = "###created_at";
+    private static final String ATTR_LANG = "###lang";
+    private static final String ATTR_LANG_1 = "###lang1";
+    private static final String ATTR_LANG_2 = "###lang2";
+    private static final String ATTR_EXACT_MATCH_1 = "###exact_match1";
+    private static final String ATTR_EXACT_MATCH_2 = "###exact_match2";
+    private static final String ATTR_DESCR = "###descr";
+    private static final String ATTR_TEXT = "###text";
+    private static final String ATTR_TEXT_1 = "###text1";
+    private static final String ATTR_TEXT_2 = "###text2";
+    private static final String ATTR_NOTES = "###notes";
+    private static final String ATTR_HIST = "###hist";
+    private static final String ATTR_CREATED_AT = "###created_at";
     private static final String CARD_EXTENSION = ".card";
     public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg" + CARD_EXTENSION;
     public static final String CARD_TRANSLATE_FILE_EXTENSION = ".tr" + CARD_EXTENSION;
@@ -146,11 +146,11 @@ public class CardsImpl implements Cards {
             case CardDto.Translate dto -> Card.Translate.builder()
                 .createdAt(Optional.of(Instant.now()))
                 .lang1(dto.getLang1())
-                .readOnly1(dto.isReadOnly1())
                 .text1(dto.getText1())
+                .exactMatch1(dto.isExactMatch1())
                 .lang2(dto.getLang2())
-                .readOnly2(dto.isReadOnly2())
                 .text2(dto.getText2())
+                .exactMatch2(dto.isExactMatch2())
                 .notes(dto.getNotes())
                 .history(List.of())
                 .build();
@@ -222,33 +222,33 @@ public class CardsImpl implements Cards {
 
     protected String fillGapsCardToString(Card.FillGaps card) {
         StringBuilder sb = new StringBuilder();
-        sb.append(ATTR_NAME_LANG).append("\n").append(card.getLang());
-        sb.append("\n\n").append(ATTR_NAME_DESCR).append("\n").append(card.getDescr());
-        sb.append("\n\n").append(ATTR_NAME_TEXT).append("\n");
+        sb.append(ATTR_LANG).append("\n").append(card.getLang());
+        sb.append("\n\n").append(ATTR_DESCR).append("\n").append(card.getDescr());
+        sb.append("\n\n").append(ATTR_TEXT).append("\n");
         appendText(sb, card.getText());
-        sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
+        sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
         appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
         return sb.toString();
     }
 
     protected String translateCardToString(Card.Translate card) {
         StringBuilder sb = new StringBuilder();
-        sb.append(ATTR_NAME_LANG_1).append("\n").append(card.getLang1());
-        sb.append("\n\n").append(ATTR_NAME_READONLY_1).append("\n").append(card.isReadOnly1() ? "y" : "n");
-        sb.append("\n\n").append(ATTR_NAME_TEXT_1).append("\n").append(card.getText1());
-        sb.append("\n\n").append(ATTR_NAME_LANG_2).append("\n").append(card.getLang2());
-        sb.append("\n\n").append(ATTR_NAME_READONLY_2).append("\n").append(card.isReadOnly2() ? "y" : "n");
-        sb.append("\n\n").append(ATTR_NAME_TEXT_2).append("\n").append(card.getText2());
-        sb.append("\n\n").append(ATTR_NAME_NOTES).append("\n").append(card.getNotes());
+        sb.append(ATTR_LANG_1).append("\n").append(card.getLang1());
+        sb.append("\n\n").append(ATTR_TEXT_1).append("\n").append(card.getText1());
+        sb.append("\n\n").append(ATTR_EXACT_MATCH_1).append("\n").append(card.isExactMatch1() ? "y" : "n");
+        sb.append("\n\n").append(ATTR_LANG_2).append("\n").append(card.getLang2());
+        sb.append("\n\n").append(ATTR_TEXT_2).append("\n").append(card.getText2());
+        sb.append("\n\n").append(ATTR_EXACT_MATCH_2).append("\n").append(card.isExactMatch2() ? "y" : "n");
+        sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
         appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
         return sb.toString();
     }
 
     private void appendCreatedAtAndHist(StringBuilder sb, Optional<Instant> createdAt, List<HistRec> hist) {
-        sb.append("\n\n").append(ATTR_NAME_CREATED_AT).append("\n").append(
+        sb.append("\n\n").append(ATTR_CREATED_AT).append("\n").append(
             createdAt.map(this::instantToStr).orElse("")
         );
-        sb.append("\n\n").append(ATTR_NAME_HIST);
+        sb.append("\n\n").append(ATTR_HIST);
         appendHistory(sb, hist);
     }
 
@@ -299,7 +299,7 @@ public class CardsImpl implements Cards {
         sb.append(instantToStr(histRec.getTime()))
             .append(" ").append(histRec.getTaskType())
             .append(" ").append(histRec.getMark())
-            .append(" ").append(histRec.getNotes());
+            .append(" ").append(histRec.getNotes().replace("\n", "\\n").replace("\r", "\\r"));
         return sb.toString();
     }
 
@@ -315,15 +315,15 @@ public class CardsImpl implements Cards {
         Map<String, List<String>> props = parseProps(str);
         return Card.Translate.builder()
             .file(file)
-            .createdAt(getInstantOpt(props, ATTR_NAME_CREATED_AT))
-            .lang1(getStr(props, ATTR_NAME_LANG_1, "").trim())
-            .readOnly1(getBool(props, ATTR_NAME_READONLY_1, false))
-            .text1(getStr(props, ATTR_NAME_TEXT_1, "").trim())
-            .lang2(getStr(props, ATTR_NAME_LANG_2, "").trim())
-            .readOnly2(getBool(props, ATTR_NAME_READONLY_2, false))
-            .text2(getStr(props, ATTR_NAME_TEXT_2, "").trim())
-            .notes(getStr(props, ATTR_NAME_NOTES, "").trim())
-            .history(parseHistory(getStr(props, ATTR_NAME_HIST, "").trim()))
+            .createdAt(getInstantOpt(props, ATTR_CREATED_AT))
+            .lang1(getStr(props, ATTR_LANG_1, "").trim())
+            .text1(getStr(props, ATTR_TEXT_1, "").trim())
+            .exactMatch1(getBool(props, ATTR_EXACT_MATCH_1, true))
+            .lang2(getStr(props, ATTR_LANG_2, "").trim())
+            .text2(getStr(props, ATTR_TEXT_2, "").trim())
+            .exactMatch2(getBool(props, ATTR_EXACT_MATCH_2, true))
+            .notes(getStr(props, ATTR_NOTES, "").trim())
+            .history(parseHistory(getStr(props, ATTR_HIST, "").trim()))
             .build();
     }
 
@@ -331,12 +331,12 @@ public class CardsImpl implements Cards {
         Map<String, List<String>> props = parseProps(str);
         return Card.FillGaps.builder()
             .file(file)
-            .createdAt(getInstantOpt(props, ATTR_NAME_CREATED_AT))
-            .lang(getStr(props, ATTR_NAME_LANG, "").trim())
-            .descr(getStr(props, ATTR_NAME_DESCR, "").trim())
-            .text(parseText(getStr(props, ATTR_NAME_TEXT, "").trim()))
-            .notes(getStr(props, ATTR_NAME_NOTES, "").trim())
-            .history(parseHistory(getStr(props, ATTR_NAME_HIST, "").trim()))
+            .createdAt(getInstantOpt(props, ATTR_CREATED_AT))
+            .lang(getStr(props, ATTR_LANG, "").trim())
+            .descr(getStr(props, ATTR_DESCR, "").trim())
+            .text(parseText(getStr(props, ATTR_TEXT, "").trim()))
+            .notes(getStr(props, ATTR_NOTES, "").trim())
+            .history(parseHistory(getStr(props, ATTR_HIST, "").trim()))
             .build();
     }
 
