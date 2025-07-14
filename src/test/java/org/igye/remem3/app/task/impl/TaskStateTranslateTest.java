@@ -7,6 +7,7 @@ import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.app.task.TaskResult;
+import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.test.TestClock;
@@ -55,53 +56,61 @@ class TaskStateTranslateTest extends HtmlBuilder {
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
         TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
 
-        //when - first render
+        //first render
         HtmlElem html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "");
 
-        //then
+        //submit the correct answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer("T2", html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T10:03:10Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ONE)
+                .notes("")
+                .build()
+        );
+        html = state.render();
+        assertHtmlExactMatchHasCorrectAnswer(html, "T2");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
+    private void assertHtmlExactMatchNoCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, "", ACT_SUBMIT_ANSWER).attr("size", "200"),
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
             inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
         );
+    }
 
-        //when - submit the correct answer
-        testUtils.setValue(html, PAR_USER_ANS, "T2");
-        clock.plusSeconds(10);
-        TaskResult taskResult = state.processUserInput(testUtils.submit(html, ACT_SUBMIT_ANSWER));
-
-        //then
-        Assertions.assertEquals(
-            Optional.of(
-                HistRec.builder()
-                    .time(Instant.parse("2025-07-14T10:03:10Z"))
-                    .taskType("translate:L1->L2")
-                    .mark(BigDecimal.ONE)
-                    .notes("")
-                    .build()
-            ),
-            taskResult.getHistRec()
-        );
-        Assertions.assertFalse(taskResult.isCompleted());
-
-        //when - "next task" button
-        html = state.render();
-
-        //then
+    private void assertHtmlExactMatchHasCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, "T2", ACT_SUBMIT_ANSWER).attr("size", "200").attr("disabled", ""),
-            inpHidden(PAR_USER_ANS, "T2"),
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200").attr("disabled", ""),
+            inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
             inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
         );
-
-        //when - press "next task"
-        clock.plusSeconds(10);
-        taskResult = state.processUserInput(testUtils.submit(html, ACT_COMPLETE_TASK));
-
-        //then
-        Assertions.assertEquals(Optional.empty(), taskResult.getHistRec());
-        Assertions.assertTrue(taskResult.isCompleted());
     }
 
+    private TaskResult submitAnswer(String answer, HtmlElem html, TaskState state) {
+        testUtils.setValue(html, PAR_USER_ANS, answer);
+        return state.processUserInput(testUtils.submit(html, ACT_SUBMIT_ANSWER));
+    }
+
+    private TaskResult submitCompleteTask(HtmlElem html, TaskState state) {
+        return state.processUserInput(testUtils.submit(html, ACT_COMPLETE_TASK));
+    }
+
+    private void assertTaskResult(TaskResult result, boolean completed, HistRec histRec) {
+        Assertions.assertEquals(completed, result.isCompleted());
+        Assertions.assertEquals(
+            histRec == null ? Optional.empty() : Optional.of(histRec),
+            result.getHistRec()
+        );
+    }
 }
