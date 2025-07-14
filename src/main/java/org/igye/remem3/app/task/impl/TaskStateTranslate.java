@@ -179,36 +179,32 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     }
 
     private HtmlElem rndButtons() {
-        HtmlTag submitAnswerBtn = inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer");
-        if (showAnswer) {
-            submitAnswerBtn.attr("disabled", "");
-        }
-        HtmlTag showAnswerBtn = inpSubmit(ACT_SHOW_ANS, "Show answer");
-        if (showAnswer) {
-            showAnswerBtn.attr("disabled", "");
-        }
-        HtmlElem nextTaskBtn;
-        if (showAnswer) {
+        ArrayList<HtmlElem> content = new ArrayList<>();
+        if (!showAnswer) {
+            content.add(inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"));
+            content.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
+        } else {
             if (exactMatch) {
-                nextTaskBtn = frag(
+                content.add(frag(
                     inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
                     inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
-                );
+                ));
             } else {
-                String mark0 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 0);
-                String mark1 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 1);
-                nextTaskBtn = frag(
-                    inpSubmit(mark0, "Incorrect").attr("style", "background-color: red;"),
-                    inpText("", "", mark0).attr("size", "1"),
-                    inpSubmit(mark1, "Correct").attr("style", "background-color: green;"),
-                    inpText("", "", mark1).attr("size", "1")
-                );
+                String parMark0 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 0);
+                String parMark1 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 1);
+                content.add(table(List.of(
+                    List.of(
+                        inpSubmit(parMark0, "Incorrect").attr("style", "background-color: red;"),
+                        inpSubmit(parMark1, "Correct").attr("style", "background-color: green;")
+                    ),
+                    List.of(
+                        inpText("", "", parMark0).attr("size", "1"),
+                        inpText("", "", parMark1).attr("size", "1")
+                    )
+                )));
             }
-        } else {
-            nextTaskBtn = null;
         }
-
-        return frag(submitAnswerBtn, showAnswerBtn, nextTaskBtn);
+        return frag(content);
     }
 
     private HtmlElem rndErrors(List<String> errors) {

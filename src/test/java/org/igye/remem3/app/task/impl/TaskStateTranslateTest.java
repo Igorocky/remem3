@@ -62,7 +62,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, "", ACT_SUBMIT_ANSWER).attr("size", "200"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
-            inpSubmit(ACT_SHOW_ANS, "Show answer")
+            inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
         );
 
         //when - submit the correct answer
@@ -91,8 +91,6 @@ class TaskStateTranslateTest extends HtmlBuilder {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, "T2", ACT_SUBMIT_ANSWER).attr("size", "200").attr("disabled", ""),
             inpHidden(PAR_USER_ANS, "T2"),
-            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("disabled", ""),
-            inpSubmit(ACT_SHOW_ANS, "Show answer").attr("disabled", ""),
             inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
             inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
         );
