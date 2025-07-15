@@ -157,9 +157,10 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
 
     private HtmlElem rndUserAnswer() {
         List<HtmlElem> content = new ArrayList<>();
+        content.add(text(exactMatch ? "= " : "~ "));
         HtmlTag inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER).attr("size", "200");
         content.add(inpText);
-        if (showAnswer) {
+        if (!exactMatch && showAnswer || userAnswerIsCorrect.orElse(false)) {
             inpText.attr("disabled", "");
             content.add(inpHidden(PAR_USER_ANS, userAnswer));
         }
@@ -180,16 +181,13 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
 
     private HtmlElem rndButtons() {
         ArrayList<HtmlElem> content = new ArrayList<>();
-        if (!showAnswer) {
+        if (!exactMatch && !showAnswer || exactMatch && !userAnswerIsCorrect.orElse(false)) {
             content.add(inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"));
+        }
+        if (!showAnswer) {
             content.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
         } else {
-            if (exactMatch) {
-                content.add(frag(
-                    inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
-                    inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
-                ));
-            } else {
+            if (!exactMatch) {
                 String parMark0 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 0);
                 String parMark1 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 1);
                 content.add(table(List.of(
@@ -202,6 +200,11 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                         inpText("", "", parMark1).attr("size", "1")
                     )
                 )));
+            } else if (userAnswerIsCorrect.orElse(false)) {
+                content.add(frag(
+                    inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
+                    inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
+                ));
             }
         }
         return frag(content);

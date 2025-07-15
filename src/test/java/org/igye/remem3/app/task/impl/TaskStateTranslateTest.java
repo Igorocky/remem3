@@ -160,7 +160,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
         taskResult = submitShowAnswer(html, state);
         assertTaskResult(taskResult, false, null);
         html = state.render();
-        assertHtmlExactMatchNoCorrectAnswer(html, "A2");
+        assertHtmlExactMatchNoCorrectAnswerShowAnswer(html, "A2");
 
         //submit the correct answer
         clock.plusSeconds(10);
@@ -180,6 +180,13 @@ class TaskStateTranslateTest extends HtmlBuilder {
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
             inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
+        );
+    }
+
+    private void assertHtmlExactMatchNoCorrectAnswerShowAnswer(HtmlElem html, String userAns) {
+        testUtils.assertInputs(html,
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200"),
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer")
         );
     }
 
