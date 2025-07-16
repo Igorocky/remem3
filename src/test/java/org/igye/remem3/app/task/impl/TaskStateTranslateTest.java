@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_COMPLETE_TASK;
+import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_COMPLETE_TASK_WITH_MARK;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SHOW_ANS;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SUBMIT_ANSWER;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.PAR_USER_ANS;
@@ -321,6 +322,117 @@ class TaskStateTranslateTest extends HtmlBuilder {
         assertTaskResult(taskResult, true, null);
     }
 
+    @Test
+    void approxMatch_ans_V() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T10:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(false)
+            .lang2("L2").text2("T2").exactMatch2(false)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlApproxMatchNoAnswer(html, "");
+
+        //submit some answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer("T2", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlApproxMatchHasAnswer(html, "T2");
+
+        //click "answer is correct" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTaskWithMark(true, html, state);
+        assertTaskResult(taskResult, true,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T10:03:20Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ONE)
+                .notes("###EXP <<<assessed_by_user>>> ###ACT T2")
+                .build()
+        );
+    }
+
+    @Test
+    void approxMatch_ans_X() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T10:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(false)
+            .lang2("L2").text2("T2").exactMatch2(false)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlApproxMatchNoAnswer(html, "");
+
+        //submit some answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer("T2", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlApproxMatchHasAnswer(html, "T2");
+
+        //click "answer is incorrect" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTaskWithMark(false, html, state);
+        assertTaskResult(taskResult, true,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T10:03:20Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP <<<assessed_by_user>>> ###ACT T2")
+                .build()
+        );
+    }
+
+    @Test
+    void approxMatch_showAns() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T10:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(false)
+            .lang2("L2").text2("T2").exactMatch2(false)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlApproxMatchNoAnswer(html, "");
+
+        //click "show answer" button
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitShowAnswer(html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T10:03:10Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP  ###ACT <<<show_answer>>>")
+                .build()
+        );
+        html = state.render();
+        assertHtmlApproxMatchShowAnswer(html, "");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
     private void assertHtmlExactMatchNoCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200"),
@@ -345,6 +457,34 @@ class TaskStateTranslateTest extends HtmlBuilder {
         );
     }
 
+    private void assertHtmlApproxMatchNoAnswer(HtmlElem html, String userAns) {
+        testUtils.assertInputs(html,
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200"),
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
+            inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
+        );
+    }
+
+    private void assertHtmlApproxMatchHasAnswer(HtmlElem html, String userAns) {
+        testUtils.assertInputs(html,
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200").attr("disabled", ""),
+            inpHidden(PAR_USER_ANS, userAns),
+            inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":0", "Incorrect").attr("style", "background-color: red;"),
+            inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":1", "Correct").attr("style", "background-color: green;"),
+            inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":0").attr("size", "1"),
+            inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":1").attr("size", "1")
+        );
+    }
+
+    private void assertHtmlApproxMatchShowAnswer(HtmlElem html, String userAns) {
+        testUtils.assertInputs(html,
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200").attr("disabled", ""),
+            inpHidden(PAR_USER_ANS, userAns),
+            inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
+            inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
+        );
+    }
+
     private TaskResult submitAnswer(String answer, HtmlElem html, TaskState state) {
         testUtils.setValue(html, PAR_USER_ANS, answer);
         return state.processUserInput(testUtils.submit(html, ACT_SUBMIT_ANSWER));
@@ -356,6 +496,12 @@ class TaskStateTranslateTest extends HtmlBuilder {
 
     private TaskResult submitCompleteTask(HtmlElem html, TaskState state) {
         return state.processUserInput(testUtils.submit(html, ACT_COMPLETE_TASK));
+    }
+
+    private TaskResult submitCompleteTaskWithMark(boolean ansIsCorrect, HtmlElem html, TaskState state) {
+        return state.processUserInput(
+            testUtils.submit(html, ACT_COMPLETE_TASK_WITH_MARK + (ansIsCorrect ? ":1" : ":0"))
+        );
     }
 
     private void assertTaskResult(TaskResult result, boolean completed, HistRec histRec) {

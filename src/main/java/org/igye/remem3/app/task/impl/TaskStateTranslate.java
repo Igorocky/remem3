@@ -187,7 +187,13 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         if (!showAnswer) {
             content.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
         } else {
-            if (!exactMatch) {
+            if (exactMatch && userAnswerIsCorrect.orElse(false) || !exactMatch && histRec.isPresent()) {
+                content.add(frag(
+                    inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
+                    inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
+                ));
+            }
+            if (!exactMatch && histRec.isEmpty()) {
                 String parMark0 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 0);
                 String parMark1 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 1);
                 content.add(table(List.of(
@@ -200,11 +206,6 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                         inpText("", "", parMark1).attr("size", "1")
                     )
                 )));
-            } else if (userAnswerIsCorrect.orElse(false)) {
-                content.add(frag(
-                    inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
-                    inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
-                ));
             }
         }
         return frag(content);
