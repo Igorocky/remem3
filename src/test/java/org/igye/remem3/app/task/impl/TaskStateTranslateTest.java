@@ -378,10 +378,10 @@ class TaskStateTranslateTest extends HtmlBuilder {
 
         //submit some answer
         clock.plusSeconds(10);
-        TaskResult taskResult = submitAnswer("T2", html, state);
+        TaskResult taskResult = submitAnswer("T", html, state);
         assertTaskResult(taskResult, false, null);
         html = state.render();
-        assertHtmlApproxMatchHasAnswer(html, "T2");
+        assertHtmlApproxMatchHasAnswer(html, "T");
 
         //click "answer is incorrect" button
         clock.plusSeconds(10);
@@ -391,7 +391,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
                 .time(Instant.parse("2025-07-14T10:03:20Z"))
                 .taskType("translate:L1->L2")
                 .mark(BigDecimal.ZERO)
-                .notes("###EXP <<<assessed_by_user>>> ###ACT T2")
+                .notes("###EXP <<<assessed_by_user>>> ###ACT T")
                 .build()
         );
     }

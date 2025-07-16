@@ -230,7 +230,9 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         ArrayList<HtmlElem> content = new ArrayList<>();
         int gapIdx = 0;
         for (TextPart textPart : card.getText()) {
-            content.add(text(" "));
+            if (!content.isEmpty()) {
+                content.add(text(" "));
+            }
             switch (textPart) {
                 case TextPart.Text text -> content.add(text(text.getText()));
                 case TextPart.Gap gap -> {
