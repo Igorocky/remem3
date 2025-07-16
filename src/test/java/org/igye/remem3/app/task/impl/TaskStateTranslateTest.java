@@ -125,6 +125,101 @@ class TaskStateTranslateTest extends HtmlBuilder {
     }
 
     @Test
+    void exactMatch_showAns_ansV() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T12:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(true)
+            .lang2("L2").text2("T2").exactMatch2(true)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "");
+
+        //click "show answer"
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitShowAnswer(html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T12:03:10Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP  ###ACT <<<show_answer>>>")
+                .build()
+        );
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswerShowAnswer(html, "");
+
+        //submit the correct answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T2", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchHasCorrectAnswer(html, "T2");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
+    @Test
+    void exactMatch_ansX_ansX_ansV() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T11:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(true)
+            .lang2("L2").text2("T2").exactMatch2(true)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang2(), card.getLang1());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "");
+
+        //submit an incorrect answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer("T3", html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T11:03:10Z"))
+                .taskType("translate:L2->L1")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP T1 ###ACT T3")
+                .build()
+        );
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "T3");
+
+        //submit another incorrect answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T2", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "T2");
+
+        //submit the correct answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T1", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchHasCorrectAnswer(html, "T1");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
+    @Test
     void exactMatch_ansX_showAns_ansV() {
         //given
         TestClock clock = new TestClock(Instant.parse("2025-07-14T12:03:00Z"));
@@ -161,6 +256,57 @@ class TaskStateTranslateTest extends HtmlBuilder {
         assertTaskResult(taskResult, false, null);
         html = state.render();
         assertHtmlExactMatchNoCorrectAnswerShowAnswer(html, "A2");
+
+        //submit the correct answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T2", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchHasCorrectAnswer(html, "T2");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
+    @Test
+    void exactMatch_showAns_ansX_ansV() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T12:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(true)
+            .lang2("L2").text2("T2").exactMatch2(true)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "");
+
+        //click "show answer"
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitShowAnswer(html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T12:03:10Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP  ###ACT <<<show_answer>>>")
+                .build()
+        );
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswerShowAnswer(html, "");
+
+        //submit an incorrect answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T3", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswerShowAnswer(html, "T3");
 
         //submit the correct answer
         clock.plusSeconds(10);

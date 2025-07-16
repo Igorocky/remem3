@@ -103,7 +103,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                 res.setHistRec(histRec);
             }
             if (params.hasParam(ACT_SUBMIT_ANSWER)) {
-                showAnswer = !exactMatch || userAnswerIsCorrect.orElse(false);
+                showAnswer = showAnswer || !exactMatch || userAnswerIsCorrect.orElse(false);
             }
             if (params.hasParam(ACT_SHOW_ANS)) {
                 showAnswer = true;
