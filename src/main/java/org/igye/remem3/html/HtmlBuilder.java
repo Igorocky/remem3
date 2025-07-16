@@ -179,14 +179,17 @@ public class HtmlBuilder {
 
     protected HtmlTag inpText(String name, String value, String onEnterBtnId, boolean autofocus) {
         String btnId = StringUtils.isBlank(onEnterBtnId) ? "null" : String.format("\"%s\"", onEnterBtnId);
-        return h("input", Map.of(
+        Map<String, String> attrs = new HashMap<>(Map.of(
             "type", "text",
             "name", name,
             "value", value,
             "autocomplete", "off",
-            "onkeydown", String.format("preventDefaultOnEnterAction(event,%s)", btnId),
-            "autofocus", String.valueOf(autofocus)
+            "onkeydown", String.format("preventDefaultOnEnterAction(event,%s)", btnId)
         ));
+        if (autofocus) {
+            attrs.put("autofocus", "");
+        }
+        return h("input", attrs);
     }
 
     protected HtmlTag inpText(String name, String value, String onEnterBtnId) {

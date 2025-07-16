@@ -17,18 +17,19 @@ import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
-    private static final String PAR_USER_ANS = "PAR_USER_ANS";
-    private static final String ACT_SUBMIT_ANSWERS = "ACT_SUBMIT_ANSWERS";
-    private static final String ACT_SHOW_HINT = "ACT_SHOW_HINT";
-    private static final String ACT_SHOW_ANS = "ACT_SHOW_ANS";
-    private static final String ACT_COMPLETE_TASK = "ACT_COMPLETE_TASK";
+    public static final String PAR_USER_ANS = "PAR_USER_ANS";
+    public static final String ACT_SUBMIT_ANSWERS = "ACT_SUBMIT_ANSWERS";
+    public static final String ACT_SHOW_HINT = "ACT_SHOW_HINT";
+    public static final String ACT_SHOW_ANS = "ACT_SHOW_ANS";
+    public static final String ACT_COMPLETE_TASK = "ACT_COMPLETE_TASK";
 
+    private final Clock clock;
     private final Utils utils;
     private final Card.FillGaps card;
     private final TaskType.FillGaps taskType;
@@ -41,7 +42,8 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private boolean showHints;
     private boolean showAnswers;
 
-    public TaskStateFillGaps(Utils utils, Cards cards, Card.FillGaps card, TaskType.FillGaps taskType) {
+    public TaskStateFillGaps(Clock clock, Utils utils, Cards cards, Card.FillGaps card, TaskType.FillGaps taskType) {
+        this.clock = clock;
         this.utils = utils;
         this.card = card;
         this.taskType = taskType;
@@ -155,28 +157,22 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     }
 
     private HtmlElem rndButtons() {
-        HtmlTag submitAnswersBtn = inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answers");
+        List<HtmlElem> content = new ArrayList<>();
+        if (!allAnsAreCorrect) {
+            content.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer"));
+        }
+        if (!showHints && !allAnsAreCorrect) {
+            content.add(inpSubmit(ACT_SHOW_HINT, "Hint").attr("style", "background-color: orange;"));
+        }
+        if (!showAnswers && !allAnsAreCorrect) {
+            content.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
+        }
         if (allAnsAreCorrect) {
-            submitAnswersBtn.attr("disabled", "");
-        }
-        HtmlTag showHintBtn = inpSubmit(ACT_SHOW_HINT, "Hint");
-        if (showHints || allAnsAreCorrect) {
-            showHintBtn.attr("disabled", "");
-        }
-        HtmlTag showAnswerBtn = inpSubmit(ACT_SHOW_ANS, "Show answer");
-        if (showAnswers || allAnsAreCorrect) {
-            showAnswerBtn.attr("disabled", "");
+            content.add(inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"));
+            content.add(inpText("", "", ACT_COMPLETE_TASK).attr("size", "1"));
         }
 
-        return frag(
-            submitAnswersBtn,
-            showHintBtn,
-            showAnswerBtn,
-            !allAnsAreCorrect ? null : frag(
-                inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
-                inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
-            )
-        );
+        return frag(content);
     }
 
     private HistRec makeHistRec() {
@@ -189,7 +185,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             }
         }
         return HistRec.builder()
-            .time(Instant.now())
+            .time(clock.instant())
             .taskType(taskType.getCode())
             .mark(allAnsAreCorrect ? BigDecimal.ONE : BigDecimal.ZERO)
             .notes(note.toString().trim())

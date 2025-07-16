@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TestUtilsImpl implements TestUtils {
+
+    private static final HtmlTag[] HTML_TAGS_EMPTY_ARR = {};
+
     @Override
     public void assertInputs(HtmlElem html, HtmlTag... elems) {
         ArrayList<HtmlTag> expectedInputs = new ArrayList<>(Arrays.asList(elems));
@@ -64,6 +67,11 @@ public class TestUtilsImpl implements TestUtils {
                 actualTagsStr
             ));
         }
+    }
+
+    @Override
+    public void assertInputs(HtmlElem html, List<HtmlTag> elems) {
+        assertInputs(html, elems.toArray(HTML_TAGS_EMPTY_ARR));
     }
 
     @Override
