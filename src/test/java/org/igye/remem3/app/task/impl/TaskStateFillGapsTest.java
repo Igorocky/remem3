@@ -15,6 +15,7 @@ import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.test.TestClock;
 import org.igye.remem3.test.TestUtils;
 import org.igye.remem3.test.impl.TestUtilsImpl;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,10 +83,72 @@ class TaskStateFillGapsTest extends HtmlBuilder {
         html = state.render();
         assertHtmlHasCorrectAnswer(html, List.of("B"));
 
-        //click "next task" button
+        //click the "next task" button
         clock.plusSeconds(10);
         taskResult = submitCompleteTask(html, state);
         assertTaskResult(taskResult, true, null);
+    }
+
+    @Test
+    void gap1_ansX_ansV() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-15T10:03:00Z"));
+        Card.FillGaps card = Card.FillGaps.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang("L1").descr("DDD").text(List.of(
+                TextPart.Text.builder().text("A").build(),
+                TextPart.Gap.builder().answer("B").hint("b").notes("/b/").build(),
+                TextPart.Text.builder().text("C").build()
+            ))
+            .notes("N")
+            .build();
+        TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlNoCorrectAnswer(html, List.of("B"), List.of(""));
+
+        //submit an incorrect answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer(List.of("b"), html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-15T10:03:10Z"))
+                .taskType("fill_gaps:L1")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP B ###ACT b")
+                .build()
+        );
+        html = state.render();
+        assertHtmlNoCorrectAnswer(html, List.of("B"), List.of("b"));
+
+        //submit the correct answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer(List.of("B"), html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlHasCorrectAnswer(html, List.of("B"));
+
+        //click the "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
+    @Test
+    void gap1_ansX_ansX_ansV() {
+        throw new Exn("not implemented");
+    }
+
+    @Test
+    void gap1_showHint_ansV() {
+        throw new Exn("not implemented");
+    }
+
+    @Test
+    void gap1_showAnswer_ansV() {
+        throw new Exn("not implemented");
     }
 
     private List<HtmlTag> makeAnsElems(List<String> expAns, List<String> userAns) {
