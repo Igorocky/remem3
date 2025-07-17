@@ -142,12 +142,22 @@ class TaskStateFillGapsTest extends HtmlBuilder {
     }
 
     @Test
+    void gap1_ansX_showHint_ansV() {
+        throw new Exn("not implemented");
+    }
+
+    @Test
     void gap1_showHint_ansV() {
         throw new Exn("not implemented");
     }
 
     @Test
-    void gap1_showAnswer_ansV() {
+    void gap1_showHint_ansX_ansV() {
+        throw new Exn("not implemented");
+    }
+
+    @Test
+    void gap1_showAns_ansV() {
         throw new Exn("not implemented");
     }
 
