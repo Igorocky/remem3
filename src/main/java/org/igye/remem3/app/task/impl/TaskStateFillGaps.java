@@ -160,14 +160,13 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         List<HtmlElem> content = new ArrayList<>();
         if (!allAnsAreCorrect) {
             content.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer"));
-        }
-        if (!showHints && !allAnsAreCorrect) {
-            content.add(inpSubmit(ACT_SHOW_HINT, "Hint").attr("style", "background-color: orange;"));
-        }
-        if (!showAnswers && !allAnsAreCorrect) {
-            content.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
-        }
-        if (allAnsAreCorrect) {
+            if (!showAnswers) {
+                content.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
+                if (!showHints) {
+                    content.add(inpSubmit(ACT_SHOW_HINT, "Hint").attr("style", "background-color: orange;"));
+                }
+            }
+        } else {
             content.add(inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"));
             content.add(inpText("", "", ACT_COMPLETE_TASK).attr("size", "1"));
         }
