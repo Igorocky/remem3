@@ -499,6 +499,64 @@ class TaskStateFillGapsTest extends HtmlBuilder {
         assertTaskResult(taskResult, true, null);
     }
 
+    @Test
+    void gap3_ansX1_ansX2_ansV() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-15T10:03:00Z"));
+        Card.FillGaps card = Card.FillGaps.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang("L1").descr("DDD").text(List.of(
+                TextPart.Text.builder().text("A").build(),
+                TextPart.Gap.builder().answer("B").hint("b").notes("/b/").build(),
+                TextPart.Text.builder().text("C").build(),
+                TextPart.Gap.builder().answer("D").hint("d").notes("/d/").build(),
+                TextPart.Text.builder().text("E").build(),
+                TextPart.Gap.builder().answer("F").hint("f").notes("/f/").build(),
+                TextPart.Text.builder().text("G").build()
+            ))
+            .notes("N")
+            .build();
+        TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlNoCorrectAnswer(html, List.of("B", "D", "F"), List.of("", "", ""));
+
+        //submit an incorrect answer 1
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer(List.of("b", "D", "f"), html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-15T10:03:10Z"))
+                .taskType("fill_gaps:L1")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP B ###ACT b ###EXP F ###ACT f")
+                .build()
+        );
+        html = state.render();
+        assertHtmlNoCorrectAnswer(html, List.of("B", "D", "F"), List.of("b", "D", "f"));
+
+        //submit an incorrect answer 2
+        clock.plusSeconds(10);
+        taskResult = submitAnswer(List.of("B", "D", "f"), html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlNoCorrectAnswer(html, List.of("B", "D", "F"), List.of("B", "D", "f"));
+
+        //submit the correct answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer(List.of("B", "D", "F"), html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlHasCorrectAnswer(html, List.of("B", "D", "F"));
+
+        //click the "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
     private List<HtmlTag> makeAnsElems(List<String> expAns, List<String> userAns) {
         List<HtmlTag> elems = new ArrayList<>();
         for (int i = 0; i < userAns.size(); i++) {

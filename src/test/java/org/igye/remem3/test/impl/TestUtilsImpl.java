@@ -76,7 +76,15 @@ public class TestUtilsImpl implements TestUtils {
 
     @Override
     public void setValue(HtmlElem html, String paramName, String value) {
-        List<HtmlTag> inputs = getAllInputs(html).filter(inp -> paramName.equals(getName(inp))).toList();
+        List<HtmlTag> inputs = getAllWritableInputsByParamName(html, paramName);
+        if (inputs.size() == 1) {
+            inputs.getFirst().attr("value", value);
+        }
+    }
+
+    @Override
+    public void setValueExn(HtmlElem html, String paramName, String value) {
+        List<HtmlTag> inputs = getAllWritableInputsByParamName(html, paramName);
         if (inputs.size() != 1) {
             throw new Exn("inputs.size() != 1");
         }
@@ -116,6 +124,12 @@ public class TestUtilsImpl implements TestUtils {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         Mockito.when(httpServletRequest.getParameterMap()).thenReturn(parameterMap);
         return new RequestParamsImpl(httpServletRequest);
+    }
+
+    private List<HtmlTag> getAllWritableInputsByParamName(HtmlElem html, String paramName) {
+        return getAllInputs(html)
+            .filter(inp -> paramName.equals(getName(inp)) && !isHidden(inp) && !isDisabled(inp))
+            .toList();
     }
 
     private boolean equals(HtmlElem a, HtmlElem b) {
@@ -197,6 +211,10 @@ public class TestUtilsImpl implements TestUtils {
         return "select".equals(getType(inp));
     }
 
+    private boolean isHidden(HtmlTag inp) {
+        return "hidden".equals(getType(inp));
+    }
+
     private String getAttr(HtmlTag tag, String attrName) {
         Map<String, String> attrs = tag.getAttrs();
         if (attrs == null) {
@@ -233,5 +251,9 @@ public class TestUtilsImpl implements TestUtils {
 
     private boolean isSelected(HtmlTag tag) {
         return hasAttr(tag, "selected");
+    }
+
+    private boolean isDisabled(HtmlTag tag) {
+        return hasAttr(tag, "disabled");
     }
 }
