@@ -3,12 +3,15 @@ package org.igye.remem3.app.dto;
 import lombok.Getter;
 import org.igye.remem3.utils.Exn;
 
+import java.io.File;
+
 public class Task {
     @Getter
     private final Card card;
     @Getter
     private final TaskType taskType;
-    
+
+    private File file;
     private String id;
 
     public Task(Card card, TaskType taskType) {
@@ -16,10 +19,16 @@ public class Task {
         this.taskType = taskType;
     }
 
+    public File getFile() {
+        if (file == null) {
+            file = card.getFile().orElseThrow(() -> new Exn("A file is not set for a card."));
+        }
+        return file;
+    }
+
     public String getId() {
         if (id == null) {
-            id = card.getFile().orElseThrow(() -> new Exn("A file is not set for a card.")).getAbsolutePath()
-                + ":::" + taskType.getCode();
+            id = getFile().getAbsolutePath() + ":::" + taskType.getCode();
         }
         return id;
     }

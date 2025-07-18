@@ -22,7 +22,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -323,7 +322,7 @@ public class CardsImpl implements Cards {
             .text2(getStr(props, ATTR_TEXT_2, "").trim())
             .exactMatch2(getBool(props, ATTR_EXACT_MATCH_2, true))
             .notes(getStr(props, ATTR_NOTES, "").trim())
-            .history(parseHistory(getStr(props, ATTR_HIST, "").trim()))
+            .history(parseHistory(props.computeIfAbsent(ATTR_HIST, _ -> List.of())))
             .build();
     }
 
@@ -336,7 +335,7 @@ public class CardsImpl implements Cards {
             .descr(getStr(props, ATTR_DESCR, "").trim())
             .text(parseText(getStr(props, ATTR_TEXT, "").trim()))
             .notes(getStr(props, ATTR_NOTES, "").trim())
-            .history(parseHistory(getStr(props, ATTR_HIST, "").trim()))
+            .history(parseHistory(props.computeIfAbsent(ATTR_HIST, _ -> List.of())))
             .build();
     }
 
@@ -370,8 +369,8 @@ public class CardsImpl implements Cards {
             .map(Instant::parse);
     }
 
-    protected List<HistRec> parseHistory(String str) {
-        return Arrays.stream(str.split("[\n\r]+"))
+    protected List<HistRec> parseHistory(List<String> hist) {
+        return hist.stream()
             .map(String::trim)
             .filter(StringUtils::isNotBlank)
             .map(this::parseHistoryRec)

@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy {
 
-    public static final int MAX_NUM_OF_ROUNDS = 1000_000;
+    public static final int MAX_NUM_OF_ROUNDS = 1_000_000;
 
     private final List<Task> allTasks;
     private final Instant startTime;
@@ -104,7 +104,6 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
                     task.getCard().getHistory().stream()
                         .filter(histRec -> Objects.equals(histRec.getTaskType(), task.getTaskType().getCode()))
                         .filter(histRec -> startTime.isBefore(histRec.getTime()))
-                        .sorted(Comparator.comparing(HistRec::getTime))
                         .toList()
             ));
         Map<String, Integer> counts = hist.entrySet().stream()

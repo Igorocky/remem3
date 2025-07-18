@@ -112,7 +112,7 @@ class CardsImplTest {
                     .notes("notes")
                     .build()
             ),
-            cards.parseHistory("2025-07-04T14:14:08Z task1 1 notes")
+            cards.parseHistory(List.of("2025-07-04T14:14:08Z task1 1 notes"))
         );
         Assertions.assertEquals(
             List.of(
@@ -123,7 +123,7 @@ class CardsImplTest {
                     .notes("notes")
                     .build()
             ),
-            cards.parseHistory("\r\n\n2025-07-04T14:14:08Z task1 1 notes\r\n\r\n")
+            cards.parseHistory(List.of("\r\n\n2025-07-04T14:14:08Z task1 1 notes\r\n\r\n"))
         );
         Assertions.assertEquals(
             List.of(
@@ -141,7 +141,7 @@ class CardsImplTest {
                     .build()
             ),
             cards.parseHistory(
-                "\r\n\n2025-07-03T14:14:08Z task1 0 notes\r\n\n2025-07-04T14:14:08Z task1 1 notes\r\n\r\n"
+                List.of("\r\n\n2025-07-03T14:14:08Z task1 0 notes\r\n", "\n2025-07-04T14:14:08Z task1 1 notes\r\n\r\n")
             )
         );
     }
