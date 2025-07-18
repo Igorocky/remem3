@@ -1,6 +1,8 @@
 package org.igye.remem3.utils;
 
 import java.io.File;
+import java.time.Duration;
+import java.util.List;
 
 public interface Utils {
     String readStringFromFile(File file);
@@ -12,4 +14,8 @@ public interface Utils {
     String objToJson(Object obj);
 
     String makeExpectedActualPair(String expected, String actual);
+
+    List<Duration> parseDurations(String durStr);
+
+    String durationsToStr(List<Duration> durations);
 }

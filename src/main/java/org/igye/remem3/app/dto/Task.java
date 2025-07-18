@@ -13,6 +13,7 @@ public class Task {
 
     private File file;
     private String id;
+    private String dir;
 
     public Task(Card card, TaskType taskType) {
         this.card = card;
@@ -31,5 +32,12 @@ public class Task {
             id = getFile().getAbsolutePath() + ":::" + taskType.getCode();
         }
         return id;
+    }
+
+    public String getDir() {
+        if (dir == null) {
+            dir = getFile().getParentFile().getAbsolutePath();
+        }
+        return dir;
     }
 }

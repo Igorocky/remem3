@@ -18,11 +18,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy {
@@ -55,7 +57,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             .collect(Collectors.toCollection(ArrayList::new));
         Map<String, Instant> dirToLastTime = activeTasks.stream()
             .collect(Collectors.toMap(
-                task -> task.getFile().getParentFile().getAbsolutePath(),
+                Task::getDir,
                 task -> taskToHist.get(task.getId()).getLast().getTime(),
                 (t1, t2) -> t1.compareTo(t2) < 0 ? t2 : t1
             ));
@@ -69,7 +71,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             String curDir = preferredDirs.getFirst();
             for (int i = 0; i < activeTasks.size(); i++) {
                 Task task = activeTasks.get(i);
-                if (curDir.equals(task.getFile().getParentFile().getAbsolutePath())) {
+                if (curDir.equals(task.getDir())) {
                     selectedTasks.add(task);
                     activeTasks.remove(i);
                     preferredDirs.removeFirst();
@@ -79,14 +81,48 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             }
             throw new Exn(String.format("Cannot find an active task in the directory %s", curDir));
         }
-        if (selectedTasks.size() < NUM_OF_TASKS_TO_SELECT && !stats.getNewTasks().isEmpty()) {
-            selectedTasks.add(stats.getNewTasks().getFirst());
+        List<Task> newTasks = stats.getNewTasks();
+        if (selectedTasks.size() < NUM_OF_TASKS_TO_SELECT && !newTasks.isEmpty()) {
+            Collections.shuffle(newTasks);
+            Set<String> knownDirs = new HashSet<>(preferredDirs);
+            boolean newTaskFound = false;
+            for (Task task : newTasks) {
+                if (!knownDirs.contains(task.getDir())) {
+                    selectedTasks.add(task);
+                    newTaskFound = true;
+                    break;
+                }
+            }
+            if (!newTaskFound) {
+                dirLoop:
+                for (int d = 0; d < preferredDirs.size(); d++) {
+                    String dir = preferredDirs.get(d);
+                    for (int t = 0; t < newTasks.size(); t++) {
+                        Task task = newTasks.get(t);
+                        if (dir.equals(task.getDir())) {
+                            selectedTasks.add(task);
+                            break dirLoop;
+                        }
+                    }
+                }
+                throw new Exn("Cannot find a new task.");
+            }
         }
-        return Optional.of(selectedTasks);
+        return Optional.of(shuffleTasksWithinDirs(selectedTasks));
+    }
+
+    private List<Task> shuffleTasksWithinDirs(List<Task> tasks) {
+        Map<String, List<Task>> dirToTasks = tasks.stream()
+            .collect(Collectors.groupingBy(Task::getDir, Collectors.toCollection(ArrayList::new)));
+        dirToTasks.values().forEach(Collections::shuffle);
+        return tasks.stream()
+            .map(t -> dirToTasks.get(t.getDir()).removeFirst())
+            .toList();
     }
 
     @Override
     public HtmlElem renderParams(boolean historyUpdated) {
+        Stats stats = getStats();
         throw new Exn("not implemented");
     }
 
