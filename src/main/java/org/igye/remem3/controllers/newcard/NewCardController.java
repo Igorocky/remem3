@@ -211,11 +211,13 @@ public class NewCardController extends HtmlBuilder
         return table(List.of(
             List.of(
                 text("Language 1"),
-                rndAvailableLanguages(st.getSettings(), card.getLang1(), PAR_CARD_TRANSLATE_LANG_1)
-            ),
-            List.of(
-                text("Exact match 1"),
-                inpCheckbox(PAR_CARD_TRANSLATE_EXACT_MATCH_1, "true", card.isExactMatch1())
+                table(List.of(List.of(
+                    rndAvailableLanguages(st.getSettings(), card.getLang1(), PAR_CARD_TRANSLATE_LANG_1),
+                    select(PAR_CARD_TRANSLATE_EXACT_MATCH_1, false, String.valueOf(card.isExactMatch1()), List.of(
+                        Pair.of("true", text("Exact match")),
+                        Pair.of("false", text("Approximate match"))
+                    ))
+                )))
             ),
             List.of(
                 text("Text 1"),
@@ -227,11 +229,13 @@ public class NewCardController extends HtmlBuilder
             ),
             List.of(
                 text("Language 2"),
-                rndAvailableLanguages(st.getSettings(), card.getLang2(), PAR_CARD_TRANSLATE_LANG_2)
-            ),
-            List.of(
-                text("Exact match 2"),
-                inpCheckbox(PAR_CARD_TRANSLATE_EXACT_MATCH_2, "true", card.isExactMatch2())
+                table(List.of(List.of(
+                    rndAvailableLanguages(st.getSettings(), card.getLang2(), PAR_CARD_TRANSLATE_LANG_2),
+                    select(PAR_CARD_TRANSLATE_EXACT_MATCH_2, false, String.valueOf(card.isExactMatch2()), List.of(
+                        Pair.of("true", text("Exact match")),
+                        Pair.of("false", text("Approximate match"))
+                    ))
+                )))
             ),
             List.of(
                 text("Text 2"),
@@ -317,14 +321,18 @@ public class NewCardController extends HtmlBuilder
                 cache.getStr(PAR_CARD_TRANSLATE_LANG_1, settings.getLanguages().getFirst())
             ))
             .text1(params.getParam(PAR_CARD_TRANSLATE_TEXT_1, ""))
-            .exactMatch1(params.hasParam(PAR_CARD_TRANSLATE_EXACT_MATCH_1))
+            .exactMatch1(isExactMatch(PAR_CARD_TRANSLATE_EXACT_MATCH_1, params))
             .lang2(params.getParam(
                 PAR_CARD_TRANSLATE_LANG_2,
                 cache.getStr(PAR_CARD_TRANSLATE_LANG_2, settings.getLanguages().getFirst())
             ))
             .text2(params.getParam(PAR_CARD_TRANSLATE_TEXT_2, ""))
-            .exactMatch2(params.hasParam(PAR_CARD_TRANSLATE_EXACT_MATCH_2))
+            .exactMatch2(isExactMatch(PAR_CARD_TRANSLATE_EXACT_MATCH_2, params))
             .notes(params.getParam(PAR_CARD_TRANSLATE_NOTES, ""))
             .build();
+    }
+
+    private boolean isExactMatch(String paramName, RequestParams params) {
+        return !params.hasParam(paramName) || Boolean.parseBoolean(params.getParam(paramName));
     }
 }
