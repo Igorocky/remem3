@@ -33,16 +33,19 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     private final Clock clock;
     private final List<Task> allTasks;
     private final List<Duration> bucketDelays;
+    private final boolean useBucketForNewTasks;
     private final Random rnd;
 
     public RepeatStrategyBuckets(
         Clock clock,
         List<Task> allTasks,
-        List<Duration> bucketDelays
+        List<Duration> bucketDelays,
+        boolean useBucketForNewTasks
     ) {
         this.clock = clock;
         this.allTasks = Collections.unmodifiableList(allTasks);
         this.bucketDelays = Collections.unmodifiableList(bucketDelays);
+        this.useBucketForNewTasks = useBucketForNewTasks;
         rnd = new Random();
     }
 
@@ -53,12 +56,18 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         List<Task> activeTasks = stats.getBuckets().stream()
             .map(Pair::getRight)
             .flatMap(Collection::stream)
-            .sorted(Comparator.comparing(task -> taskToHist.get(task.getId()).getLast().getTime()))
+            .sorted(Comparator.comparing(task -> {
+                List<HistRec> hist = taskToHist.get(task.getId());
+                return hist.isEmpty() ? Instant.MIN : hist.getLast().getTime();
+            }))
             .collect(Collectors.toCollection(ArrayList::new));
         Map<String, Instant> dirToLastTime = activeTasks.stream()
             .collect(Collectors.toMap(
                 Task::getDir,
-                task -> taskToHist.get(task.getId()).getLast().getTime(),
+                task -> {
+                    List<HistRec> hist = taskToHist.get(task.getId());
+                    return hist.isEmpty() ? Instant.MIN : hist.getLast().getTime();
+                },
                 (t1, t2) -> t1.compareTo(t2) < 0 ? t2 : t1
             ));
         ArrayList<String> preferredDirs = dirToLastTime.entrySet().stream()
@@ -101,11 +110,14 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                         Task task = newTasks.get(t);
                         if (dir.equals(task.getDir())) {
                             selectedTasks.add(task);
+                            newTaskFound = true;
                             break dirLoop;
                         }
                     }
                 }
-                throw new Exn("Cannot find a new task.");
+                if (!newTaskFound) {
+                    throw new Exn("Cannot find a new task.");
+                }
             }
         }
         return Optional.of(shuffleTasksWithinDirs(selectedTasks));
@@ -130,10 +142,9 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         Map<String, List<HistRec>> taskToHist = allTasks.stream()
             .collect(Collectors.toMap(
                 Task::getId,
-                task ->
-                    task.getCard().getHistory().stream()
-                        .filter(histRec -> Objects.equals(histRec.getTaskType(), task.getTaskType().getCode()))
-                        .toList()
+                task -> task.getCard().getHistory().stream()
+                    .filter(histRec -> Objects.equals(histRec.getTaskType(), task.getTaskType().getCode()))
+                    .toList()
             ));
         List<Task> newTasks = new ArrayList<>();
         List<Pair<List<Task>, List<Task>>> buckets = new ArrayList<>(bucketDelays.size());
@@ -146,12 +157,14 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             .toList();
         for (Task task : allTasks) {
             List<HistRec> taskHist = taskToHist.get(task.getId());
-            if (taskHist.isEmpty()) {
+            if (taskHist.isEmpty() && useBucketForNewTasks) {
                 newTasks.add(task);
             } else {
                 int bucketNum = getBucketNum(taskHist);
                 Pair<List<Task>, List<Task>> bucket = buckets.get(bucketNum);
-                if (taskHist.getLast().getTime().isBefore(bucketActivationTimes.get(bucketNum))) {
+                if (!taskHist.isEmpty()
+                    && taskHist.getLast().getTime().isBefore(bucketActivationTimes.get(bucketNum))
+                ) {
                     bucket.getLeft().add(task);
                 } else {
                     bucket.getRight().add(task);
@@ -166,7 +179,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     }
 
     private int getBucketNum(List<HistRec> hist) {
-        if (hist.isEmpty()) {
+        if (hist.isEmpty() && useBucketForNewTasks) {
             throw new Exn("hist.isEmpty()");
         }
         int res = 0;
