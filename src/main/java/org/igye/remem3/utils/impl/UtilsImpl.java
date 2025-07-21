@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class UtilsImpl implements Utils {
@@ -64,20 +64,18 @@ public class UtilsImpl implements Utils {
     }
 
     @Override
-    public List<Duration> parseDurations(String durStr) {
+    public Duration parseDuration(String durStr) {
+        if (StringUtils.isBlank(durStr)) {
+            throw new Exn("Duration cannot be empty");
+        }
         return Arrays.stream(durStr.trim().split("\\s+"))
-            .map(this::parseDuration)
-            .toList();
+            .map(this::parseSingleDuration)
+            .reduce(Duration::plus)
+            .orElseThrow(() -> new Exn("Cannot get the sum of durations."));
     }
 
     @Override
-    public String durationsToStr(List<Duration> durations) {
-        return durations.stream()
-            .map(this::durationToStr)
-            .collect(Collectors.joining(" "));
-    }
-
-    private String durationToStr(Duration dur) {
+    public String durationToStr(Duration dur) {
         StringBuilder sb = new StringBuilder();
         long seconds = dur.getSeconds();
         Iterator<Pair<Long, String>> iter = SECONDS_TO_UNIT.iterator();
@@ -95,7 +93,7 @@ public class UtilsImpl implements Utils {
         return sb.toString().trim();
     }
 
-    private Duration parseDuration(String str) {
+    private Duration parseSingleDuration(String str) {
         Matcher matcher = DURATION_PATTERN.matcher(str);
         if (!matcher.matches()) {
             throw new Exn(String.format("Cannot parse duration '%s'.", str));
