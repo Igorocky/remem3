@@ -12,11 +12,11 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -57,13 +57,22 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     public Optional<List<Task>> getNextTasks() {
         Stats stats = getStats();
         Map<String, List<HistRec>> taskToHist = stats.getTaskToHist();
-        List<Task> activeTasks = stats.getBuckets().stream()
-            .map(Pair::getRight)
-            .flatMap(Collection::stream)
-            .sorted(Comparator.comparing(task -> {
-                List<HistRec> hist = taskToHist.get(task.getId());
-                return hist.isEmpty() ? Instant.MIN : hist.getLast().getTime();
-            }))
+        Instant curTime = clock.instant();
+        List<Pair<Task, BigDecimal>> overdues = new ArrayList<>();
+        List<Pair<List<Task>, List<Task>>> buckets = stats.getBuckets();
+        for (int b = 0; b < buckets.size(); b++) {
+            List<Task> activeTasks = buckets.get(b).getRight();
+            for (int t = 0; t < activeTasks.size(); t++) {
+                Task task = activeTasks.get(t);
+                overdues.add(Pair.of(
+                    task,
+                    getOverdue(curTime, bucketDelays.get(b), taskToHist.get(task.getId()))
+                ));
+            }
+        }
+        List<Task> activeTasks = overdues.stream()
+            .sorted(Comparator.<Pair<Task, BigDecimal>, BigDecimal>comparing(Pair::getRight).reversed())
+            .map(Pair::getLeft)
             .collect(Collectors.toCollection(ArrayList::new));
         Map<String, Instant> dirToLastTime = activeTasks.stream()
             .collect(Collectors.toMap(
@@ -127,15 +136,6 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         return Optional.of(shuffleTasksWithinDirs(selectedTasks));
     }
 
-    private List<Task> shuffleTasksWithinDirs(List<Task> tasks) {
-        Map<String, List<Task>> dirToTasks = tasks.stream()
-            .collect(Collectors.groupingBy(Task::getDir, Collectors.toCollection(ArrayList::new)));
-        dirToTasks.values().forEach(Collections::shuffle);
-        return tasks.stream()
-            .map(t -> dirToTasks.get(t.getDir()).removeFirst())
-            .toList();
-    }
-
     @Override
     public HtmlElem renderParams(boolean historyUpdated) {
         Stats stats = getStats();
@@ -189,6 +189,31 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         return table(rows).attr("class", "table-single-border bucket-params");
     }
 
+    private BigDecimal getOverdue(Instant curTime, Duration bucketDelay, List<HistRec> hist) {
+        if (hist.isEmpty()) {
+            return new BigDecimal("0.15");
+        }
+        Instant lastTime = hist.getLast().getTime();
+        Duration taskDuration = Duration.between(lastTime, curTime);
+        if (taskDuration.compareTo(bucketDelay) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return BigDecimal.valueOf(taskDuration.minus(bucketDelay).getSeconds())
+            .setScale(10, RoundingMode.HALF_UP)
+            .divide(
+                BigDecimal.valueOf(bucketDelay.getSeconds()).setScale(10, RoundingMode.HALF_UP), RoundingMode.HALF_UP
+            );
+    }
+
+    private List<Task> shuffleTasksWithinDirs(List<Task> tasks) {
+        Map<String, List<Task>> dirToTasks = tasks.stream()
+            .collect(Collectors.groupingBy(Task::getDir, Collectors.toCollection(ArrayList::new)));
+        dirToTasks.values().forEach(Collections::shuffle);
+        return tasks.stream()
+            .map(t -> dirToTasks.get(t.getDir()).removeFirst())
+            .toList();
+    }
+
     private Stats getStats() {
         Map<String, List<HistRec>> taskToHist = allTasks.stream()
             .collect(Collectors.toMap(
@@ -203,9 +228,6 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             buckets.add(Pair.of(new ArrayList<>(), new ArrayList<>()));
         }
         Instant curTime = clock.instant();
-        List<Instant> bucketActivationTimes = bucketDelays.stream()
-            .map(curTime::plus)
-            .toList();
         for (Task task : allTasks) {
             List<HistRec> taskHist = taskToHist.get(task.getId());
             if (taskHist.isEmpty() && useBucketForNewTasks) {
@@ -213,12 +235,16 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             } else {
                 int bucketNum = getBucketNum(taskHist);
                 Pair<List<Task>, List<Task>> bucket = buckets.get(bucketNum);
-                if (!taskHist.isEmpty()
-                    && taskHist.getLast().getTime().isBefore(bucketActivationTimes.get(bucketNum))
-                ) {
-                    bucket.getLeft().add(task);
-                } else {
+                if (taskHist.isEmpty()) {
                     bucket.getRight().add(task);
+                } else {
+                    Instant taskLastTime = taskHist.getLast().getTime();
+                    Duration taskDur = Duration.between(taskLastTime, curTime);
+                    if (taskDur.compareTo(bucketDelays.get(bucketNum)) > 0) {
+                        bucket.getRight().add(task);
+                    } else {
+                        bucket.getLeft().add(task);
+                    }
                 }
             }
         }
