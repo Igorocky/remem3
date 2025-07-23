@@ -2,6 +2,7 @@ package org.igye.remem3.utils;
 
 import java.io.File;
 import java.time.Duration;
+import java.util.List;
 
 public interface Utils {
     String readStringFromFile(File file);
@@ -15,6 +16,8 @@ public interface Utils {
     String makeExpectedActualPair(String expected, String actual);
 
     Duration parseDuration(String durStr);
+
+    List<Duration> parseDurations(String durStr);
 
     String durationToStr(Duration duration);
 }

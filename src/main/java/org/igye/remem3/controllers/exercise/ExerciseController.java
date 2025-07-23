@@ -147,10 +147,16 @@ public class ExerciseController extends HtmlBuilder
 
     @Override
     public void saveState(ExerciseState state) {
-        switch (state) {
-            case ExerciseState.SetParams _ -> this.startedState = null;
-            case ExerciseState.Started st -> this.startedState = st;
-        }
+        int _ = switch (state) {
+            case ExerciseState.SetParams _ -> {
+                this.startedState = null;
+                yield 1;
+            }
+            case ExerciseState.Started st -> {
+                this.startedState = st;
+                yield 1;
+            }
+        };
     }
 
     @Override
@@ -396,7 +402,7 @@ public class ExerciseController extends HtmlBuilder
             .cards(cards)
             .dirSelector(dirSelector)
             .taskTypes(getTaskTypes(getAvailableTaskTypes(cards, dirSelector.getSelectedDirectory()), params))
-            .repeatStrategyCmp(new RepeatStrategyCmpImpl("PAR_REPEAT_STRATEGY", params))
+            .repeatStrategyCmp(new RepeatStrategyCmpImpl(settings, utils, "PAR_REPEAT_STRATEGY", params))
             .build();
     }
 

@@ -149,13 +149,17 @@ public class NewCardController extends HtmlBuilder
                 return st.withErrors(errors);
             }
             st.getCache().put(PAR_DIR_TO_SAVE_NEW_CARD_TO, dirStr);
-            switch (cardDto) {
-                case CardDto.FillGaps dto -> st.getCache().put(PAR_CARD_FILL_GAPS_LANG, dto.getLang());
+            int _ = switch (cardDto) {
+                case CardDto.FillGaps dto -> {
+                    st.getCache().put(PAR_CARD_FILL_GAPS_LANG, dto.getLang());
+                    yield 1;
+                }
                 case CardDto.Translate dto -> {
                     st.getCache().put(PAR_CARD_TRANSLATE_LANG_1, dto.getLang1());
                     st.getCache().put(PAR_CARD_TRANSLATE_LANG_2, dto.getLang2());
+                    yield 1;
                 }
-            }
+            };
             cards.saveCard(new File(dir, makeFileName(card)), card);
             return st.withCardParams(clearParams(cardDto));
         } catch (Exception ex) {

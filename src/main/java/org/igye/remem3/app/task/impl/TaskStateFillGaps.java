@@ -228,8 +228,11 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             if (!content.isEmpty()) {
                 content.add(text(" "));
             }
-            switch (textPart) {
-                case TextPart.Text text -> content.add(text(text.getText()));
+            int _ = switch (textPart) {
+                case TextPart.Text text -> {
+                    content.add(text(text.getText()));
+                    yield 1;
+                }
                 case TextPart.Gap gap -> {
                     String userAns = userAnswers.get(gapIdx);
                     String gapParamName = keyValueParam(PAR_USER_ANS, gapIdx);
@@ -240,8 +243,9 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
                         content.add(inpHidden(gapParamName, userAns));
                     }
                     gapIdx++;
+                    yield 1;
                 }
-            }
+            };
         }
         return frag(content);
     }

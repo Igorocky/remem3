@@ -75,6 +75,15 @@ public class UtilsImpl implements Utils {
     }
 
     @Override
+    public List<Duration> parseDurations(String durStr) {
+        return Arrays.stream(durStr.split(","))
+            .map(String::trim)
+            .filter(StringUtils::isNotBlank)
+            .map(this::parseDuration)
+            .toList();
+    }
+
+    @Override
     public String durationToStr(Duration dur) {
         StringBuilder sb = new StringBuilder();
         long seconds = dur.getSeconds();

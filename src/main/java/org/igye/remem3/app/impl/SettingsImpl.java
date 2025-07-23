@@ -6,9 +6,13 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.Utils;
 
 import java.io.File;
+import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -21,6 +25,7 @@ public class SettingsImpl implements Settings {
     private static final String PROP_LANGUAGES = "languages";
     private static final String PROP_CACHE_FILE = "cache_file";
     private static final String PROP_CARD_EDITOR = "card_editor";
+    private static final String PROP_BUCKET_DELAYS = "bucket_delays";
     private static final Pattern SPACE_PAT = Pattern.compile("\\s");
 
     @Builder.Default
@@ -31,6 +36,8 @@ public class SettingsImpl implements Settings {
     private String cacheFile = "";
     @Builder.Default
     private String cardEditor = "";
+    @Builder.Default
+    private List<BucketDelaysDto> bucketDelays = List.of();
 
     public static Settings load(App app) {
         List<String> languages = trimAndSkipEmpty(Collections.unmodifiableList(app.getPropList(PROP_LANGUAGES)));
@@ -60,7 +67,48 @@ public class SettingsImpl implements Settings {
             .directoriesWithCards(directoriesWithCards)
             .cacheFile(getNotBlankProp(app, PROP_CACHE_FILE))
             .cardEditor(getNotBlankProp(app, PROP_CARD_EDITOR))
+            .bucketDelays(parseBucketDelays(app.getPropStr(PROP_BUCKET_DELAYS), app.getUtils()))
             .build();
+    }
+
+    private static List<BucketDelaysDto> parseBucketDelays(String str, Utils utils) {
+        if (StringUtils.isBlank(str)) {
+            throw new Exn(String.format("%s property cannot be empty.", PROP_BUCKET_DELAYS));
+        }
+        List<BucketDelaysDto> bucketDelays = Arrays.stream(str.split(";"))
+            .map(String::trim)
+            .filter(StringUtils::isNotBlank)
+            .map(part -> {
+                String[] nameAndDelays = part.split(":");
+                if (nameAndDelays.length != 2) {
+                    throw new Exn(String.format(
+                        "Each bucket delays part must consist of a name and delays; cannot parse '%s'.", part
+                    ));
+                }
+                String name = nameAndDelays[0].trim();
+                if (StringUtils.isBlank(name)) {
+                    throw new Exn(String.format("The name of bucket delays part must not be empty, got '%s'.", part));
+                }
+                String delaysFromProps = nameAndDelays[1].trim();
+                List<Duration> delays = utils.parseDurations(delaysFromProps);
+                if (delays.isEmpty()) {
+                    throw new Exn(String.format("At least one bucket must be defined, got 0 in '%s'.", part));
+                }
+                return BucketDelaysDto.builder()
+                    .name(name)
+                    .delays(delays)
+                    .delaysFromProps(delaysFromProps)
+                    .build();
+            })
+            .toList();
+        long distinctNameCnt = bucketDelays.stream()
+            .map(BucketDelaysDto::getName)
+            .distinct()
+            .count();
+        if (bucketDelays.size() != distinctNameCnt) {
+            throw new Exn("All bucket delays names must be unique");
+        }
+        return bucketDelays;
     }
 
     private static String getNotBlankProp(App app, String propName) {

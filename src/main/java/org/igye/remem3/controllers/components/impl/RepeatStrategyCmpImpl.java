@@ -3,13 +3,20 @@ package org.igye.remem3.controllers.components.impl;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.RepeatStrategyType;
+import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.impl.RepeatStrategyBuckets;
 import org.igye.remem3.app.impl.RepeatStrategyCircle;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
+import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +26,8 @@ import static org.igye.remem3.app.impl.RepeatStrategyCircle.MAX_NUM_OF_ROUNDS;
 
 public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategyCmp {
 
+    private final Settings settings;
+    private final Utils utils;
     private final String baseParamName;
 
     private final String parStrategyType;
@@ -30,17 +39,27 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private final String parCircleNumOfRounds;
     private Optional<Integer> valCircleNumOfRounds;
 
-    public RepeatStrategyCmpImpl(String baseParamName, RequestParams params) {
+    private final String parBucketsDelays;
+    private String valBucketsDelays;
+
+    private final String parBucketsUseBucketForNewTasks;
+    private boolean valBucketsUseBucketForNewTasks;
+
+    public RepeatStrategyCmpImpl(Settings settings, Utils utils, String baseParamName, RequestParams params) {
+        this.settings = settings;
+        this.utils = utils;
         this.baseParamName = baseParamName;
         parStrategyType = makeParamName("TYPE");
         parCircleRndFactor = makeParamName("CIRCLE_RANDOMNESS_FACTOR");
         parCircleNumOfRounds = makeParamName("CIRCLE_NUMBER_OF_ROUNDS");
+        parBucketsDelays = makeParamName("BUCKETS_DELAYS");
+        parBucketsUseBucketForNewTasks = makeParamName("BUCKETS_USE_BUCKET_FOR_NEW_TASKS");
 
         valStrategyType = params.hasParam(parStrategyType)
             ? RepeatStrategyType.valueOf(params.getParam(parStrategyType))
             : RepeatStrategyType.CIRCLE;
 
-        switch (valStrategyType) {
+        int _ = switch (valStrategyType) {
             case CIRCLE -> {
                 valCircleRndFactor = params.hasParam(parCircleRndFactor)
                     ? parseCircleRandomnessFactor(params.getParam(parCircleRndFactor))
@@ -48,8 +67,18 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valCircleNumOfRounds = params.hasParam(parCircleNumOfRounds)
                     ? parseCircleNumOfRounds(params.getParam(parCircleNumOfRounds))
                     : Optional.empty();
+                yield 1;
             }
-        }
+            case BUCKETS -> {
+                valBucketsDelays = params.hasParam(parBucketsDelays)
+                    ? params.getParam(parBucketsDelays)
+                    : settings.getBucketDelays().getFirst().getName();
+                valBucketsUseBucketForNewTasks =
+                    !params.hasParam(parBucketsUseBucketForNewTasks)
+                        || Boolean.parseBoolean(params.getParam(parBucketsUseBucketForNewTasks));
+                yield 1;
+            }
+        };
     }
 
     @Override
@@ -74,6 +103,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             ))),
             switch (valStrategyType) {
                 case CIRCLE -> rndCircleParams();
+                case BUCKETS -> rndBucketsParams();
             }
         );
     }
@@ -82,7 +112,44 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
         return switch (valStrategyType) {
             case CIRCLE -> new RepeatStrategyCircle(tasks, Instant.now(), valCircleRndFactor, valCircleNumOfRounds);
+            case BUCKETS -> new RepeatStrategyBuckets(
+                utils, Clock.systemDefaultZone(), tasks, getSelectedBucketDelays(), valBucketsUseBucketForNewTasks
+            );
         };
+    }
+
+    private HtmlElem rndBucketsParams() {
+        return table(List.of(
+            List.of(
+                text("Bucket delays"),
+                select(parBucketsDelays, valBucketsDelays,
+                    settings.getBucketDelays().stream()
+                        .map(delays ->
+                            Pair.of(
+                                delays.getName(),
+                                text(String.format("%s: %s", delays.getName(), delays.getDelaysFromProps()))
+                            ))
+                        .toList()
+                )
+            ),
+            List.of(
+                text("Use a separate bucket for new tasks"),
+                select(parBucketsUseBucketForNewTasks, valBucketsUseBucketForNewTasks + "",
+                    List.of(
+                        Pair.of(Boolean.TRUE.toString(), text("Yes")),
+                        Pair.of(Boolean.FALSE.toString(), text("No"))
+                    )
+                )
+            )
+        ));
+    }
+
+    private List<Duration> getSelectedBucketDelays() {
+        return settings.getBucketDelays().stream()
+            .filter(delays -> delays.getName().equals(valBucketsDelays))
+            .findFirst()
+            .map(BucketDelaysDto::getDelays)
+            .orElseThrow(() -> new Exn(String.format("Cannot find bucket delays by name '%s'", valBucketsDelays)));
     }
 
     private HtmlElem rndCircleParams() {
