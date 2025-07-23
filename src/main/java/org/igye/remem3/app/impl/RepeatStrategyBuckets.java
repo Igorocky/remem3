@@ -8,6 +8,7 @@ import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
+import org.igye.remem3.html.HtmlText;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
@@ -97,7 +98,9 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                     selectedTasks.add(task);
                     activeTasks.remove(i);
                     preferredDirs.removeFirst();
-                    preferredDirs.add(curDir);
+                    if (activeTasks.stream().anyMatch(t -> curDir.equals(t.getDir()))) {
+                        preferredDirs.add(curDir);
+                    }
                     continue mainLoop;
                 }
             }
@@ -144,49 +147,62 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         List<HtmlElem> delay = new ArrayList<>();
         List<HtmlElem> active = new ArrayList<>();
         List<HtmlElem> waiting = new ArrayList<>();
+        List<HtmlElem> total = new ArrayList<>();
         rows.add(header);
         rows.add(delay);
         rows.add(active);
         rows.add(waiting);
+        rows.add(total);
         header.add(text("Bucket number"));
         delay.add(text("Bucket delay"));
         active.add(text("Active"));
         waiting.add(text("Waiting"));
+        total.add(text("Total"));
         List<Pair<List<Task>, List<Task>>> buckets = stats.getBuckets();
         List<Task> newTasks = stats.getNewTasks();
         Instant curTime = clock.instant();
-        List<Instant> bucketActivationTimes = bucketDelays.stream()
-            .map(curTime::plus)
-            .toList();
         Map<String, List<HistRec>> taskToHist = stats.getTaskToHist();
-        for (int i = 0; i < buckets.size(); i++) {
-            if (i == 0 && !newTasks.isEmpty()) {
+        for (int b = 0; b < buckets.size(); b++) {
+            if (b == 0 && !newTasks.isEmpty()) {
                 header.add(text("0"));
                 delay.add(null);
-                active.add(text(String.valueOf(newTasks.size())));
+                HtmlText numOfNewTasksElem = text(String.valueOf(newTasks.size()));
+                active.add(numOfNewTasksElem);
                 waiting.add(null);
+                total.add(numOfNewTasksElem);
             }
-            header.add(text(String.valueOf(i + 1)));
-            delay.add(text(utils.durationToStr(bucketDelays.get(i))));
-            int activeCnt = buckets.get(i).getRight().size();
-            List<Task> waitingTasks = buckets.get(i).getLeft();
+            header.add(text(String.valueOf(b + 1)));
+            Duration bucketDelay = bucketDelays.get(b);
+            delay.add(text(utils.durationToStr(bucketDelay)));
+            int activeCnt = buckets.get(b).getRight().size();
+            List<Task> waitingTasks = buckets.get(b).getLeft();
             int waitingCnt = waitingTasks.size();
             active.add(text(String.valueOf(activeCnt)));
             if (activeCnt == 0 && waitingCnt > 0) {
-                Instant activationTime = bucketActivationTimes.get(i);
-                Duration timeToWait = waitingTasks.stream()
+                Duration maxTaskDelay = waitingTasks.stream()
                     .map(t -> taskToHist.get(t.getId()))
                     .map(List::getLast)
                     .map(HistRec::getTime)
-                    .map(t -> t.isBefore(activationTime) ? Duration.between(t, activationTime) : Duration.ZERO)
-                    .min(Duration::compareTo)
-                    .orElseThrow(() -> new Exn("Cannot determine time to wait"));
+                    .map(lastTime ->
+                        lastTime.isBefore(curTime)
+                            ? Duration.between(lastTime, curTime)
+                            : Duration.ZERO
+                    )
+                    .max(Duration::compareTo)
+                    .orElseThrow(() -> new Exn("Cannot determine maxTaskDelay."));
+                Duration timeToWait = bucketDelay.compareTo(maxTaskDelay) <= 0
+                    ? Duration.ZERO
+                    : bucketDelay.minus(maxTaskDelay);
                 waiting.add(text(String.format("%s (%s)", waitingCnt, utils.durationToStr(timeToWait))));
             } else {
                 waiting.add(text(String.valueOf(waitingCnt)));
             }
+            total.add(text(String.valueOf(activeCnt + waitingCnt)));
         }
-        return table(rows).attr("class", "table-single-border bucket-params");
+        return frag(
+            div(text(String.format("Number of tasks: %s", allTasks.size()))),
+            div(table(rows).attr("class", "table-single-border bucket-params"))
+        );
     }
 
     private BigDecimal getOverdue(Instant curTime, Duration bucketDelay, List<HistRec> hist) {
@@ -228,12 +244,13 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             buckets.add(Pair.of(new ArrayList<>(), new ArrayList<>()));
         }
         Instant curTime = clock.instant();
+        int maxBucketNum = buckets.size() - 1;
         for (Task task : allTasks) {
             List<HistRec> taskHist = taskToHist.get(task.getId());
             if (taskHist.isEmpty() && useBucketForNewTasks) {
                 newTasks.add(task);
             } else {
-                int bucketNum = getBucketNum(taskHist);
+                int bucketNum = Math.min(getBucketNum(taskHist), maxBucketNum);
                 Pair<List<Task>, List<Task>> bucket = buckets.get(bucketNum);
                 if (taskHist.isEmpty()) {
                     bucket.getRight().add(task);

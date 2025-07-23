@@ -158,7 +158,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     private HtmlElem rndUserAnswer() {
         List<HtmlElem> content = new ArrayList<>();
         content.add(text(exactMatch ? "= " : "~ "));
-        HtmlTag inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER).attr("size", "200");
+        HtmlTag inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER, true).attr("size", "200");
         content.add(inpText);
         if (!exactMatch && showAnswer || userAnswerIsCorrect.orElse(false)) {
             inpText.attr("disabled", "");
@@ -190,7 +190,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             if (exactMatch && userAnswerIsCorrect.orElse(false) || !exactMatch && histRec.isPresent()) {
                 content.add(frag(
                     inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
-                    inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
+                    inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1")
                 ));
             }
             if (!exactMatch && histRec.isEmpty()) {
@@ -202,7 +202,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                         inpSubmit(parMark1, "Correct").attr("style", "background-color: green;")
                     ),
                     List.of(
-                        inpText("", "", parMark0).attr("size", "1"),
+                        inpText("", "", parMark0, true).attr("size", "1"),
                         inpText("", "", parMark1).attr("size", "1")
                     )
                 )));
