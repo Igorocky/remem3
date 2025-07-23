@@ -564,11 +564,12 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             String eAns = expAns.get(i);
             if (eAns.equals(uAns)) {
                 elems.add(
-                    inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS).attr("size", "20").attr("disabled", "")
+                    inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS, true)
+                        .attr("size", "20").attr("disabled", "")
                 );
                 elems.add(inpHidden(PAR_USER_ANS + ":" + i, uAns));
             } else {
-                elems.add(inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS).attr("size", "20"));
+                elems.add(inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS, true).attr("size", "20"));
             }
         }
         return elems;
@@ -598,7 +599,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
     private void assertHtmlHasCorrectAnswer(HtmlElem html, List<String> expAns) {
         List<HtmlTag> elems = new ArrayList<>(makeAnsElems(expAns, expAns));
         elems.add(inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"));
-        elems.add(inpText("", "", ACT_COMPLETE_TASK).attr("size", "1"));
+        elems.add(inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1"));
         testUtils.assertInputs(html, elems);
     }
 

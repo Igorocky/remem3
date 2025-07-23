@@ -435,7 +435,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
 
     private void assertHtmlExactMatchNoCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200"),
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "200"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
             inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
         );
@@ -443,23 +443,23 @@ class TaskStateTranslateTest extends HtmlBuilder {
 
     private void assertHtmlExactMatchNoCorrectAnswerShowAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200"),
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "200"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer")
         );
     }
 
     private void assertHtmlExactMatchHasCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200").attr("disabled", ""),
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "200").attr("disabled", ""),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
-            inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
+            inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1")
         );
     }
 
     private void assertHtmlApproxMatchNoAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200"),
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "200"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
             inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
         );
@@ -467,21 +467,21 @@ class TaskStateTranslateTest extends HtmlBuilder {
 
     private void assertHtmlApproxMatchHasAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200").attr("disabled", ""),
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "200").attr("disabled", ""),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":0", "Incorrect").attr("style", "background-color: red;"),
             inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":1", "Correct").attr("style", "background-color: green;"),
-            inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":0").attr("size", "1"),
+            inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":0", true).attr("size", "1"),
             inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":1").attr("size", "1")
         );
     }
 
     private void assertHtmlApproxMatchShowAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER).attr("size", "200").attr("disabled", ""),
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "200").attr("disabled", ""),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
-            inpText("", "", ACT_COMPLETE_TASK).attr("size", "1")
+            inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1")
         );
     }
 
