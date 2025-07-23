@@ -1,0 +1,8 @@
+.table-single-border, .table-single-border td {
+    border-collapse: collapse;
+    border: 1px solid black
+}
+
+.bucket-params td {
+    padding: 5px;
+}

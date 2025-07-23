@@ -1,6 +1,7 @@
 package org.igye.remem3.html;
 
 import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
@@ -59,7 +60,8 @@ public class HtmlBuilder {
             h("head",
                 h("meta", Map.of("charset", "UTF-8")),
                 h("title", text(title)),
-                h("script", Map.of("type", "text/javascript", "src", contextPath + "/remem-utils.js"), text(""))
+                h("script", Map.of("type", "text/javascript", "src", contextPath + "/remem-utils.js"), text("")),
+                h("link", Map.of("rel", "stylesheet", "href", contextPath + "/remem.css"))
             ),
             h("body", children)
         );
@@ -130,7 +132,7 @@ public class HtmlBuilder {
     }
 
     protected HtmlTag div(String style, List<? extends HtmlElem> children) {
-        return h("div", Map.of("style", style), children);
+        return h("div", Map.of("style", style), CollectionUtils.isEmpty(children) ? List.of(text("")) : children);
     }
 
     protected HtmlTag div(String style, HtmlElem... content) {
@@ -150,7 +152,7 @@ public class HtmlBuilder {
             tableData.stream()
                 .map(rowData -> h("tr",
                     rowData.stream()
-                        .map(cellData -> h("td", cellData))
+                        .map(cellData -> h("td", cellData == null ? text("") : cellData))
                         .toList()
                 ))
                 .toList()

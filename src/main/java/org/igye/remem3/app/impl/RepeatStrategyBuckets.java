@@ -148,6 +148,10 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         rows.add(delay);
         rows.add(active);
         rows.add(waiting);
+        header.add(text("Bucket number"));
+        delay.add(text("Bucket delay"));
+        active.add(text("Active"));
+        waiting.add(text("Waiting"));
         List<Pair<List<Task>, List<Task>>> buckets = stats.getBuckets();
         List<Task> newTasks = stats.getNewTasks();
         Instant curTime = clock.instant();
@@ -182,7 +186,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                 waiting.add(text(String.valueOf(waitingCnt)));
             }
         }
-        return table(rows);
+        return table(rows).attr("class", "table-single-border bucket-params");
     }
 
     private Stats getStats() {
