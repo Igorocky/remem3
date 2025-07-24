@@ -53,4 +53,8 @@ public final class HtmlTag implements HtmlElem {
         attrs.put(attrName, attrValue);
         return this;
     }
+
+    public HtmlTag disabled() {
+        return attr("disabled", "");
+    }
 }

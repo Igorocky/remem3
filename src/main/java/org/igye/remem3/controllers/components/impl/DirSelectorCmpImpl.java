@@ -20,12 +20,14 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
     private final Cache cache;
     private final String baseParamName;
     private final List<String> selectedDirectoryList;
+    private final boolean isReadonly;
 
     public DirSelectorCmpImpl(Settings settings, Cache cache, RequestParams params, String baseParamName) {
         this.settings = settings;
         this.cache = cache;
         this.baseParamName = baseParamName;
         this.selectedDirectoryList = getSelectedDirectoryList(params);
+        isReadonly = false;
     }
 
     public DirSelectorCmpImpl(Settings settings, Cache cache, String dirStr, String baseParamName) {
@@ -33,6 +35,15 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
         this.cache = cache;
         this.baseParamName = baseParamName;
         this.selectedDirectoryList = getSelectedDirectoryList(dirStr);
+        isReadonly = false;
+    }
+
+    public DirSelectorCmpImpl(Settings settings, Cache cache, File dir, String baseParamName) {
+        this.settings = settings;
+        this.cache = cache;
+        this.baseParamName = baseParamName;
+        this.selectedDirectoryList = List.of(dir.getAbsolutePath());
+        isReadonly = true;
     }
 
     @Override
@@ -52,6 +63,9 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
 
     @Override
     public HtmlElem render() {
+        if (isReadonly) {
+            return text(getSelectedDirectoryStr());
+        }
         List<HtmlElem> selectors = new ArrayList<>();
         String parentPath = "";
         for (int i = 0; i < selectedDirectoryList.size(); i++) {

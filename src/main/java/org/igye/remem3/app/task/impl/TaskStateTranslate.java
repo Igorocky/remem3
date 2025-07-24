@@ -161,7 +161,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         HtmlTag inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER, true).attr("size", "200");
         content.add(inpText);
         if (!exactMatch && showAnswer || userAnswerIsCorrect.orElse(false)) {
-            inpText.attr("disabled", "");
+            inpText.disabled();
             content.add(inpHidden(PAR_USER_ANS, userAnswer));
         }
         return frag(content);

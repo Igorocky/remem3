@@ -3,6 +3,7 @@ package org.igye.remem3.controllers.exercise;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
@@ -35,12 +36,14 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -50,6 +53,7 @@ public class ExerciseController extends HtmlBuilder
     implements StatefulWebController<ExerciseState, Supplier<? extends ExerciseState>> {
 
     private static final String PAR_EXERCISE_STAGE = "PAR_EXERCISE_STAGE";
+    private static final String PAR_EXERCISE_CONFIG = "PAR_EXERCISE_CONFIG";
     private static final String PAR_DIR_TO_READ_TASKS_FROM = "PAR_DIR_TO_READ_TASKS_FROM";
     private static final String PAR_TASK_TYPE = "PAR_TASK_TYPE";
     private static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
@@ -61,6 +65,8 @@ public class ExerciseController extends HtmlBuilder
     private static final String ACT_SKIP_TASK = "ACT_SKIP_TASK";
     private static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "ACT_COPY_CARD_PATH_TO_CLIPBOARD";
     private static final String ACT_OPEN_CARD = "ACT_OPEN_CARD";
+    private static final String PROP_DIRECTORY = "directory";
+    private static final String PROP_TASKS = "tasks";
 
     private final App app;
     private final Utils utils;
@@ -276,6 +282,7 @@ public class ExerciseController extends HtmlBuilder
             .settings(st.getSettings())
             .cache(st.getCache())
             .cards(st.getCards())
+            .config(st.getConfig())
             .repeatStrategyCmp(st.getRepeatStrategyCmp())
             .dir(selectedDir.getAbsolutePath())
             .taskTypes(taskTypes)
@@ -298,13 +305,24 @@ public class ExerciseController extends HtmlBuilder
     }
 
     private ExerciseState actCancelExercise(ExerciseState.Started st) {
+        Settings settings = st.getSettings();
+        String config = st.getConfig();
+        Cache cache = st.getCache();
+        if (StringUtils.isNotBlank(config)) {
+            return settings.getExercises().stream()
+                .filter(e -> config.equals(e.getLeft()))
+                .map(e -> makeSetParamsStateWithPredefinedConfig(settings, cache, e))
+                .findFirst()
+                .orElseThrow(() -> new Exn(String.format("Cannot find the exercise with name '%s'", config)));
+        }
         DirSelectorCmpImpl dirSelector = new DirSelectorCmpImpl(
-            st.getSettings(), st.getCache(), st.getDir(), PAR_DIR_TO_READ_TASKS_FROM
+            settings, cache, st.getDir(), PAR_DIR_TO_READ_TASKS_FROM
         );
         return ExerciseState.SetParams.builder()
-            .settings(st.getSettings())
-            .cache(st.getCache())
+            .settings(settings)
+            .cache(cache)
             .cards(st.getCards())
+            .config(config)
             .dirSelector(dirSelector)
             .taskTypes(getTaskTypes(
                 getAvailableTaskTypes(st.getCards(), dirSelector.getSelectedDirectory()),
@@ -324,7 +342,7 @@ public class ExerciseController extends HtmlBuilder
 
     private HtmlElem rndParams(ExerciseState.SetParams st) {
         return frag(
-            h4(text("Select exercise")),
+            h4(text("Select exercise"), rndExerciseConfigSelector(st)),
             rndDirSelector(st),
             rndTaskTypes(st),
             br(),
@@ -335,11 +353,20 @@ public class ExerciseController extends HtmlBuilder
         );
     }
 
+    private HtmlElem rndExerciseConfigSelector(ExerciseState.SetParams st) {
+        ArrayList<Pair<String, ? extends HtmlElem>> options = new ArrayList<>();
+        options.add(Pair.of("", text("CUSTOM")));
+        st.getSettings().getExercises().stream()
+            .map(ex -> Pair.of(ex.getLeft(), text(ex.getLeft())))
+            .forEach(options::add);
+        return select(PAR_EXERCISE_CONFIG, true, st.getConfig(), options);
+    }
+
     private HtmlElem rndProperties(ExerciseState.SetParams st) {
         List<Pair<String, String>> props = new ArrayList<>();
-        props.add(Pair.of("directory", st.getDirSelector().getSelectedDirectoryStr()));
+        props.add(Pair.of(PROP_DIRECTORY, st.getDirSelector().getSelectedDirectoryStr()));
         props.add(Pair.of(
-            "tasks",
+            PROP_TASKS,
             st.getTaskTypes().stream()
                 .filter(Pair::getRight)
                 .map(Pair::getLeft)
@@ -376,7 +403,8 @@ public class ExerciseController extends HtmlBuilder
                         inpSubmit(ACT_OPEN_CARD, "open")
                     )
                 )),
-                cardPath.map(_ -> div(text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))))
+                cardPath
+                    .map(_ -> div(text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))))
                     .orElse(null),
                 br(),
                 div(text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
@@ -423,12 +451,67 @@ public class ExerciseController extends HtmlBuilder
     }
 
     private ExerciseState.SetParams makeSetParamsState(Settings settings, Cache cache, RequestParams params) {
+        String config = params.getParam(PAR_EXERCISE_CONFIG, "");
+        if (StringUtils.isNotBlank(config)) {
+            return settings.getExercises().stream()
+                .filter(e -> config.equals(e.getLeft()))
+                .map(e -> makeSetParamsStateWithPredefinedConfig(settings, cache, e))
+                .findFirst()
+                .orElseThrow(() -> new Exn(String.format("Cannot find the exercise with name '%s'", config)));
+        } else {
+            return makeSetParamsStateWithCustomConfig(settings, cache, params);
+        }
+    }
+
+    @SneakyThrows
+    private ExerciseState.SetParams makeSetParamsStateWithPredefinedConfig(
+        Settings settings, Cache cache, Pair<String, File> config
+    ) {
+        File configFile = config.getRight();
+        Properties props = new Properties();
+        try (FileReader fileReader = new FileReader(configFile)) {
+            props.load(fileReader);
+        }
+        String dirStr = props.getProperty(PROP_DIRECTORY);
+        if (StringUtils.isBlank(dirStr)) {
+            throw new Exn(String.format("%s is not specified in %s.", PROP_DIRECTORY, configFile.getAbsolutePath()));
+        }
+        dirStr = dirStr.trim();
+        File dir = dirStr.startsWith("/") ? new File(dirStr) : new File(configFile.getParentFile(), dirStr);
+        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, dir, PAR_DIR_TO_READ_TASKS_FROM);
+        Cards cards = new CardsImpl(utils, settings);
+        String tasksStr = props.getProperty(PROP_TASKS);
+        tasksStr = StringUtils.isBlank(dirStr) ? "" : tasksStr;
+        Set<String> selectedTasks = Arrays.stream(tasksStr.split(","))
+            .map(String::trim)
+            .filter(StringUtils::isNotBlank)
+            .collect(Collectors.toSet());
+        return ExerciseState.SetParams.builder()
+            .settings(settings)
+            .cache(cache)
+            .cards(cards)
+            .config(config.getLeft())
+            .dirSelector(dirSelector)
+            .taskTypes(getTaskTypesForPredefinedConfig(
+                getAvailableTaskTypes(cards, dirSelector.getSelectedDirectory()),
+                TaskTypeMatcher.fromList(selectedTasks)
+            ))
+            .repeatStrategyCmp(new RepeatStrategyCmpImpl(
+                settings, utils, "PAR_REPEAT_STRATEGY", configFile, props
+            ))
+            .build();
+    }
+
+    private ExerciseState.SetParams makeSetParamsStateWithCustomConfig(
+        Settings settings, Cache cache, RequestParams params
+    ) {
         DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, params, PAR_DIR_TO_READ_TASKS_FROM);
         Cards cards = new CardsImpl(utils, settings);
         return ExerciseState.SetParams.builder()
             .settings(settings)
             .cache(cache)
             .cards(cards)
+            .config("")
             .dirSelector(dirSelector)
             .taskTypes(getTaskTypes(getAvailableTaskTypes(cards, dirSelector.getSelectedDirectory()), params))
             .repeatStrategyCmp(new RepeatStrategyCmpImpl(settings, utils, "PAR_REPEAT_STRATEGY", params))
@@ -454,15 +537,29 @@ public class ExerciseController extends HtmlBuilder
             .toList();
     }
 
+    private List<Pair<TaskType, Boolean>> getTaskTypesForPredefinedConfig(
+        List<TaskType> availableTaskTypes, TaskTypeMatcher matcher
+    ) {
+        return availableTaskTypes.stream()
+            .map(typ -> Pair.of(typ, matcher.matches(typ)))
+            .toList();
+    }
+
     private HtmlElem rndTaskTypes(ExerciseState.SetParams st) {
         return frag(
             h5(text("Task types")),
             table(
                 st.getTaskTypes().stream()
-                    .map(typ -> List.of(
-                        inpCheckbox(PAR_TASK_TYPE, typ.getLeft().getCode(), typ.getRight()),
-                        text(typ.getLeft().getCode())
-                    ))
+                    .map(typ -> {
+                        HtmlTag checkbox = inpCheckbox(PAR_TASK_TYPE, typ.getLeft().getCode(), typ.getRight());
+                        if (StringUtils.isNotBlank(st.getConfig())) {
+                            checkbox.disabled();
+                        }
+                        return List.of(
+                            checkbox,
+                            text(typ.getLeft().getCode())
+                        );
+                    })
                     .toList()
             )
         );

@@ -239,7 +239,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
                     HtmlTag gapElem = inpText(gapParamName, userAns, ACT_SUBMIT_ANSWERS, true).attr("size", "20");
                     content.add(gapElem);
                     if (gap.getAnswer().equals(userAns)) {
-                        gapElem.attr("disabled", "");
+                        gapElem.disabled();
                         content.add(inpHidden(gapParamName, userAns));
                     }
                     gapIdx++;

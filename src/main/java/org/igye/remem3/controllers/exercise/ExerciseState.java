@@ -33,6 +33,7 @@ public sealed interface ExerciseState {
         private Settings settings;
         private Cache cache;
         private Cards cards;
+        private String config;
         private DirSelectorCmp dirSelector;
         private List<Pair<TaskType, Boolean>> taskTypes;
         private RepeatStrategyCmp repeatStrategyCmp;
@@ -49,6 +50,7 @@ public sealed interface ExerciseState {
         private Settings settings;
         private Cache cache;
         private Cards cards;
+        private String config;
         private RepeatStrategyCmp repeatStrategyCmp;
         private String dir;
         private Set<String> taskTypes;
