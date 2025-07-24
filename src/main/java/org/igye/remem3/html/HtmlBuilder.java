@@ -123,6 +123,10 @@ public class HtmlBuilder {
         return h("br");
     }
 
+    protected HtmlTag hr() {
+        return h("hr");
+    }
+
     protected HtmlTag pre(List<? extends HtmlElem> content) {
         return h("pre", content);
     }

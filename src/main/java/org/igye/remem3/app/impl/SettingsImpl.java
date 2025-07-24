@@ -2,8 +2,10 @@ package org.igye.remem3.app.impl;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.BucketDelaysDto;
@@ -26,6 +28,7 @@ public class SettingsImpl implements Settings {
     private static final String PROP_CACHE_FILE = "cache_file";
     private static final String PROP_CARD_EDITOR = "card_editor";
     private static final String PROP_BUCKET_DELAYS = "bucket_delays";
+    private static final String PROP_EXERCISES = "exercises";
     private static final Pattern SPACE_PAT = Pattern.compile("\\s");
 
     @Builder.Default
@@ -38,6 +41,8 @@ public class SettingsImpl implements Settings {
     private String cardEditor = "";
     @Builder.Default
     private List<BucketDelaysDto> bucketDelays = List.of();
+    @Builder.Default
+    private List<Pair<String, File>> exercises = List.of();
 
     public static Settings load(App app) {
         List<String> languages = trimAndSkipEmpty(Collections.unmodifiableList(app.getPropList(PROP_LANGUAGES)));
@@ -68,7 +73,40 @@ public class SettingsImpl implements Settings {
             .cacheFile(getNotBlankProp(app, PROP_CACHE_FILE))
             .cardEditor(getNotBlankProp(app, PROP_CARD_EDITOR))
             .bucketDelays(parseBucketDelays(app.getPropStr(PROP_BUCKET_DELAYS), app.getUtils()))
+            .exercises(loadExercises(app))
             .build();
+    }
+
+    @SneakyThrows
+    private static List<Pair<String, File>> loadExercises(App app) {
+        List<Pair<String, File>> exercises = trimAndSkipEmpty(app.getPropList(PROP_EXERCISES)).stream()
+            .map(nameAndPath -> {
+                String[] parts = nameAndPath.split(":");
+                if (parts.length != 2) {
+                    throw new Exn(String.format(
+                        "Cannot parse exercise '%s', the format should be 'name:path'.", nameAndPath
+                    ));
+                }
+                String name = parts[0].trim();
+                if (StringUtils.isBlank(name)) {
+                    throw new Exn(String.format(
+                        "The name of an exercise must not be blank, got '%s'.", nameAndPath
+                    ));
+                }
+                String path = parts[1].trim();
+                if (StringUtils.isBlank(path)) {
+                    throw new Exn(String.format(
+                        "The path of an exercise must not be blank, got '%s'.", nameAndPath
+                    ));
+                }
+                return Pair.of(name, new File(path));
+            })
+            .toList();
+        long namesCnt = exercises.stream().map(Pair::getLeft).distinct().count();
+        if (namesCnt != exercises.size()) {
+            throw new Exn("Names of all exercises must be unique.");
+        }
+        return exercises;
     }
 
     private static List<BucketDelaysDto> parseBucketDelays(String str, Utils utils) {
@@ -123,16 +161,17 @@ public class SettingsImpl implements Settings {
         }
     }
 
-    private static void checkNotBlank(String value, String propName) {
+    private static String checkNotBlank(String value, String propName) {
         if (StringUtils.isBlank(value)) {
             throw new Exn(String.format("The '%s' property must not be blank.", propName));
         }
+        return value;
     }
 
     private static List<String> trimAndSkipEmpty(List<String> list) {
         return list.stream()
-            .map(String::trim)
             .filter(StringUtils::isNotBlank)
+            .map(String::trim)
             .toList();
     }
 }

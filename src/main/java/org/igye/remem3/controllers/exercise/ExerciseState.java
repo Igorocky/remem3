@@ -36,6 +36,7 @@ public sealed interface ExerciseState {
         private DirSelectorCmp dirSelector;
         private List<Pair<TaskType, Boolean>> taskTypes;
         private RepeatStrategyCmp repeatStrategyCmp;
+        private boolean showProperties;
     }
 
     @Builder

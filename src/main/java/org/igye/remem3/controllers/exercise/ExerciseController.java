@@ -53,6 +53,7 @@ public class ExerciseController extends HtmlBuilder
     private static final String PAR_DIR_TO_READ_TASKS_FROM = "PAR_DIR_TO_READ_TASKS_FROM";
     private static final String PAR_TASK_TYPE = "PAR_TASK_TYPE";
     private static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
+    private static final String ACT_SHOW_PROPERTIES = "ACT_SHOW_PROPERTIES";
     private static final String ACT_START_EXERCISE = "ACT_START_EXERCISE";
     private static final String ACT_CANCEL_EXERCISE = "ACT_CANCEL_EXERCISE";
     private static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
@@ -111,6 +112,9 @@ public class ExerciseController extends HtmlBuilder
             case ExerciseState.SetParams st -> {
                 if (params.hasParam(ACT_START_EXERCISE)) {
                     yield Optional.of(() -> actStartExercise(st));
+                }
+                if (params.hasParam(ACT_SHOW_PROPERTIES)) {
+                    yield Optional.of(() -> st.withShowProperties(true));
                 }
                 yield Optional.empty();
             }
@@ -326,7 +330,31 @@ public class ExerciseController extends HtmlBuilder
             br(),
             st.getRepeatStrategyCmp().render(),
             br(),
-            inpSubmit(ACT_START_EXERCISE, "Start")
+            div(inpSubmit(ACT_START_EXERCISE, "Start"), inpSubmit(ACT_SHOW_PROPERTIES, "Show properties")),
+            !st.isShowProperties() ? null : rndProperties(st)
+        );
+    }
+
+    private HtmlElem rndProperties(ExerciseState.SetParams st) {
+        List<Pair<String, String>> props = new ArrayList<>();
+        props.add(Pair.of("directory", st.getDirSelector().getSelectedDirectoryStr()));
+        props.add(Pair.of(
+            "tasks",
+            st.getTaskTypes().stream()
+                .filter(Pair::getRight)
+                .map(Pair::getLeft)
+                .map(TaskType::getCode)
+                .collect(Collectors.joining(", "))
+        ));
+        props.addAll(st.getRepeatStrategyCmp().getProperties());
+        return frag(
+            hr(),
+            frag(
+                props.stream()
+                    .map(prop -> div(text(prop.getLeft() + "=" + prop.getRight())))
+                    .toList()
+            ),
+            hr()
         );
     }
 
@@ -348,7 +376,8 @@ public class ExerciseController extends HtmlBuilder
                         inpSubmit(ACT_OPEN_CARD, "open")
                     )
                 )),
-                div(text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))),
+                cardPath.map(_ -> div(text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))))
+                    .orElse(null),
                 br(),
                 div(text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
                 div(st.getRepeatStrategy().renderParams(historyUpdated))
@@ -376,9 +405,9 @@ public class ExerciseController extends HtmlBuilder
             inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS, st.isShowParams() ? "Hide parameters" : "Show parameters"),
             st.getTaskState().isPresent() ? inpSubmit(ACT_SKIP_TASK, "Skip this task") : null,
             params,
-            h("hr"),
+            hr(),
             taskContent,
-            h("hr"),
+            hr(),
             exerciseCompleted ? null : inpSubmit(ACT_CANCEL_EXERCISE, "Cancel")
         );
     }

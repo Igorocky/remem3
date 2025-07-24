@@ -18,9 +18,11 @@ import org.igye.remem3.web.RequestParams;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.igye.remem3.app.impl.RepeatStrategyCircle.MAX_NUM_OF_ROUNDS;
 
@@ -118,6 +120,30 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         };
     }
 
+    @Override
+    public List<Pair<String, String>> getProperties() {
+        ArrayList<Pair<String, String>> props = new ArrayList<>();
+        props.add(Pair.of("repeat_strategy", valStrategyType.toString()));
+        int _ = switch (valStrategyType) {
+            case CIRCLE -> {
+                props.add(Pair.of("rounds", valCircleNumOfRounds.map(String::valueOf).orElse("")));
+                props.add(Pair.of("randomness", String.valueOf(valCircleRndFactor)));
+                yield 0;
+            }
+            case BUCKETS -> {
+                props.add(Pair.of(
+                    "bucket_delays",
+                    getSelectedBucketDelays().stream()
+                        .map(utils::durationToStr)
+                        .collect(Collectors.joining(", "))
+                ));
+                props.add(Pair.of("use_separate_bucket_for_new_tasks", valBucketsUseBucketForNewTasks ? "y" : "n"));
+                yield 0;
+            }
+        };
+        return props;
+    }
+
     private HtmlElem rndBucketsParams() {
         return table(List.of(
             List.of(
@@ -155,12 +181,12 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private HtmlElem rndCircleParams() {
         return table(List.of(
             List.of(
-                text("Randomness"),
-                inpText(parCircleRndFactor, String.valueOf(valCircleRndFactor), null)
-            ),
-            List.of(
                 text("Rounds"),
                 inpText(parCircleNumOfRounds, valCircleNumOfRounds.map(String::valueOf).orElse(""), null)
+            ),
+            List.of(
+                text("Randomness"),
+                inpText(parCircleRndFactor, String.valueOf(valCircleRndFactor), null)
             )
         ));
     }

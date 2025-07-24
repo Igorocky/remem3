@@ -1,5 +1,6 @@
 package org.igye.remem3.controllers.components;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Task;
@@ -13,4 +14,6 @@ public interface RepeatStrategyCmp {
     HtmlElem render();
 
     RepeatStrategy makeRepeatStrategy(List<Task> tasks);
+
+    List<Pair<String, String>> getProperties();
 }
