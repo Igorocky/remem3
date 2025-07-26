@@ -158,7 +158,8 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     private HtmlElem rndUserAnswer() {
         List<HtmlElem> content = new ArrayList<>();
         content.add(text(exactMatch ? "= " : "~ "));
-        HtmlTag inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER, true).attr("size", "200");
+        HtmlTag inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER, true)
+            .attr("size", "200").attr("spellcheck", "false").attr("class", "border-on-focus");
         content.add(inpText);
         if (!exactMatch && showAnswer || userAnswerIsCorrect.orElse(false)) {
             inpText.disabled();
@@ -202,8 +203,10 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                         inpSubmit(parMark1, "Correct").attr("style", "background-color: green;")
                     ),
                     List.of(
-                        inpText("", "", parMark0, true).attr("size", "1"),
-                        inpText("", "", parMark1).attr("size", "1")
+                        inpText("", "", parMark0, true)
+                            .attr("size", "1").attr("class", "border-on-focus"),
+                        inpText("", "", parMark1)
+                            .attr("size", "1").attr("class", "border-on-focus")
                     )
                 )));
             }

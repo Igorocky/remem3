@@ -352,7 +352,7 @@ public class ExerciseController extends HtmlBuilder
             st.getRepeatStrategyCmp().render(),
             br(),
             div(
-                inpSubmit(ACT_START_EXERCISE, "Start"),
+                inpSubmit(ACT_START_EXERCISE, "Start").attr("style", "background-color: green;"),
                 st.isShowProperties() ? null : inpSubmit(ACT_SHOW_PROPERTIES, "Show properties")
             ),
             !st.isShowProperties() ? null : rndProperties(st)

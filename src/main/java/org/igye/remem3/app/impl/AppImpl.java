@@ -68,7 +68,7 @@ public class AppImpl implements App {
     public synchronized void reloadProperties() {
         propFiles.clear();
         propFiles.addAll(
-            getPropList("property-files", Collections.emptyList()).stream()
+            getPropList("property_files", Collections.emptyList()).stream()
                 .map(File::new)
                 .map(propFile -> new PropertyFileReaderImpl(this, propFile))
                 .toList()

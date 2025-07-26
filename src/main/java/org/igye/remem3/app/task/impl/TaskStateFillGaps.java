@@ -168,7 +168,10 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             }
         } else {
             content.add(inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"));
-            content.add(inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1"));
+            content.add(
+                inpText("", "", ACT_COMPLETE_TASK, true)
+                    .attr("size", "1").attr("class", "border-on-focus")
+            );
         }
 
         return frag(content);
@@ -236,7 +239,8 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
                 case TextPart.Gap gap -> {
                     String userAns = userAnswers.get(gapIdx);
                     String gapParamName = keyValueParam(PAR_USER_ANS, gapIdx);
-                    HtmlTag gapElem = inpText(gapParamName, userAns, ACT_SUBMIT_ANSWERS, true).attr("size", "20");
+                    HtmlTag gapElem = inpText(gapParamName, userAns, ACT_SUBMIT_ANSWERS, true)
+                        .attr("size", "20").attr("spellcheck", "false").attr("class", "border-on-focus");
                     content.add(gapElem);
                     if (gap.getAnswer().equals(userAns)) {
                         gapElem.disabled();

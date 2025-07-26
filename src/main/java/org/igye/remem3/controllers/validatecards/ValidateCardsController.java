@@ -94,6 +94,8 @@ public class ValidateCardsController extends HtmlBuilder
         long cardsWithErrorsCnt = cardsAndErrors.stream().filter(pair -> !pair.getRight().isEmpty()).count();
         if (cardsWithErrorsCnt == 0) {
             content.add(div(text("All cards are valid.")));
+        } else if (cardsWithErrorsCnt == 1) {
+            content.add(div(text("1 card has validation errors.")));
         } else {
             content.add(div(text(String.format("%s cards have validation errors.", cardsWithErrorsCnt))));
         }
