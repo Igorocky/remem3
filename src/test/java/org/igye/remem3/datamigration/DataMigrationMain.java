@@ -89,7 +89,7 @@ public class DataMigrationMain {
             .map(row -> {
                 String cardType = (String) row.get("typ");
                 Optional<File> file = Optional.of(dirs.get((Integer) row.get("folder_id")));
-                Optional<Instant> createdAt = Optional.of(Instant.ofEpochMilli(((Integer) row.get("crt_time")) * 1000));
+                Optional<Instant> createdAt = Optional.of(toInstant((Integer) row.get("crt_time")));
                 Card card = switch (cardType) {
                     case "fill_gaps" -> Card.FillGaps.builder()
                         .file(file)
@@ -122,6 +122,10 @@ public class DataMigrationMain {
             ));
     }
 
+    private Instant toInstant(Integer seconds) {
+        return Instant.ofEpochMilli(seconds.longValue() * 1000);
+    }
+
     private List<Card> loadHistForCards(
         Database database,
         Map<Integer, Card> cards
@@ -136,7 +140,7 @@ public class DataMigrationMain {
             .map(row -> {
                 int cardId = (Integer) row.get("card_id");
                 HistRec histRec = HistRec.builder()
-                    .time(Instant.ofEpochMilli(((Integer) row.get("time")) * 1000))
+                    .time(toInstant((Integer) row.get("time")))
                     .taskType(makeTaskType(cardId, (String) row.get("code"), cards))
                     .mark(new BigDecimal((Double) row.get("mark")))
                     .notes((String) row.get("note"))
