@@ -436,7 +436,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlExactMatchNoCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "200").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
             inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
         );
@@ -445,14 +445,14 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlExactMatchNoCorrectAnswerShowAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "200").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer")
         );
     }
 
     private void assertHtmlExactMatchHasCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
-            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "200")
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "150")
                 .attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
@@ -464,7 +464,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlApproxMatchNoAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "200").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
             inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
         );
@@ -473,7 +473,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlApproxMatchHasAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "200").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":0", "Incorrect").attr("style", "background-color: red;"),
             inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":1", "Correct").attr("style", "background-color: green;"),
@@ -487,7 +487,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlApproxMatchShowAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "200").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
             inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1").attr("class", "border-on-focus")
