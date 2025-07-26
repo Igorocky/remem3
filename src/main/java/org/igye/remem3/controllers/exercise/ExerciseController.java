@@ -348,7 +348,10 @@ public class ExerciseController extends HtmlBuilder
             br(),
             st.getRepeatStrategyCmp().render(),
             br(),
-            div(inpSubmit(ACT_START_EXERCISE, "Start"), inpSubmit(ACT_SHOW_PROPERTIES, "Show properties")),
+            div(
+                inpSubmit(ACT_START_EXERCISE, "Start"),
+                st.isShowProperties() ? null : inpSubmit(ACT_SHOW_PROPERTIES, "Show properties")
+            ),
             !st.isShowProperties() ? null : rndProperties(st)
         );
     }
