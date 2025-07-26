@@ -1,6 +1,5 @@
 package org.igye.remem3.controllers.newcard;
 
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
@@ -31,7 +30,6 @@ import java.util.function.Supplier;
 import static org.igye.remem3.app.impl.CardsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
 import static org.igye.remem3.app.impl.CardsImpl.CARD_TRANSLATE_FILE_EXTENSION;
 
-@RequiredArgsConstructor
 public class NewCardController extends HtmlBuilder
     implements StatefulWebController<NewCardState, Supplier<NewCardState>> {
 
@@ -54,6 +52,11 @@ public class NewCardController extends HtmlBuilder
 
     private final App app;
     private final Utils utils;
+
+    public NewCardController(App app) {
+        this.app = app;
+        this.utils = app.getUtils();
+    }
 
     @Override
     public String getPath() {

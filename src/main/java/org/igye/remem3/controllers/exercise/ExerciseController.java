@@ -1,6 +1,5 @@
 package org.igye.remem3.controllers.exercise;
 
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,7 +47,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 public class ExerciseController extends HtmlBuilder
     implements StatefulWebController<ExerciseState, Supplier<? extends ExerciseState>> {
 
@@ -71,6 +69,11 @@ public class ExerciseController extends HtmlBuilder
     private final App app;
     private final Utils utils;
     private ExerciseState.Started startedState;
+
+    public ExerciseController(App app) {
+        this.app = app;
+        this.utils = app.getUtils();
+    }
 
     @Override
     public String getPath() {
