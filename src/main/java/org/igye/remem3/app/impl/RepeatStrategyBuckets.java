@@ -2,6 +2,7 @@ package org.igye.remem3.app.impl;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.dto.HistRec;
@@ -18,6 +19,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -193,7 +195,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                 Duration timeToWait = bucketDelay.compareTo(maxTaskDelay) <= 0
                     ? Duration.ZERO
                     : bucketDelay.minus(maxTaskDelay);
-                waiting.add(text(String.format("%s (%s)", waitingCnt, utils.durationToStr(timeToWait))));
+                waiting.add(text(String.format("%s (%s)", waitingCnt, getApproxDurationStr(timeToWait))));
             } else {
                 waiting.add(text(String.valueOf(waitingCnt)));
             }
@@ -203,6 +205,13 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             div(text(String.format("Number of tasks: %s", allTasks.size()))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
+    }
+
+    private String getApproxDurationStr(Duration dur) {
+        return Arrays.stream(utils.durationToStr(dur).split("\\s+"))
+            .filter(StringUtils::isNotBlank)
+            .findFirst()
+            .get();
     }
 
     private BigDecimal getOverdue(Instant curTime, Duration bucketDelay, List<HistRec> hist) {
