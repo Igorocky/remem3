@@ -191,7 +191,8 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             if (exactMatch && userAnswerIsCorrect.orElse(false) || !exactMatch && histRec.isPresent()) {
                 content.add(frag(
                     inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
-                    inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1")
+                    inpText("", "", ACT_COMPLETE_TASK, true)
+                        .attr("size", "1").attr("class", "border-on-focus")
                 ));
             }
             if (!exactMatch && histRec.isEmpty()) {

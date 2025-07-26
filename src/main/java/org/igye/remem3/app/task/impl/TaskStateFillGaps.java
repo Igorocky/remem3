@@ -136,14 +136,14 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
                 listItem.add(h("b", text(gap.getAnswer())));
                 nothingToShow = false;
             }
-            if (StringUtils.isNotBlank(gap.getHint()) && (ansIsCorrect || showHints)) {
+            if (StringUtils.isNotBlank(gap.getHint()) && (ansIsCorrect || showAnswers || showHints)) {
                 if (!listItem.isEmpty()) {
                     listItem.add(br());
                 }
                 listItem.add(text(gap.getHint()));
                 nothingToShow = false;
             }
-            if (StringUtils.isNotBlank(gap.getNotes()) && ansIsCorrect) {
+            if (StringUtils.isNotBlank(gap.getNotes()) && (ansIsCorrect || showAnswers)) {
                 listItem.add(br());
                 listItem.add(text(gap.getNotes()));
                 nothingToShow = false;

@@ -281,6 +281,7 @@ public class ExerciseController extends HtmlBuilder
         }
         RepeatStrategy repeatStrategy = st.getRepeatStrategyCmp().makeRepeatStrategy(tasks);
         Optional<List<Task>> nextTasks = repeatStrategy.getNextTasks();
+        st.getCache().put(PAR_EXERCISE_CONFIG, st.getConfig());
         return ExerciseState.Started.builder()
             .settings(st.getSettings())
             .cache(st.getCache())
@@ -458,7 +459,7 @@ public class ExerciseController extends HtmlBuilder
     }
 
     private ExerciseState.SetParams makeSetParamsState(Settings settings, Cache cache, RequestParams params) {
-        String config = params.getParam(PAR_EXERCISE_CONFIG, "");
+        String config = params.getParam(PAR_EXERCISE_CONFIG, cache.getStr(PAR_EXERCISE_CONFIG, ""));
         if (StringUtils.isNotBlank(config)) {
             return settings.getExercises().stream()
                 .filter(e -> config.equals(e.getLeft()))

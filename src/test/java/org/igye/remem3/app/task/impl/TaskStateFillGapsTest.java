@@ -566,10 +566,14 @@ class TaskStateFillGapsTest extends HtmlBuilder {
                 elems.add(
                     inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS, true)
                         .attr("size", "20").attr("disabled", "")
+                        .attr("spellcheck", "false").attr("class", "border-on-focus")
                 );
                 elems.add(inpHidden(PAR_USER_ANS + ":" + i, uAns));
             } else {
-                elems.add(inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS, true).attr("size", "20"));
+                elems.add(
+                    inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS, true)
+                        .attr("size", "20").attr("spellcheck", "false").attr("class", "border-on-focus")
+                );
             }
         }
         return elems;
@@ -599,7 +603,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
     private void assertHtmlHasCorrectAnswer(HtmlElem html, List<String> expAns) {
         List<HtmlTag> elems = new ArrayList<>(makeAnsElems(expAns, expAns));
         elems.add(inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"));
-        elems.add(inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1"));
+        elems.add(inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1").attr("class", "border-on-focus"));
         testUtils.assertInputs(html, elems);
     }
 
