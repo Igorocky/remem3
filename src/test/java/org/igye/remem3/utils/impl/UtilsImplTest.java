@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.Map;
 
 class UtilsImplTest {
     private final UtilsImpl utils = new UtilsImpl(new ObjectMapper());
@@ -46,4 +47,30 @@ class UtilsImplTest {
             )
         );
     }
+
+    @Test
+    void replacePlaceholders() {
+        Assertions.assertEquals("123", utils.replacePlaceholders("123", _ -> ""));
+        Assertions.assertEquals(
+            "A123",
+            utils.replacePlaceholders("${a}123", Map.of("a", "A")::get)
+        );
+        Assertions.assertEquals(
+            "1A23",
+            utils.replacePlaceholders("1${a}23", Map.of("a", "A")::get)
+        );
+        Assertions.assertEquals(
+            "123A",
+            utils.replacePlaceholders("123${a}", Map.of("a", "A")::get)
+        );
+        Assertions.assertEquals(
+            "A1B2C3D",
+            utils.replacePlaceholders("${a}1${b}2${c}3${d}", Map.of("a", "A", "b", "B", "c", "C", "d", "D")::get)
+        );
+        Assertions.assertEquals(
+            "ABC1DEF2GHI",
+            utils.replacePlaceholders("${x1}1${x2}2${x3}", Map.of("x1", "ABC", "x2", "DEF", "x3", "GHI")::get)
+        );
+    }
+
 }

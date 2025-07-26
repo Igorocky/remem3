@@ -3,6 +3,7 @@ package org.igye.remem3.utils;
 import java.io.File;
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Function;
 
 public interface Utils {
     String readStringFromFile(File file);
@@ -20,4 +21,6 @@ public interface Utils {
     List<Duration> parseDurations(String durStr);
 
     String durationToStr(Duration duration);
+
+    String replacePlaceholders(String text, Function<String, String> valueSupplier);
 }

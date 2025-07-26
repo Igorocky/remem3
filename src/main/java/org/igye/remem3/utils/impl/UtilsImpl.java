@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +33,7 @@ public class UtilsImpl implements Utils {
         .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
         .map(e -> Pair.of(e.getValue(), e.getKey()))
         .toList();
+    private static final Pattern PLACEHOLDER_PAT = Pattern.compile("\\$\\{([a-zA-Z0-9_-]+)}");
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
@@ -100,6 +102,20 @@ public class UtilsImpl implements Utils {
             return "0s";
         }
         return sb.toString().trim();
+    }
+
+    @Override
+    public String replacePlaceholders(String text, Function<String, String> valueSupplier) {
+        StringBuilder res = new StringBuilder();
+        int lastIdx = 0;
+        Matcher matcher = PLACEHOLDER_PAT.matcher(text);
+        while (matcher.find()) {
+            res.append(text, lastIdx, matcher.start());
+            res.append(valueSupplier.apply(matcher.group(1)));
+            lastIdx = matcher.end();
+        }
+        res.append(text, lastIdx, text.length());
+        return res.toString();
     }
 
     private Duration parseSingleDuration(String str) {
