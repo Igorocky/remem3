@@ -390,12 +390,12 @@ public class ExerciseController extends HtmlBuilder
 
     private HtmlElem rndExercise(ExerciseState.Started st) {
         HtmlElem params;
+        Optional<String> cardPath = getCurrentCardFile(st).map(File::getAbsolutePath);
         if (st.isShowParams()) {
             String taskTypesStr = st.getTaskTypes().isEmpty()
                 ? "All available in the directory"
                 : st.getTaskTypes().stream().sorted().collect(Collectors.joining(", "));
             Boolean historyUpdated = st.getTaskState().map(TaskState::isHistoryUpdated).orElse(false);
-            Optional<String> cardPath = getCurrentCardFile(st).map(File::getAbsolutePath);
             params = frag(
                 div(text(String.format("Directory: %s", st.getDir()))),
                 div(text(String.format("Task types: %s", taskTypesStr))),
@@ -434,6 +434,7 @@ public class ExerciseController extends HtmlBuilder
         return frag(
             h4(text("Exercise")),
             inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS, st.isShowParams() ? "Hide parameters" : "Show parameters"),
+            cardPath.isPresent() ? inpSubmit(ACT_OPEN_CARD, "Edit this card") : null,
             st.getTaskState().isPresent() ? inpSubmit(ACT_SKIP_TASK, "Skip this task") : null,
             params,
             hr(),
