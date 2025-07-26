@@ -1,13 +1,21 @@
 package org.igye.remem3.controllers.validatecards;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
+import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.dto.Card;
+import org.igye.remem3.app.impl.CardsImpl;
+import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
-import org.igye.remem3.utils.Exn;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -71,12 +79,62 @@ public class ValidateCardsController extends HtmlBuilder
                     inpText(PAR_DIR, st.getDir(), ACT_VALIDATE, true).attr("size", "100")
                 ),
                 div(inpSubmit(ACT_VALIDATE, "Validate"))
-            )
+            ),
+            rndValidationResults(st)
         ).toString();
     }
 
-    private ValidateCardsState actValidateCards(ValidateCardsState state) {
-        throw new Exn("not implemented");
+    private HtmlElem rndValidationResults(ValidateCardsState st) {
+        List<Pair<Card, List<String>>> cardsAndErrors = st.getCardsAndErrors();
+        if (CollectionUtils.isEmpty(cardsAndErrors)) {
+            return null;
+        }
+        ArrayList<HtmlElem> content = new ArrayList<>();
+        content.add(div(text(String.format("There are %s cards.", cardsAndErrors.size()))));
+        long cardsWithErrorsCnt = cardsAndErrors.stream().filter(pair -> !pair.getRight().isEmpty()).count();
+        if (cardsWithErrorsCnt == 0) {
+            content.add(div(text("All cards are valid.")));
+        } else {
+            content.add(div(text(String.format("%s cards have validation errors.", cardsWithErrorsCnt))));
+        }
+        content.addAll(
+            cardsAndErrors.stream()
+                .filter(pair -> !pair.getRight().isEmpty())
+                .map(pair -> rndCardErrors(pair.getLeft(), pair.getRight()))
+                .toList()
+        );
+        return div(content);
+    }
+
+    private HtmlElem rndCardErrors(Card card, List<String> errors) {
+        return div(
+            div(text(card.getFile().get().getAbsolutePath())),
+            ul(errors.stream().map(this::text).toList())
+        ).attr("style", "margin-top:10px;");
+    }
+
+    private ValidateCardsState actValidateCards(ValidateCardsState st) {
+        String dirStr = st.getDir();
+        File dir = new File(dirStr);
+        if (!dir.exists()) {
+            return st.withErrors(List.of(String.format("The specified directory doesn't exist: %s", dirStr)));
+        }
+        if (!dir.isDirectory()) {
+            return st.withErrors(List.of(String.format("Not a directory: %s", dirStr)));
+        }
+        app.reloadProperties();
+        Settings settings = SettingsImpl.load(app);
+        Cards cardUtils = new CardsImpl(app.getUtils(), settings);
+        List<Card> cards = cardUtils.loadAllCards(dir);
+        if (cards.isEmpty()) {
+            return st.withErrors(List.of(String.format("The specified directory doesn't contains cards: %s", dirStr)));
+        }
+        return st.withCardsAndErrors(
+            cards.stream()
+                .sorted(Comparator.comparing(c -> c.getFile().get().getAbsolutePath()))
+                .map(card -> Pair.of(card, cardUtils.validateCard(card)))
+                .toList()
+        );
     }
 
     private HtmlElem rndErrors(List<String> errors) {
