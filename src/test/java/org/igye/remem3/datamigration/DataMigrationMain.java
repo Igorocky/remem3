@@ -9,19 +9,27 @@ import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
+import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.CardsImpl;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.impl.UtilsImpl;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static org.igye.remem3.app.impl.CardsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
+import static org.igye.remem3.app.impl.CardsImpl.CARD_TRANSLATE_FILE_EXTENSION;
 
 public class DataMigrationMain {
     public static void main(String[] args) {
@@ -37,8 +45,25 @@ public class DataMigrationMain {
         ObjectMapper objectMapper = new ObjectMapper();
         Utils utils = new UtilsImpl(objectMapper);
         Cards cardUtils = new CardsImpl(utils, settings);
-        Map<Integer, Card> cards = selectCards(database, langs, dirs, cardUtils);
-        System.out.println(dirs);
+        Map<Integer, Card> cardsWithoutHistory = selectCards(database, langs, dirs, cardUtils);
+        List<Card> cards = loadHistForCards(database, cardsWithoutHistory);
+        saveCards(new File("/home/igor/tmp/remem_migrated"), cards, cardUtils);
+    }
+
+    private void saveCards(File baseDir, List<Card> cards, Cards cardUtils) {
+        for (Card card : cards) {
+            File dir = new File(baseDir, card.getFile().get().getPath());
+            cardUtils.saveCard(new File(dir, makeFileName(card)), card);
+        }
+    }
+
+    private String makeFileName(Card card) {
+        String baseName = UUID.randomUUID().toString().replace("-", "_");
+        String extension = switch (card) {
+            case Card.FillGaps _ -> CARD_FILL_GAPS_FILE_EXTENSION;
+            case Card.Translate _ -> CARD_TRANSLATE_FILE_EXTENSION;
+        };
+        return baseName + extension;
     }
 
     private Map<Integer, Card> selectCards(
@@ -58,7 +83,8 @@ public class DataMigrationMain {
                 left join CARD_TYPE ct on card.card_type_id = ct.id
                 left join CARD_FILL card_fill on card.id = card_fill.id
                 left join CARD_TRAN card_tran on card.id = card_tran.id
-                """).stream()
+                """
+            ).stream()
             .filter(row -> expectedCardTypes.contains((String) row.get("typ")))
             .map(row -> {
                 String cardType = (String) row.get("typ");
@@ -68,7 +94,7 @@ public class DataMigrationMain {
                     case "fill_gaps" -> Card.FillGaps.builder()
                         .file(file)
                         .createdAt(createdAt)
-                        .history(List.of())
+                        .history(new ArrayList<>())
                         .lang(notNull(langs.get((Integer) row.get("card_fill_lang"))))
                         .descr((String) row.get("card_fill_descr"))
                         .text(cardUtils.parseText(notNull((String) row.get("card_fill_text"))))
@@ -77,7 +103,7 @@ public class DataMigrationMain {
                     case "translate" -> Card.Translate.builder()
                         .file(file)
                         .createdAt(createdAt)
-                        .history(List.of())
+                        .history(new ArrayList<>())
                         .lang1(notNull(langs.get((Integer) row.get("card_tran_lang1"))))
                         .text1((String) row.get("card_tran_text1"))
                         .exactMatch1(((Integer) row.get("card_tran_readonly1")) == 0)
@@ -96,15 +122,58 @@ public class DataMigrationMain {
             ));
     }
 
+    private List<Card> loadHistForCards(
+        Database database,
+        Map<Integer, Card> cards
+    ) {
+        Map<Integer, List<HistRec>> hist = database.select("""
+                select task.card_id, hist.time, tt.code, hist.mark, hist.note
+                from TASK_HIST hist
+                left join TASK task on hist.task_id = task.id
+                left join TASK_TYPE tt on task.task_type_id = tt.id            
+                """
+            ).stream()
+            .map(row -> {
+                int cardId = (Integer) row.get("card_id");
+                HistRec histRec = HistRec.builder()
+                    .time(Instant.ofEpochMilli(((Integer) row.get("time")) * 1000))
+                    .taskType(makeTaskType(cardId, (String) row.get("code"), cards))
+                    .mark(new BigDecimal((Double) row.get("mark")))
+                    .notes((String) row.get("note"))
+                    .build();
+                return Pair.of(cardId, histRec);
+            })
+            .collect(Collectors.groupingBy(Pair::getLeft, Collectors.mapping(Pair::getRight, Collectors.toList())));
+        cards.entrySet().forEach(e -> {
+            List<HistRec> history = e.getValue().getHistory();
+            List<HistRec> cardHist = hist.get(e.getKey());
+            if (history.isEmpty() && cardHist != null) {
+                history.addAll(cardHist.stream().sorted(Comparator.comparing(HistRec::getTime)).toList());
+            }
+        });
+        return cards.values().stream().toList();
+    }
+
+    private String makeTaskType(int cardId, String taskCode, Map<Integer, Card> cards) {
+        return switch (taskCode) {
+            case "fill_gaps" -> new TaskType.FillGaps(((Card.FillGaps) cards.get(cardId)).getLang()).getCode();
+            case "lang1->lang2" -> {
+                Card.Translate card = (Card.Translate) cards.get(cardId);
+                yield new TaskType.Translate(card.getLang1(), card.getLang2()).getCode();
+            }
+            case "lang2->lang1" -> {
+                Card.Translate card = (Card.Translate) cards.get(cardId);
+                yield new TaskType.Translate(card.getLang2(), card.getLang1()).getCode();
+            }
+            default -> throw new Exn(String.format("Unexpected task type code %s.", taskCode));
+        };
+    }
+
     private <T> T notNull(T obj) {
         if (obj == null) {
             throw new Exn("Expected not null");
         }
         return obj;
-    }
-
-    private Map<Integer, List<HistRec>> selectHistForCards(Database database) {
-        return null;
     }
 
     private Map<Integer, String> selectLangs(Database database) {
