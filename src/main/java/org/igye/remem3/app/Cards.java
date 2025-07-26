@@ -2,6 +2,7 @@ package org.igye.remem3.app;
 
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
+import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.controllers.newcard.CardDto;
 
 import java.io.File;
@@ -19,4 +20,6 @@ public interface Cards {
     void appendHistRecToFile(File file, HistRec histRec);
 
     Card makeCard(CardDto cardDto);
+
+    List<TextPart> parseText(String str);
 }

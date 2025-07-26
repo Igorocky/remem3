@@ -39,6 +39,7 @@ public sealed interface Card {
         @Getter
         @Builder.Default
         private List<HistRec> history = List.of();
+
         private List<TaskType> taskTypes;
         private List<Task> tasks;
 

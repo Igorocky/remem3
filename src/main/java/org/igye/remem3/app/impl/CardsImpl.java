@@ -156,6 +156,38 @@ public class CardsImpl implements Cards {
         };
     }
 
+    @Override
+    public List<TextPart> parseText(String str) {
+        if (StringUtils.isBlank(str)) {
+            return Collections.emptyList();
+        }
+        Matcher matcher = GAP_PATTERN.matcher(str);
+        int lastIdx = 0;
+        ArrayList<TextPart> res = new ArrayList<>();
+        while (matcher.find()) {
+            if (lastIdx < matcher.start()) {
+                res.add(TextPart.Text.builder().text(str.substring(lastIdx, matcher.start()).trim()).build());
+            }
+            String gapText = matcher.group(1);
+            String[] gapParts = gapText.split("\\|");
+            if (gapParts.length > 3) {
+                throw new Exn(String.format("gapParts.length > 3 for %s", gapText));
+            }
+            res.add(
+                TextPart.Gap.builder()
+                    .answer(getElemOrEmptyStr(gapParts, 0))
+                    .hint(getElemOrEmptyStr(gapParts, 1))
+                    .notes(getElemOrEmptyStr(gapParts, 2))
+                    .build()
+            );
+            lastIdx = matcher.end();
+        }
+        if (lastIdx < str.length()) {
+            res.add(TextPart.Text.builder().text(str.substring(lastIdx).trim()).build());
+        }
+        return res;
+    }
+
     private List<String> validateFillGapsCard(Card.FillGaps card) {
         ArrayList<String> res = new ArrayList<>();
         String lang = card.getLang();
@@ -389,37 +421,6 @@ public class CardsImpl implements Cards {
             .mark(new BigDecimal(matcher.group(3)))
             .notes(StringUtils.isNotBlank(notes) ? notes.trim() : "")
             .build();
-    }
-
-    protected List<TextPart> parseText(String str) {
-        if (StringUtils.isBlank(str)) {
-            return Collections.emptyList();
-        }
-        Matcher matcher = GAP_PATTERN.matcher(str);
-        int lastIdx = 0;
-        ArrayList<TextPart> res = new ArrayList<>();
-        while (matcher.find()) {
-            if (lastIdx < matcher.start()) {
-                res.add(TextPart.Text.builder().text(str.substring(lastIdx, matcher.start()).trim()).build());
-            }
-            String gapText = matcher.group(1);
-            String[] gapParts = gapText.split("\\|");
-            if (gapParts.length > 3) {
-                throw new Exn(String.format("gapParts.length > 3 for %s", gapText));
-            }
-            res.add(
-                TextPart.Gap.builder()
-                    .answer(getElemOrEmptyStr(gapParts, 0))
-                    .hint(getElemOrEmptyStr(gapParts, 1))
-                    .notes(getElemOrEmptyStr(gapParts, 2))
-                    .build()
-            );
-            lastIdx = matcher.end();
-        }
-        if (lastIdx < str.length()) {
-            res.add(TextPart.Text.builder().text(str.substring(lastIdx).trim()).build());
-        }
-        return res;
     }
 
     private String getElemOrEmptyStr(String[] gapParts, int i) {
