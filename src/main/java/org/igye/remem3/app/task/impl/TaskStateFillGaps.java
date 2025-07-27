@@ -38,6 +38,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private final List<String> cardErrors;
     private final List<TextPart.Gap> gaps;
 
+    private boolean hasMissingAnswers;
     private List<String> userAnswers;
     private boolean allAnsAreCorrect;
     private Optional<HistRec> histRec = Optional.empty();
@@ -65,6 +66,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             return new TaskResult();
         }
+        hasMissingAnswers = false;
         TaskResult res = new TaskResult();
         if (
             params.hasParam(ACT_SUBMIT_ANSWERS)
@@ -73,7 +75,10 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
                 || params.hasParam(ACT_COMPLETE_TASK)
         ) {
             readUserAnswers(Optional.of(params));
-            if (histRec.isEmpty()) {
+            hasMissingAnswers = userAnswers.stream().anyMatch(StringUtils::isBlank)
+                && !params.hasParam(ACT_SHOW_HINT)
+                && !params.hasParam(ACT_SHOW_ANS);
+            if (histRec.isEmpty() && !hasMissingAnswers) {
                 histRec = Optional.of(makeHistRec());
                 res.setHistRec(histRec);
             }
@@ -111,6 +116,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
             br(),
             div(rndTextWithGaps()),
             br(),
+            hasMissingAnswers ? div("color:red;margin-bottom:20px;", text("Please fill in all the gaps.")) : null,
             div(rndButtons()),
             br(),
             div(rndAnswers()),
