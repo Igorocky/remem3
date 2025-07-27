@@ -473,11 +473,20 @@ public class ExerciseController extends HtmlBuilder
     private ExerciseState.SetParams makeSetParamsState(Settings settings, Cache cache, RequestParams params) {
         String config = params.getParam(PAR_EXERCISE_CONFIG, cache.getStr(PAR_EXERCISE_CONFIG, ""));
         if (StringUtils.isNotBlank(config)) {
+            String finalConfig = config;
+            config = settings.getExercises().stream()
+                .map(Pair::getLeft)
+                .filter(finalConfig::equals)
+                .findFirst()
+                .orElse("");
+        }
+        if (StringUtils.isNotBlank(config)) {
+            String finalConfig1 = config;
             return settings.getExercises().stream()
-                .filter(e -> config.equals(e.getLeft()))
+                .filter(e -> finalConfig1.equals(e.getLeft()))
                 .map(e -> makeSetParamsStateWithPredefinedConfig(settings, cache, e))
                 .findFirst()
-                .orElseThrow(() -> new Exn(String.format("Cannot find the exercise with name '%s'", config)));
+                .orElseThrow(() -> new Exn(String.format("Cannot find the exercise with name '%s'", finalConfig1)));
         } else {
             return makeSetParamsStateWithCustomConfig(settings, cache, params);
         }

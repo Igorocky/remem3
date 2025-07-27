@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
+
 public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy {
 
     public static final int MIN_BATCH_SIZE = 1;
@@ -131,16 +133,17 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                 Duration timeToWait = bucketDelay.compareTo(maxTaskDelay) <= 0
                     ? Duration.ZERO
                     : bucketDelay.minus(maxTaskDelay);
-                waiting.add(text(String.format("%s (%s)", waitingCnt, getApproxDurationStr(timeToWait))));
+                waiting.add(text(format("%s (%s)", waitingCnt, getApproxDurationStr(timeToWait))));
             } else {
                 waiting.add(text(String.valueOf(waitingCnt)));
             }
             total.add(text(String.valueOf(activeCnt + waitingCnt)));
         }
         return frag(
-            div(text(String.format("Number of tasks: %s", allTasks.size()))),
-            div(text(String.format("Use a separate bucket for new tasks: %s", useBucketForNewTasks ? "Yes" : "No"))),
-            div(text(String.format("Batch size: %s", batchSize))),
+            div(text(format("Number of tasks: %s", allTasks.size()))),
+            div(text(format("Use a separate bucket for new tasks: %s", useBucketForNewTasks ? "Yes" : "No"))),
+            div(text(format("Prefer tasks with longer history: %s", preferTasksWithLongerHistory ? "Yes" : "No"))),
+            div(text(format("Batch size: %s", batchSize))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
     }
@@ -204,7 +207,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                         continue mainLoop;
                     }
                 }
-                throw new Exn(String.format("Cannot find an active task in the directory %s", curDir));
+                throw new Exn(format("Cannot find an active task in the directory %s", curDir));
             }
         }
         return selectedTasks;
@@ -278,7 +281,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             .get();
     }
 
-    private BigDecimal getOverdue(Instant curTime, Duration bucketDelay, List<HistRec> hist) {
+    protected BigDecimal getOverdue(Instant curTime, Duration bucketDelay, List<HistRec> hist) {
         if (hist.isEmpty()) {
             return new BigDecimal("0.15");
         }
@@ -336,7 +339,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             .build();
     }
 
-    private int getBucketNum(List<HistRec> hist) {
+    protected int getBucketNum(List<HistRec> hist) {
         if (hist.isEmpty() && useBucketForNewTasks) {
             throw new Exn("hist.isEmpty()");
         }
