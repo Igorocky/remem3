@@ -437,8 +437,9 @@ class TaskStateTranslateTest extends HtmlBuilder {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
                 .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
-            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
-            inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
+            inpSubmit(ACT_SHOW_ANS, "Show answer")
+                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
         );
     }
 
@@ -446,7 +447,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
                 .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
-            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer")
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus")
         );
     }
 
@@ -455,7 +456,8 @@ class TaskStateTranslateTest extends HtmlBuilder {
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "150")
                 .attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
-            inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
+            inpSubmit(ACT_COMPLETE_TASK, "Next task")
+                .attr("style", "background-color: green;").attr("class", "border-on-focus"),
             inpText("", "", ACT_COMPLETE_TASK, true)
                 .attr("size", "1").attr("class", "border-on-focus")
         );
@@ -465,8 +467,9 @@ class TaskStateTranslateTest extends HtmlBuilder {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
                 .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
-            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"),
-            inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;")
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
+            inpSubmit(ACT_SHOW_ANS, "Show answer")
+                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
         );
     }
 
@@ -475,8 +478,10 @@ class TaskStateTranslateTest extends HtmlBuilder {
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
                 .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
-            inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":0", "Incorrect").attr("style", "background-color: red;"),
-            inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":1", "Correct").attr("style", "background-color: green;"),
+            inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":0", "Incorrect")
+                .attr("style", "background-color: red;").attr("class", "border-on-focus"),
+            inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":1", "Correct")
+                .attr("style", "background-color: green;").attr("class", "border-on-focus"),
             inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":0", true)
                 .attr("size", "1").attr("class", "border-on-focus"),
             inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":1")
@@ -489,7 +494,8 @@ class TaskStateTranslateTest extends HtmlBuilder {
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
                 .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
-            inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
+            inpSubmit(ACT_COMPLETE_TASK, "Next task")
+                .attr("style", "background-color: green;").attr("class", "border-on-focus"),
             inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1").attr("class", "border-on-focus")
         );
     }

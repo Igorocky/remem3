@@ -182,15 +182,16 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
 
     private HtmlElem rndButtons() {
         ArrayList<HtmlElem> content = new ArrayList<>();
-        if (!exactMatch && !showAnswer || exactMatch && !userAnswerIsCorrect.orElse(false)) {
-            content.add(inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer"));
-        }
         if (!showAnswer) {
-            content.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
+            content.add(
+                inpSubmit(ACT_SHOW_ANS, "Show answer")
+                    .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+            );
         } else {
             if (exactMatch && userAnswerIsCorrect.orElse(false) || !exactMatch && histRec.isPresent()) {
                 content.add(frag(
-                    inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"),
+                    inpSubmit(ACT_COMPLETE_TASK, "Next task")
+                        .attr("style", "background-color: green;").attr("class", "border-on-focus"),
                     inpText("", "", ACT_COMPLETE_TASK, true)
                         .attr("size", "1").attr("class", "border-on-focus")
                 ));
@@ -200,8 +201,10 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                 String parMark1 = keyValueParam(ACT_COMPLETE_TASK_WITH_MARK, 1);
                 content.add(table(List.of(
                     List.of(
-                        inpSubmit(parMark0, "Incorrect").attr("style", "background-color: red;"),
-                        inpSubmit(parMark1, "Correct").attr("style", "background-color: green;")
+                        inpSubmit(parMark0, "Incorrect")
+                            .attr("style", "background-color: red;").attr("class", "border-on-focus"),
+                        inpSubmit(parMark1, "Correct")
+                            .attr("style", "background-color: green;").attr("class", "border-on-focus")
                     ),
                     List.of(
                         inpText("", "", parMark0, true)
@@ -211,6 +214,9 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                     )
                 )));
             }
+        }
+        if (!exactMatch && !showAnswer || exactMatch && !userAnswerIsCorrect.orElse(false)) {
+            content.add(inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"));
         }
         return frag(content);
     }

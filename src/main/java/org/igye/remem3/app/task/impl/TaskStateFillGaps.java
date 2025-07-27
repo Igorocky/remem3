@@ -159,15 +159,24 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private HtmlElem rndButtons() {
         List<HtmlElem> content = new ArrayList<>();
         if (!allAnsAreCorrect) {
-            content.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer"));
             if (!showAnswers) {
-                content.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
                 if (!showHints) {
-                    content.add(inpSubmit(ACT_SHOW_HINT, "Hint").attr("style", "background-color: orange;"));
+                    content.add(
+                        inpSubmit(ACT_SHOW_HINT, "Hint")
+                            .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                    );
                 }
+                content.add(
+                    inpSubmit(ACT_SHOW_ANS, "Show answer")
+                        .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                );
             }
+            content.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer").attr("class", "border-on-focus"));
         } else {
-            content.add(inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"));
+            content.add(
+                inpSubmit(ACT_COMPLETE_TASK, "Next task")
+                    .attr("style", "background-color: green;").attr("class", "border-on-focus")
+            );
             content.add(
                 inpText("", "", ACT_COMPLETE_TASK, true)
                     .attr("size", "1").attr("class", "border-on-focus")

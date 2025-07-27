@@ -581,28 +581,42 @@ class TaskStateFillGapsTest extends HtmlBuilder {
 
     private void assertHtmlNoCorrectAnswer(HtmlElem html, List<String> expAns, List<String> userAns) {
         List<HtmlTag> elems = new ArrayList<>(makeAnsElems(expAns, userAns));
-        elems.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer"));
-        elems.add(inpSubmit(ACT_SHOW_HINT, "Hint").attr("style", "background-color: orange;"));
-        elems.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
+        elems.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer").attr("class", "border-on-focus"));
+        elems.add(
+            inpSubmit(ACT_SHOW_HINT, "Hint")
+                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+        );
+        elems.add(
+            inpSubmit(ACT_SHOW_ANS, "Show answer")
+                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+        );
         testUtils.assertInputs(html, elems);
     }
 
     private void assertHtmlNoCorrectAnswerShowHint(HtmlElem html, List<String> expAns, List<String> userAns) {
         List<HtmlTag> elems = new ArrayList<>(makeAnsElems(expAns, userAns));
-        elems.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer"));
-        elems.add(inpSubmit(ACT_SHOW_ANS, "Show answer").attr("style", "background-color: orange;"));
+        elems.add(
+            inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer").attr("class", "border-on-focus")
+        );
+        elems.add(
+            inpSubmit(ACT_SHOW_ANS, "Show answer")
+                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+        );
         testUtils.assertInputs(html, elems);
     }
 
     private void assertHtmlNoCorrectAnswerShowAnswer(HtmlElem html, List<String> expAns, List<String> userAns) {
         List<HtmlTag> elems = new ArrayList<>(makeAnsElems(expAns, userAns));
-        elems.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer"));
+        elems.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer").attr("class", "border-on-focus"));
         testUtils.assertInputs(html, elems);
     }
 
     private void assertHtmlHasCorrectAnswer(HtmlElem html, List<String> expAns) {
         List<HtmlTag> elems = new ArrayList<>(makeAnsElems(expAns, expAns));
-        elems.add(inpSubmit(ACT_COMPLETE_TASK, "Next task").attr("style", "background-color: green;"));
+        elems.add(
+            inpSubmit(ACT_COMPLETE_TASK, "Next task")
+                .attr("style", "background-color: green;").attr("class", "border-on-focus")
+        );
         elems.add(inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1").attr("class", "border-on-focus"));
         testUtils.assertInputs(html, elems);
     }
