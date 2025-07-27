@@ -9,6 +9,7 @@ import org.igye.remem3.html.HtmlElem;
 import java.util.List;
 
 public interface RepeatStrategyCmp {
+
     RepeatStrategyType getStrategyType();
 
     HtmlElem render();
@@ -16,4 +17,6 @@ public interface RepeatStrategyCmp {
     RepeatStrategy makeRepeatStrategy(List<Task> tasks);
 
     List<Pair<String, String>> getProperties();
+
+    void cacheState();
 }

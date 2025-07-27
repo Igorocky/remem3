@@ -288,6 +288,7 @@ public class ExerciseController extends HtmlBuilder
         if (StringUtils.isBlank(st.getConfig())) {
             cache.put(PAR_DIR_TO_READ_TASKS_FROM, st.getDirSelector().getSelectedDirectoryStr());
             cache.put(PAR_TASK_TYPE, selectedTaskTypes.stream().collect(Collectors.joining(",")));
+            st.getRepeatStrategyCmp().cacheState();
         }
         return ExerciseState.Started.builder()
             .settings(st.getSettings())
@@ -516,7 +517,7 @@ public class ExerciseController extends HtmlBuilder
                 TaskTypeMatcher.fromList(selectedTasks)
             ))
             .repeatStrategyCmp(new RepeatStrategyCmpImpl(
-                settings, utils, "PAR_REPEAT_STRATEGY", configFile, props
+                settings, utils, cache, "PAR_REPEAT_STRATEGY", configFile, props
             ))
             .build();
     }
@@ -533,7 +534,7 @@ public class ExerciseController extends HtmlBuilder
             .config("")
             .dirSelector(dirSelector)
             .taskTypes(getTaskTypes(getAvailableTaskTypes(cards, dirSelector.getSelectedDirectory()), params, cache))
-            .repeatStrategyCmp(new RepeatStrategyCmpImpl(settings, utils, "PAR_REPEAT_STRATEGY", params))
+            .repeatStrategyCmp(new RepeatStrategyCmpImpl(settings, utils, cache, "PAR_REPEAT_STRATEGY", params))
             .build();
     }
 

@@ -3,6 +3,7 @@ package org.igye.remem3.controllers.components.impl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.Settings;
@@ -19,6 +20,7 @@ import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -40,6 +42,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private static final String PROP_BUCKETS_USE_SEPARATE_BUCKET_FOR_NEW_TASKS = "use_separate_bucket_for_new_tasks";
     private final Settings settings;
     private final Utils utils;
+    private final Cache cache;
     private final String baseParamName;
     private final boolean isReadonly;
 
@@ -50,64 +53,76 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private Optional<Integer> valCircleNumOfRounds;
 
     private final String parCircleRndFactor;
-    private double valCircleRndFactor;
+    private BigDecimal valCircleRndFactor;
 
-    private final String parBucketsDelays;
-    private String valBucketsDelays;
+    private final String parBucketsDelaysName;
+    private String valBucketsDelaysName;
     private List<Duration> valBucketsDelaysList;
 
     private final String parBucketsUseBucketForNewTasks;
     private boolean valBucketsUseBucketForNewTasks;
 
-    public RepeatStrategyCmpImpl(Settings settings, Utils utils, String baseParamName, RequestParams params) {
+    public RepeatStrategyCmpImpl(
+        Settings settings, Utils utils, Cache cache, String baseParamName, RequestParams params
+    ) {
         this.settings = settings;
         this.utils = utils;
+        this.cache = cache;
         this.baseParamName = baseParamName;
         isReadonly = false;
         parStrategyType = makeParamName("TYPE");
         parCircleRndFactor = makeParamName("CIRCLE_RANDOMNESS_FACTOR");
         parCircleNumOfRounds = makeParamName("CIRCLE_NUMBER_OF_ROUNDS");
-        parBucketsDelays = makeParamName("BUCKETS_DELAYS");
+        parBucketsDelaysName = makeParamName("BUCKETS_DELAYS_NAME");
         parBucketsUseBucketForNewTasks = makeParamName("BUCKETS_USE_BUCKET_FOR_NEW_TASKS");
 
         valStrategyType = params.hasParam(parStrategyType)
             ? RepeatStrategyType.valueOf(params.getParam(parStrategyType))
-            : RepeatStrategyType.CIRCLE;
+            : RepeatStrategyType.valueOf(cache.getStr(parStrategyType, RepeatStrategyType.CIRCLE.toString()));
 
         int _ = switch (valStrategyType) {
             case CIRCLE -> {
                 valCircleNumOfRounds = params.hasParam(parCircleNumOfRounds)
                     ? parseCircleNumOfRounds(params.getParam(parCircleNumOfRounds))
-                    : Optional.empty();
+                    : Optional.of(cache.getStr(parCircleNumOfRounds, ""))
+                    .flatMap(str -> StringUtils.isBlank(str) ? Optional.empty() : parseCircleNumOfRounds(str));
                 valCircleRndFactor = params.hasParam(parCircleRndFactor)
                     ? parseCircleRandomnessFactor(params.getParam(parCircleRndFactor))
-                    : 0.3;
+                    : parseCircleRandomnessFactor(cache.getStr(parCircleRndFactor, ""));
                 yield 1;
             }
             case BUCKETS -> {
-                valBucketsDelays = params.hasParam(parBucketsDelays)
-                    ? params.getParam(parBucketsDelays)
-                    : settings.getBucketDelays().getFirst().getName();
+                valBucketsDelaysName = params.hasParam(parBucketsDelaysName)
+                    ? params.getParam(parBucketsDelaysName)
+                    : cache.getStr(parBucketsDelaysName, settings.getBucketDelays().getFirst().getName());
+                if (
+                    settings.getBucketDelays().stream()
+                        .map(BucketDelaysDto::getName)
+                        .noneMatch(name -> name.equals(valBucketsDelaysName))
+                ) {
+                    valBucketsDelaysName = settings.getBucketDelays().getFirst().getName();
+                }
                 valBucketsDelaysList = null;
-                valBucketsUseBucketForNewTasks =
-                    !params.hasParam(parBucketsUseBucketForNewTasks)
-                        || Boolean.parseBoolean(params.getParam(parBucketsUseBucketForNewTasks));
+                valBucketsUseBucketForNewTasks = params.hasParam(parBucketsUseBucketForNewTasks)
+                    ? Boolean.parseBoolean(params.getParam(parBucketsUseBucketForNewTasks))
+                    : cache.getBool(parBucketsUseBucketForNewTasks, true);
                 yield 1;
             }
         };
     }
 
     public RepeatStrategyCmpImpl(
-        Settings settings, Utils utils, String baseParamName, File configFile, Properties props
+        Settings settings, Utils utils, Cache cache, String baseParamName, File configFile, Properties props
     ) {
         this.settings = settings;
         this.utils = utils;
+        this.cache = cache;
         this.baseParamName = baseParamName;
         isReadonly = true;
         parStrategyType = makeParamName("TYPE");
         parCircleRndFactor = makeParamName("CIRCLE_RANDOMNESS_FACTOR");
         parCircleNumOfRounds = makeParamName("CIRCLE_NUMBER_OF_ROUNDS");
-        parBucketsDelays = makeParamName("BUCKETS_DELAYS");
+        parBucketsDelaysName = makeParamName("BUCKETS_DELAYS");
         parBucketsUseBucketForNewTasks = makeParamName("BUCKETS_USE_BUCKET_FOR_NEW_TASKS");
 
         String strategyTypeStr = props.getProperty(PROP_REPEAT_STRATEGY);
@@ -133,15 +148,18 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 String rndFactorStr = props.getProperty(PROP_CIRCLE_RANDOMNESS);
                 valCircleRndFactor = StringUtils.isNotBlank(rndFactorStr)
                     ? parseCircleRandomnessFactor(rndFactorStr)
-                    : 0.3;
+                    : new BigDecimal("0.3");
                 yield 1;
             }
             case BUCKETS -> {
                 String bucketsDelaysStr = props.getProperty(PROP_BUCKETS_BUCKET_DELAYS);
                 try {
-                    valBucketsDelays = null;
+                    valBucketsDelaysName = null;
                     valBucketsDelaysList = utils.parseDurations(bucketsDelaysStr);
-                } catch (IllegalArgumentException e) {
+                    if (valBucketsDelaysList.isEmpty()) {
+                        throw new Exn("At least one bucket must be specified.");
+                    }
+                } catch (Exception e) {
                     throw new Exn(String.format(
                         "Cannot parse %s=%s in %s, got an error %s.",
                         PROP_BUCKETS_BUCKET_DELAYS,
@@ -192,7 +210,9 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     @Override
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
         return switch (valStrategyType) {
-            case CIRCLE -> new RepeatStrategyCircle(tasks, Instant.now(), valCircleRndFactor, valCircleNumOfRounds);
+            case CIRCLE -> new RepeatStrategyCircle(
+                tasks, Instant.now(), valCircleRndFactor.doubleValue(), valCircleNumOfRounds
+            );
             case BUCKETS -> new RepeatStrategyBuckets(
                 utils, Clock.systemDefaultZone(), tasks, getSelectedBucketDelays(), valBucketsUseBucketForNewTasks
             );
@@ -226,6 +246,23 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         return props;
     }
 
+    @Override
+    public void cacheState() {
+        cache.put(parStrategyType, valStrategyType.toString());
+        int _ = switch (valStrategyType) {
+            case CIRCLE -> {
+                cache.put(parCircleNumOfRounds, valCircleNumOfRounds.map(String::valueOf).orElse(""));
+                cache.put(parCircleRndFactor, String.valueOf(valCircleRndFactor));
+                yield 1;
+            }
+            case BUCKETS -> {
+                cache.put(parBucketsDelaysName, valBucketsDelaysName);
+                cache.put(parBucketsUseBucketForNewTasks, valBucketsUseBucketForNewTasks);
+                yield 1;
+            }
+        };
+    }
+
     private HtmlElem rndBucketsParams() {
         HtmlElem delaysSelector;
         if (isReadonly) {
@@ -233,7 +270,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valBucketsDelaysList.stream().map(utils::durationToStr).collect(Collectors.joining(", "))
             );
         } else {
-            delaysSelector = select(parBucketsDelays, valBucketsDelays,
+            delaysSelector = select(parBucketsDelaysName, valBucketsDelaysName,
                 settings.getBucketDelays().stream()
                     .map(delays ->
                         Pair.of(
@@ -263,10 +300,10 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             return valBucketsDelaysList;
         }
         return settings.getBucketDelays().stream()
-            .filter(delays -> delays.getName().equals(valBucketsDelays))
+            .filter(delays -> delays.getName().equals(valBucketsDelaysName))
             .findFirst()
             .map(BucketDelaysDto::getDelays)
-            .orElseThrow(() -> new Exn(String.format("Cannot find bucket delays by name '%s'", valBucketsDelays)));
+            .orElseThrow(() -> new Exn(String.format("Cannot find bucket delays by name '%s'", valBucketsDelaysName)));
     }
 
     private HtmlElem rndCircleParams() {
@@ -292,11 +329,18 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         }
     }
 
-    private double parseCircleRandomnessFactor(String doubleStr) {
+    private BigDecimal parseCircleRandomnessFactor(String str) {
         try {
-            return Math.max(0, Math.min(Double.parseDouble(doubleStr), 1));
-        } catch (NumberFormatException e) {
-            return 0.3;
+            BigDecimal res = new BigDecimal(str);
+            if (res.compareTo(BigDecimal.ZERO) < 0) {
+                return BigDecimal.ZERO;
+            }
+            if (BigDecimal.ONE.compareTo(res) < 0) {
+                return BigDecimal.ONE;
+            }
+            return res;
+        } catch (Exception e) {
+            return new BigDecimal("0.3");
         }
     }
 
