@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static org.igye.remem3.app.task.impl.TaskStateFillGaps.ACT_COMPLETE_TASK;
 import static org.igye.remem3.app.task.impl.TaskStateFillGaps.ACT_SHOW_ANS;
 import static org.igye.remem3.app.task.impl.TaskStateFillGaps.ACT_SHOW_HINT;
@@ -584,11 +585,11 @@ class TaskStateFillGapsTest extends HtmlBuilder {
         elems.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer").attr("class", "border-on-focus"));
         elems.add(
             inpSubmit(ACT_SHOW_HINT, "Hint")
-                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
         );
         elems.add(
             inpSubmit(ACT_SHOW_ANS, "Show answer")
-                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
         );
         testUtils.assertInputs(html, elems);
     }
@@ -600,7 +601,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
         );
         elems.add(
             inpSubmit(ACT_SHOW_ANS, "Show answer")
-                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
         );
         testUtils.assertInputs(html, elems);
     }
@@ -615,9 +616,9 @@ class TaskStateFillGapsTest extends HtmlBuilder {
         List<HtmlTag> elems = new ArrayList<>(makeAnsElems(expAns, expAns));
         elems.add(
             inpSubmit(ACT_COMPLETE_TASK, "Next task")
-                .attr("style", "background-color: green;").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
+                .attr("autofocus", "")
         );
-        elems.add(inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1").attr("class", "border-on-focus"));
         testUtils.assertInputs(html, elems);
     }
 

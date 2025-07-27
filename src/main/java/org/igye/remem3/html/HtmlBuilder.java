@@ -12,6 +12,10 @@ import java.util.List;
 import java.util.Map;
 
 public class HtmlBuilder {
+    protected static final String GREEN = "#0077008a";
+    protected static final String RED = "#ff00008f";
+    protected static final String ORANGE = "#ffa500a3";
+
     @Setter
     private String contextPath;
 

@@ -47,6 +47,8 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
+
 public class ExerciseController extends HtmlBuilder
     implements StatefulWebController<ExerciseState, Supplier<? extends ExerciseState>> {
 
@@ -353,8 +355,12 @@ public class ExerciseController extends HtmlBuilder
             st.getRepeatStrategyCmp().render(),
             br(),
             div(
-                inpSubmit(ACT_START_EXERCISE, "Start").attr("style", "background-color: green;"),
-                st.isShowProperties() ? null : inpSubmit(ACT_SHOW_PROPERTIES, "Show properties")
+                inpSubmit(ACT_START_EXERCISE, "Start")
+                    .attr("style", format("background-color: %s;", GREEN))
+                    .attr("autofocus", "").attr("class", "border-on-focus"),
+                st.isShowProperties()
+                    ? null
+                    : inpSubmit(ACT_SHOW_PROPERTIES, "Show properties").attr("class", "border-on-focus")
             ),
             !st.isShowProperties() ? null : rndProperties(st)
         );

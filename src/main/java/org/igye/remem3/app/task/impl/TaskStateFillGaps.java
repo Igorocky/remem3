@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.String.format;
+
 public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     public static final String PAR_USER_ANS = "PAR_USER_ANS";
     public static final String ACT_SUBMIT_ANSWERS = "ACT_SUBMIT_ANSWERS";
@@ -103,7 +105,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         }
         HtmlElem descr = StringUtils.isNotBlank(card.getDescr())
             ? text(card.getDescr())
-            : text(String.format("Fill gaps in %s language", card.getLang()));
+            : text(format("Fill gaps in %s language", card.getLang()));
         return frag(
             div(descr),
             br(),
@@ -163,23 +165,20 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
                 if (!showHints) {
                     content.add(
                         inpSubmit(ACT_SHOW_HINT, "Hint")
-                            .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                            .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
                     );
                 }
                 content.add(
                     inpSubmit(ACT_SHOW_ANS, "Show answer")
-                        .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                        .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
                 );
             }
             content.add(inpSubmit(ACT_SUBMIT_ANSWERS, "Submit answer").attr("class", "border-on-focus"));
         } else {
             content.add(
                 inpSubmit(ACT_COMPLETE_TASK, "Next task")
-                    .attr("style", "background-color: green;").attr("class", "border-on-focus")
-            );
-            content.add(
-                inpText("", "", ACT_COMPLETE_TASK, true)
-                    .attr("size", "1").attr("class", "border-on-focus")
+                    .attr("style", format("background-color: %s;", GREEN))
+                    .attr("class", "border-on-focus").attr("autofocus", "")
             );
         }
 
@@ -225,7 +224,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         for (int i = 0; i < gaps.size(); i++) {
             String paramName = keyValueParam(PAR_USER_ANS, i);
             if (!params.hasParam(paramName)) {
-                throw new Exn(String.format("!params.hasParam(keyValueParam(%s, %s))", PAR_USER_ANS, i));
+                throw new Exn(format("!params.hasParam(keyValueParam(%s, %s))", PAR_USER_ANS, i));
             }
             String userAns = params.getParam(paramName).trim();
             userAnswers.add(userAns);

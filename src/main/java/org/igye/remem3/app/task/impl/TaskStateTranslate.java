@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.String.format;
+
 public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     protected static final String PAR_USER_ANS = "PAR_USER_ANS";
     protected static final String ACT_SUBMIT_ANSWER = "ACT_SUBMIT_ANSWER";
@@ -61,7 +63,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             expAnswer = card.getText1();
             exactMatch = card.isExactMatch1();
         } else {
-            cardErrors.add(String.format(
+            cardErrors.add(format(
                 "Languages from the task %s->%s don't match languages in the card %s<->%s.",
                 taskType.getLangFrom(), taskType.getLangTo(), card.getLang1(), card.getLang2()
             ));
@@ -143,7 +145,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             userAnswer = "";
         }
         return frag(
-            div(text(String.format("%s -> %s", taskType.getLangFrom(), taskType.getLangTo()))),
+            div(text(format("%s -> %s", taskType.getLangFrom(), taskType.getLangTo()))),
             br(),
             div(text(textToTranslate)),
             br(),
@@ -185,15 +187,14 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         if (!showAnswer) {
             content.add(
                 inpSubmit(ACT_SHOW_ANS, "Show answer")
-                    .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                    .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
             );
         } else {
             if (exactMatch && userAnswerIsCorrect.orElse(false) || !exactMatch && histRec.isPresent()) {
                 content.add(frag(
                     inpSubmit(ACT_COMPLETE_TASK, "Next task")
-                        .attr("style", "background-color: green;").attr("class", "border-on-focus"),
-                    inpText("", "", ACT_COMPLETE_TASK, true)
-                        .attr("size", "1").attr("class", "border-on-focus")
+                        .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
+                        .attr("autofocus", "")
                 ));
             }
             if (!exactMatch && histRec.isEmpty()) {
@@ -202,15 +203,10 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                 content.add(table(List.of(
                     List.of(
                         inpSubmit(parMark0, "Incorrect")
-                            .attr("style", "background-color: red;").attr("class", "border-on-focus"),
+                            .attr("style", format("background-color: %s;", RED)).attr("class", "border-on-focus")
+                            .attr("autofocus", ""),
                         inpSubmit(parMark1, "Correct")
-                            .attr("style", "background-color: green;").attr("class", "border-on-focus")
-                    ),
-                    List.of(
-                        inpText("", "", parMark0, true)
-                            .attr("size", "1").attr("class", "border-on-focus"),
-                        inpText("", "", parMark1)
-                            .attr("size", "1").attr("class", "border-on-focus")
+                            .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
                     )
                 )));
             }

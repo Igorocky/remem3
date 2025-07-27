@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.String.format;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_COMPLETE_TASK;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_COMPLETE_TASK_WITH_MARK;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SHOW_ANS;
@@ -439,7 +440,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
                 .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
             inpSubmit(ACT_SHOW_ANS, "Show answer")
-                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
         );
     }
 
@@ -457,9 +458,8 @@ class TaskStateTranslateTest extends HtmlBuilder {
                 .attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task")
-                .attr("style", "background-color: green;").attr("class", "border-on-focus"),
-            inpText("", "", ACT_COMPLETE_TASK, true)
-                .attr("size", "1").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
+                .attr("autofocus", "")
         );
     }
 
@@ -469,7 +469,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
                 .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
             inpSubmit(ACT_SHOW_ANS, "Show answer")
-                .attr("style", "background-color: orange;").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
         );
     }
 
@@ -479,13 +479,10 @@ class TaskStateTranslateTest extends HtmlBuilder {
                 .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":0", "Incorrect")
-                .attr("style", "background-color: red;").attr("class", "border-on-focus"),
+                .attr("style", format("background-color: %s;", RED)).attr("class", "border-on-focus")
+                .attr("autofocus", ""),
             inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":1", "Correct")
-                .attr("style", "background-color: green;").attr("class", "border-on-focus"),
-            inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":0", true)
-                .attr("size", "1").attr("class", "border-on-focus"),
-            inpText("", "", ACT_COMPLETE_TASK_WITH_MARK + ":1")
-                .attr("size", "1").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
         );
     }
 
@@ -495,8 +492,8 @@ class TaskStateTranslateTest extends HtmlBuilder {
                 .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task")
-                .attr("style", "background-color: green;").attr("class", "border-on-focus"),
-            inpText("", "", ACT_COMPLETE_TASK, true).attr("size", "1").attr("class", "border-on-focus")
+                .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
+                .attr("autofocus", "")
         );
     }
 
