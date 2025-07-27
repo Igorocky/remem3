@@ -3,6 +3,8 @@ package org.igye.remem3.app;
 public interface Cache {
     String getStr(String key, String defaultValue);
 
+    int getInt(String key, int defaultValue);
+
     long getLong(String key, long defaultValue);
 
     boolean getBool(String key, boolean defaultValue);

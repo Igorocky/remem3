@@ -32,9 +32,12 @@ import java.util.stream.Stream;
 
 public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy {
 
-    private static final int NUM_OF_TASKS_IN_BATCH = 5;
+    public static final int MIN_BATCH_SIZE = 1;
+    public static final int MAX_BATCH_SIZE = 10;
+    public static final int DEFAULT_BATCH_SIZE = 5;
     private final Utils utils;
     private final Clock clock;
+    private final int batchSize;
     private final List<Task> allTasks;
     private final List<Duration> bucketDelays;
     private final boolean useBucketForNewTasks;
@@ -42,12 +45,14 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     public RepeatStrategyBuckets(
         Utils utils,
         Clock clock,
+        int batchSize,
         List<Task> allTasks,
         List<Duration> bucketDelays,
         boolean useBucketForNewTasks
     ) {
         this.utils = utils;
         this.clock = clock;
+        this.batchSize = Math.max(MIN_BATCH_SIZE, Math.min(batchSize, MAX_BATCH_SIZE));
         this.allTasks = Collections.unmodifiableList(allTasks);
         this.bucketDelays = Collections.unmodifiableList(bucketDelays);
         this.useBucketForNewTasks = useBucketForNewTasks;
@@ -59,9 +64,9 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         Map<String, List<HistRec>> taskToHist = stats.getTaskToHist();
         ArrayList<Task> activeTasks = getPreferredActiveTasks(clock.instant(), stats.getBuckets(), taskToHist);
         ArrayList<String> preferredDirs = getPreferredDirs(activeTasks, taskToHist);
-        List<Task> selectedTasks = selectActiveTasksToRepeat(activeTasks, preferredDirs, NUM_OF_TASKS_IN_BATCH);
+        List<Task> selectedTasks = selectActiveTasksToRepeat(activeTasks, preferredDirs, batchSize);
         List<Task> newTasks = stats.getNewTasks();
-        if (selectedTasks.size() < NUM_OF_TASKS_IN_BATCH && !newTasks.isEmpty()) {
+        if (selectedTasks.size() < batchSize && !newTasks.isEmpty()) {
             Collections.shuffle(newTasks);
             selectedTasks.add(selectNewTask(activeTasks, preferredDirs, selectedTasks, newTasks));
         }
@@ -132,6 +137,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         return frag(
             div(text(String.format("Number of tasks: %s", allTasks.size()))),
             div(text(String.format("Use a separate bucket for new tasks: %s", useBucketForNewTasks ? "Yes" : "No"))),
+            div(text(String.format("Batch size: %s", batchSize))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
     }

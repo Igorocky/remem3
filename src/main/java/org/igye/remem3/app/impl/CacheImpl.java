@@ -42,6 +42,11 @@ public class CacheImpl implements Cache {
     }
 
     @Override
+    public int getInt(String key, int defaultValue) {
+        return (int) getLong(key, defaultValue);
+    }
+
+    @Override
     public long getLong(String key, long defaultValue) {
         String value = cacheData.get(key);
         if (value == null) {
