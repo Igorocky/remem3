@@ -38,6 +38,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     private final Utils utils;
     private final Clock clock;
     private final int batchSize;
+    private final boolean preferTasksWithLongerHistory;
     private final List<Task> allTasks;
     private final List<Duration> bucketDelays;
     private final boolean useBucketForNewTasks;
@@ -46,6 +47,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         Utils utils,
         Clock clock,
         int batchSize,
+        boolean preferTasksWithLongerHistory,
         List<Task> allTasks,
         List<Duration> bucketDelays,
         boolean useBucketForNewTasks
@@ -53,6 +55,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         this.utils = utils;
         this.clock = clock;
         this.batchSize = Math.max(MIN_BATCH_SIZE, Math.min(batchSize, MAX_BATCH_SIZE));
+        this.preferTasksWithLongerHistory = preferTasksWithLongerHistory;
         this.allTasks = Collections.unmodifiableList(allTasks);
         this.bucketDelays = Collections.unmodifiableList(bucketDelays);
         this.useBucketForNewTasks = useBucketForNewTasks;
@@ -148,27 +151,31 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         List<Task> selectedTasks,
         List<Task> newTasks
     ) {
-        Set<String> knownDirs = Stream.concat(activeTasks.stream(), selectedTasks.stream())
-            .map(Task::getDir)
-            .collect(Collectors.toSet());
-        for (Task task : newTasks) {
-            if (!knownDirs.contains(task.getDir())) {
-                return task;
-            }
-        }
-        if (preferredDirs.isEmpty()) {
+        if (preferTasksWithLongerHistory) {
             return newTasks.getFirst();
-        }
-        for (int d = 0; d < preferredDirs.size(); d++) {
-            String dir = preferredDirs.get(d);
-            for (int t = 0; t < newTasks.size(); t++) {
-                Task task = newTasks.get(t);
-                if (dir.equals(task.getDir())) {
+        } else {
+            Set<String> knownDirs = Stream.concat(activeTasks.stream(), selectedTasks.stream())
+                .map(Task::getDir)
+                .collect(Collectors.toSet());
+            for (Task task : newTasks) {
+                if (!knownDirs.contains(task.getDir())) {
                     return task;
                 }
             }
+            if (preferredDirs.isEmpty()) {
+                return newTasks.getFirst();
+            }
+            for (int d = 0; d < preferredDirs.size(); d++) {
+                String dir = preferredDirs.get(d);
+                for (int t = 0; t < newTasks.size(); t++) {
+                    Task task = newTasks.get(t);
+                    if (dir.equals(task.getDir())) {
+                        return task;
+                    }
+                }
+            }
+            return newTasks.getFirst();
         }
-        return newTasks.getFirst();
     }
 
     private ArrayList<Task> selectActiveTasksToRepeat(
@@ -177,22 +184,28 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         int maxNumOfTasksToSelect
     ) {
         ArrayList<Task> selectedTasks = new ArrayList<>();
-        mainLoop:
-        while (selectedTasks.size() < maxNumOfTasksToSelect && !activeTasks.isEmpty()) {
-            String curDir = preferredDirs.getFirst();
-            for (int i = 0; i < activeTasks.size(); i++) {
-                Task task = activeTasks.get(i);
-                if (curDir.equals(task.getDir())) {
-                    selectedTasks.add(task);
-                    activeTasks.remove(i);
-                    preferredDirs.removeFirst();
-                    if (activeTasks.stream().anyMatch(t -> curDir.equals(t.getDir()))) {
-                        preferredDirs.add(curDir);
+        if (preferTasksWithLongerHistory) {
+            selectedTasks.addAll(
+                activeTasks.stream().limit(maxNumOfTasksToSelect).toList()
+            );
+        } else {
+            mainLoop:
+            while (selectedTasks.size() < maxNumOfTasksToSelect && !activeTasks.isEmpty()) {
+                String curDir = preferredDirs.getFirst();
+                for (int i = 0; i < activeTasks.size(); i++) {
+                    Task task = activeTasks.get(i);
+                    if (curDir.equals(task.getDir())) {
+                        selectedTasks.add(task);
+                        activeTasks.remove(i);
+                        preferredDirs.removeFirst();
+                        if (activeTasks.stream().anyMatch(t -> curDir.equals(t.getDir()))) {
+                            preferredDirs.add(curDir);
+                        }
+                        continue mainLoop;
                     }
-                    continue mainLoop;
                 }
+                throw new Exn(String.format("Cannot find an active task in the directory %s", curDir));
             }
-            throw new Exn(String.format("Cannot find an active task in the directory %s", curDir));
         }
         return selectedTasks;
     }
@@ -203,8 +216,20 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         Map<String, List<HistRec>> taskToHist
     ) {
         List<Pair<Task, BigDecimal>> overdues = calcOverdues(curTime, buckets, taskToHist);
+        Comparator<Pair<Task, BigDecimal>> overdueCmp = Comparator.<Pair<Task, BigDecimal>, BigDecimal>comparing(
+            Pair::getRight
+        ).reversed();
+        Comparator<Pair<Task, BigDecimal>> taskCmp;
+        if (preferTasksWithLongerHistory) {
+            taskCmp = Comparator.<Pair<Task, BigDecimal>, Integer>comparing(
+                    p -> taskToHist.get(p.getLeft().getId()).size()
+                )
+                .reversed().thenComparing(overdueCmp);
+        } else {
+            taskCmp = overdueCmp;
+        }
         return overdues.stream()
-            .sorted(Comparator.<Pair<Task, BigDecimal>, BigDecimal>comparing(Pair::getRight).reversed())
+            .sorted(taskCmp)
             .map(Pair::getLeft)
             .collect(Collectors.toCollection(ArrayList::new));
     }

@@ -44,6 +44,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private static final String PROP_CIRCLE_RANDOMNESS = "randomness";
     private static final String PROP_BUCKETS_BUCKET_DELAYS = "bucket_delays";
     private static final String PROP_BUCKETS_USE_SEPARATE_BUCKET_FOR_NEW_TASKS = "use_separate_bucket_for_new_tasks";
+    private static final String PROP_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY = "prefer_tasks_with_longer_history";
     private static final String PROP_BUCKETS_BATCH_SIZE = "batch_size";
     private final Settings settings;
     private final Utils utils;
@@ -67,6 +68,9 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private final String parBucketsUseBucketForNewTasks;
     private boolean valBucketsUseBucketForNewTasks;
 
+    private final String parBucketsPreferTasksWithLongerHistory;
+    private boolean valBucketsPreferTasksWithLongerHistory;
+
     private final String parBucketsBatchSize;
     private int valBucketsBatchSize;
 
@@ -84,6 +88,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         parBucketsDelaysName = makeParamName("BUCKETS_DELAYS_NAME");
         parBucketsUseBucketForNewTasks = makeParamName("BUCKETS_USE_BUCKET_FOR_NEW_TASKS");
         parBucketsBatchSize = makeParamName("BUCKETS_BATCH_SIZE");
+        parBucketsPreferTasksWithLongerHistory = makeParamName("BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY");
 
         valStrategyType = params.hasParam(parStrategyType)
             ? RepeatStrategyType.valueOf(params.getParam(parStrategyType))
@@ -115,6 +120,9 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valBucketsUseBucketForNewTasks = params.hasParam(parBucketsUseBucketForNewTasks)
                     ? Boolean.parseBoolean(params.getParam(parBucketsUseBucketForNewTasks))
                     : cache.getBool(parBucketsUseBucketForNewTasks, true);
+                valBucketsPreferTasksWithLongerHistory = params.hasParam(parBucketsPreferTasksWithLongerHistory)
+                    ? Boolean.parseBoolean(params.getParam(parBucketsPreferTasksWithLongerHistory))
+                    : cache.getBool(parBucketsPreferTasksWithLongerHistory, false);
                 valBucketsBatchSize = params.hasParam(parBucketsBatchSize)
                     ? parseBatchSize(params.getParam(parBucketsBatchSize))
                     : cache.getInt(parBucketsBatchSize, DEFAULT_BATCH_SIZE);
@@ -137,6 +145,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         parBucketsDelaysName = makeParamName("BUCKETS_DELAYS");
         parBucketsUseBucketForNewTasks = makeParamName("BUCKETS_USE_BUCKET_FOR_NEW_TASKS");
         parBucketsBatchSize = makeParamName("BUCKETS_BATCH_SIZE");
+        parBucketsPreferTasksWithLongerHistory = makeParamName("BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY");
 
         String strategyTypeStr = props.getProperty(PROP_REPEAT_STRATEGY);
         if (StringUtils.isBlank(strategyTypeStr)) {
@@ -162,6 +171,9 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valBucketsDelaysName = null;
                 valBucketsDelaysList = readBucketsDelaysListFromProps(configFile, props);
                 valBucketsUseBucketForNewTasks = readBucketsUseBucketForNewTasksFromProps(configFile, props);
+                valBucketsPreferTasksWithLongerHistory = readBucketsPreferTasksWithLongerHistoryFromProps(
+                    configFile, props
+                );
                 valBucketsBatchSize = readBucketsBatchSizeFromProps(configFile, props);
                 yield 1;
             }
@@ -207,7 +219,8 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             );
             case BUCKETS -> new RepeatStrategyBuckets(
                 utils, Clock.systemDefaultZone(),
-                valBucketsBatchSize, tasks, getSelectedBucketDelays(), valBucketsUseBucketForNewTasks
+                valBucketsBatchSize, valBucketsPreferTasksWithLongerHistory,
+                tasks, getSelectedBucketDelays(), valBucketsUseBucketForNewTasks
             );
         };
     }
@@ -233,6 +246,10 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                     PROP_BUCKETS_USE_SEPARATE_BUCKET_FOR_NEW_TASKS,
                     valBucketsUseBucketForNewTasks ? "y" : "n"
                 ));
+                props.add(Pair.of(
+                    PROP_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY,
+                    valBucketsPreferTasksWithLongerHistory ? "y" : "n"
+                ));
                 props.add(Pair.of(PROP_BUCKETS_BATCH_SIZE, String.valueOf(valBucketsBatchSize)));
                 yield 0;
             }
@@ -252,6 +269,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             case BUCKETS -> {
                 cache.put(parBucketsDelaysName, valBucketsDelaysName);
                 cache.put(parBucketsUseBucketForNewTasks, valBucketsUseBucketForNewTasks);
+                cache.put(parBucketsPreferTasksWithLongerHistory, valBucketsPreferTasksWithLongerHistory);
                 cache.put(parBucketsBatchSize, valBucketsBatchSize);
                 yield 1;
             }
@@ -342,8 +360,26 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             return false;
         }
         throw new Exn(format(
-            "%s must be empty or one of '%s', '%s'.",
-            PROP_BUCKETS_USE_SEPARATE_BUCKET_FOR_NEW_TASKS, "y", "n"
+            "%s must be empty or one of '%s', '%s', in %s",
+            PROP_BUCKETS_USE_SEPARATE_BUCKET_FOR_NEW_TASKS, "y", "n", configFile.getAbsolutePath()
+        ));
+    }
+
+    private boolean readBucketsPreferTasksWithLongerHistoryFromProps(File configFile, Properties props) {
+        String preferTasksWithLongerHistoryStr = props.getProperty(PROP_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY);
+        if (StringUtils.isBlank(preferTasksWithLongerHistoryStr)) {
+            return false;
+        }
+        preferTasksWithLongerHistoryStr = preferTasksWithLongerHistoryStr.trim().toLowerCase();
+        if ("y".equals(preferTasksWithLongerHistoryStr)) {
+            return true;
+        }
+        if ("n".equals(preferTasksWithLongerHistoryStr)) {
+            return false;
+        }
+        throw new Exn(format(
+            "%s must be empty or one of '%s', '%s', in %s",
+            PROP_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY, "y", "n", configFile.getAbsolutePath()
         ));
     }
 
@@ -381,13 +417,25 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         if (isReadonly) {
             bucketForNewTasksSelector.disabled();
         }
-        HtmlTag batchSize = inpText(parBucketsBatchSize, String.valueOf(valBucketsBatchSize), null);
+        HtmlTag preferTasksWithLongerHistorySelector = select(
+            parBucketsPreferTasksWithLongerHistory,
+            valBucketsPreferTasksWithLongerHistory + "",
+            List.of(
+                Pair.of(Boolean.TRUE.toString(), text("Yes")),
+                Pair.of(Boolean.FALSE.toString(), text("No"))
+            )
+        );
+        if (isReadonly) {
+            preferTasksWithLongerHistorySelector.disabled();
+        }
+        HtmlTag batchSize = inpText(parBucketsBatchSize, String.valueOf(valBucketsBatchSize), null).attr("size", "3");
         if (isReadonly) {
             batchSize.disabled();
         }
         return table(List.of(
             List.of(text("Bucket delays"), delaysSelector),
             List.of(text("Use a separate bucket for new tasks"), bucketForNewTasksSelector),
+            List.of(text("Prefer tasks with longer history"), preferTasksWithLongerHistorySelector),
             List.of(text("Batch size"), batchSize)
         ));
     }
