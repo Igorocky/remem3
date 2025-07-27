@@ -60,7 +60,7 @@ public class SettingsImpl implements Settings {
         );
         checkNotEmpty(directoriesWithCards, PROP_DIRECTORIES_WITH_CARDS);
         String nonExistentDirs = directoriesWithCards.stream()
-            .map(path -> new File(path))
+            .map(File::new)
             .filter(dir -> !dir.exists() || !dir.isDirectory())
             .map(File::getName)
             .collect(Collectors.joining(", "));
@@ -87,19 +87,23 @@ public class SettingsImpl implements Settings {
                         "Cannot parse exercise '%s', the format should be 'name:path'.", nameAndPath
                     ));
                 }
-                String name = parts[0].trim();
-                if (StringUtils.isBlank(name)) {
-                    throw new Exn(String.format(
-                        "The name of an exercise must not be blank, got '%s'.", nameAndPath
-                    ));
-                }
                 String path = parts[1].trim();
                 if (StringUtils.isBlank(path)) {
                     throw new Exn(String.format(
                         "The path of an exercise must not be blank, got '%s'.", nameAndPath
                     ));
                 }
-                return Pair.of(name, new File(path));
+                File file = new File(path);
+                String name = parts[0].trim();
+                if (StringUtils.isBlank(name)) {
+                    name = removeExtension(file.getName());
+                }
+                if (StringUtils.isBlank(name)) {
+                    throw new Exn(String.format(
+                        "The name of an exercise must not be blank, got '%s'.", nameAndPath
+                    ));
+                }
+                return Pair.of(name, file);
             })
             .toList();
         long namesCnt = exercises.stream().map(Pair::getLeft).distinct().count();
@@ -107,6 +111,18 @@ public class SettingsImpl implements Settings {
             throw new Exn("Names of all exercises must be unique.");
         }
         return exercises;
+    }
+
+    protected static String removeExtension(String name) {
+        int dotIdx = name.length() - 1;
+        while (dotIdx >= 0 && name.charAt(dotIdx) != '.') {
+            dotIdx--;
+        }
+        if (dotIdx < 0) {
+            return name;
+        } else {
+            return name.substring(0, dotIdx);
+        }
     }
 
     private static List<BucketDelaysDto> parseBucketDelays(String str, Utils utils) {
