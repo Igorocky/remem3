@@ -267,12 +267,12 @@ public class ExerciseController extends HtmlBuilder
     }
 
     private ExerciseState actStartExercise(ExerciseState.SetParams st) {
-        Set<String> taskTypes = st.getTaskTypes().stream()
+        Set<String> selectedTaskTypes = st.getTaskTypes().stream()
             .filter(Pair::getRight)
             .map(Pair::getLeft)
             .map(TaskType::getCode)
             .collect(Collectors.toSet());
-        TaskTypeMatcher taskTypeMatcher = TaskTypeMatcher.fromList(taskTypes);
+        TaskTypeMatcher taskTypeMatcher = TaskTypeMatcher.fromList(selectedTaskTypes);
         File selectedDir = st.getDirSelector().getSelectedDirectory();
         List<Task> tasks = st.getCards().loadAllCards(selectedDir).stream()
             .flatMap(card -> card.getTasks().stream())
@@ -283,17 +283,22 @@ public class ExerciseController extends HtmlBuilder
         }
         RepeatStrategy repeatStrategy = st.getRepeatStrategyCmp().makeRepeatStrategy(tasks);
         Optional<List<Task>> nextTasks = repeatStrategy.getNextTasks();
-        st.getCache().put(PAR_EXERCISE_CONFIG, st.getConfig());
+        Cache cache = st.getCache();
+        cache.put(PAR_EXERCISE_CONFIG, st.getConfig());
+        if (StringUtils.isBlank(st.getConfig())) {
+            cache.put(PAR_DIR_TO_READ_TASKS_FROM, st.getDirSelector().getSelectedDirectoryStr());
+            cache.put(PAR_TASK_TYPE, selectedTaskTypes.stream().collect(Collectors.joining(",")));
+        }
         return ExerciseState.Started.builder()
             .settings(st.getSettings())
-            .cache(st.getCache())
+            .cache(cache)
             .cards(st.getCards())
             .config(st.getConfig())
             .repeatStrategyCmp(st.getRepeatStrategyCmp())
             .dir(selectedDir.getAbsolutePath())
-            .taskTypes(taskTypes)
+            .taskTypes(selectedTaskTypes)
             .repeatStrategy(repeatStrategy)
-            .showParams(st.getCache().getBool(PAR_SHOW_EXERCISE_PARAMS, false))
+            .showParams(cache.getBool(PAR_SHOW_EXERCISE_PARAMS, false))
             .nextTasks(nextTasks)
             .taskState(nextTasks.flatMap(nt ->
                 nt.isEmpty() ? Optional.empty() : makeTaskState(st.getCards(), nt.getFirst())
@@ -527,7 +532,7 @@ public class ExerciseController extends HtmlBuilder
             .cards(cards)
             .config("")
             .dirSelector(dirSelector)
-            .taskTypes(getTaskTypes(getAvailableTaskTypes(cards, dirSelector.getSelectedDirectory()), params))
+            .taskTypes(getTaskTypes(getAvailableTaskTypes(cards, dirSelector.getSelectedDirectory()), params, cache))
             .repeatStrategyCmp(new RepeatStrategyCmpImpl(settings, utils, "PAR_REPEAT_STRATEGY", params))
             .build();
     }
@@ -540,8 +545,15 @@ public class ExerciseController extends HtmlBuilder
             .toList();
     }
 
-    private List<Pair<TaskType, Boolean>> getTaskTypes(List<TaskType> availableTaskTypes, RequestParams params) {
-        Set<String> checked = Arrays.stream(params.getParams(PAR_TASK_TYPE)).collect(Collectors.toSet());
+    private List<Pair<TaskType, Boolean>> getTaskTypes(
+        List<TaskType> availableTaskTypes, RequestParams params, Cache cache
+    ) {
+        Set<String> checked = params.hasParam(keyValueParam(PAR_DIR_TO_READ_TASKS_FROM, 0))
+            ? Arrays.stream(params.getParams(PAR_TASK_TYPE)).collect(Collectors.toSet())
+            : Arrays.stream(cache.getStr(PAR_TASK_TYPE, "").split(","))
+            .filter(StringUtils::isNotBlank)
+            .map(String::trim)
+            .collect(Collectors.toSet());
         return getTaskTypes(availableTaskTypes, checked);
     }
 
