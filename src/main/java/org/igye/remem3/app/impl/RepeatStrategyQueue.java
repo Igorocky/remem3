@@ -72,28 +72,6 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         return Optional.of(nextTasks);
     }
 
-    protected int compare(TaskDto a, TaskDto b) {
-        if (a.getHistLen() == 0) {
-            //A is a new task
-            if (b.getHistLen() == 0) {
-                //B is a new task
-                return 0;
-            } else {
-                //B is an old task
-                return 1;
-            }
-        } else {
-            //A is an old task
-            if (b.getHistLen() == 0) {
-                //B is a new task
-                return -1;
-            } else {
-                //B is an old task
-                return Integer.compare(a.getStreak(), b.getStreak());
-            }
-        }
-    }
-
     private static HistRecDto makeHistRecDto(TaskDto task, HistRec histRec) {
         return HistRecDto.builder()
             .histRec(histRec)
