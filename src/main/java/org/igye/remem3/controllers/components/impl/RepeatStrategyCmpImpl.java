@@ -11,6 +11,7 @@ import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.impl.RepeatStrategyBuckets;
 import org.igye.remem3.app.impl.RepeatStrategyCircle;
+import org.igye.remem3.app.impl.RepeatStrategyQueue;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
@@ -39,6 +40,16 @@ import static org.igye.remem3.app.impl.RepeatStrategyCircle.MAX_NUM_OF_ROUNDS;
 
 public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategyCmp {
 
+    private static final String PAR_TYPE = "TYPE";
+    private static final String PAR_CIRCLE_RANDOMNESS_FACTOR = "CIRCLE_RANDOMNESS_FACTOR";
+    private static final String PAR_CIRCLE_NUMBER_OF_ROUNDS = "CIRCLE_NUMBER_OF_ROUNDS";
+    private static final String PAR_BUCKETS_DELAYS_NAME = "BUCKETS_DELAYS_NAME";
+    private static final String PAR_BUCKETS_USE_BUCKET_FOR_NEW_TASKS = "BUCKETS_USE_BUCKET_FOR_NEW_TASKS";
+    private static final String PAR_BUCKETS_BATCH_SIZE = "BUCKETS_BATCH_SIZE";
+    private static final String PAR_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY =
+        "BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY";
+    private static final String PAR_QUEUE_BATCH_SIZE = "QUEUE_BATCH_SIZE";
+
     private static final String PROP_REPEAT_STRATEGY = "repeat_strategy";
     private static final String PROP_CIRCLE_ROUNDS = "rounds";
     private static final String PROP_CIRCLE_RANDOMNESS = "randomness";
@@ -46,6 +57,8 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private static final String PROP_BUCKETS_USE_SEPARATE_BUCKET_FOR_NEW_TASKS = "use_separate_bucket_for_new_tasks";
     private static final String PROP_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY = "prefer_tasks_with_longer_history";
     private static final String PROP_BUCKETS_BATCH_SIZE = "batch_size";
+    private static final String PROP_QUEUE_BATCH_SIZE = "batch_size";
+
     private final Settings settings;
     private final Utils utils;
     private final Cache cache;
@@ -74,6 +87,9 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private final String parBucketsBatchSize;
     private int valBucketsBatchSize;
 
+    private final String parQueueBatchSize;
+    private int valQueueBatchSize;
+
     public RepeatStrategyCmpImpl(
         Settings settings, Utils utils, Cache cache, String baseParamName, RequestParams params
     ) {
@@ -82,13 +98,14 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         this.cache = cache;
         this.baseParamName = baseParamName;
         isReadonly = false;
-        parStrategyType = makeParamName("TYPE");
-        parCircleRndFactor = makeParamName("CIRCLE_RANDOMNESS_FACTOR");
-        parCircleNumOfRounds = makeParamName("CIRCLE_NUMBER_OF_ROUNDS");
-        parBucketsDelaysName = makeParamName("BUCKETS_DELAYS_NAME");
-        parBucketsUseBucketForNewTasks = makeParamName("BUCKETS_USE_BUCKET_FOR_NEW_TASKS");
-        parBucketsBatchSize = makeParamName("BUCKETS_BATCH_SIZE");
-        parBucketsPreferTasksWithLongerHistory = makeParamName("BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY");
+        parStrategyType = makeParamName(PAR_TYPE);
+        parCircleRndFactor = makeParamName(PAR_CIRCLE_RANDOMNESS_FACTOR);
+        parCircleNumOfRounds = makeParamName(PAR_CIRCLE_NUMBER_OF_ROUNDS);
+        parBucketsDelaysName = makeParamName(PAR_BUCKETS_DELAYS_NAME);
+        parBucketsUseBucketForNewTasks = makeParamName(PAR_BUCKETS_USE_BUCKET_FOR_NEW_TASKS);
+        parBucketsBatchSize = makeParamName(PAR_BUCKETS_BATCH_SIZE);
+        parBucketsPreferTasksWithLongerHistory = makeParamName(PAR_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY);
+        parQueueBatchSize = makeParamName(PAR_QUEUE_BATCH_SIZE);
 
         valStrategyType = params.hasParam(parStrategyType)
             ? RepeatStrategyType.valueOf(params.getParam(parStrategyType))
@@ -124,8 +141,22 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                     ? Boolean.parseBoolean(params.getParam(parBucketsPreferTasksWithLongerHistory))
                     : cache.getBool(parBucketsPreferTasksWithLongerHistory, false);
                 valBucketsBatchSize = params.hasParam(parBucketsBatchSize)
-                    ? parseBatchSize(params.getParam(parBucketsBatchSize))
+                    ? utils.getInRange(
+                    MIN_BATCH_SIZE,
+                    parseBatchSize(params.getParam(parBucketsBatchSize), DEFAULT_BATCH_SIZE),
+                    MAX_BATCH_SIZE
+                )
                     : cache.getInt(parBucketsBatchSize, DEFAULT_BATCH_SIZE);
+                yield 1;
+            }
+            case QUEUE -> {
+                valQueueBatchSize = params.hasParam(parQueueBatchSize)
+                    ? utils.getInRange(
+                    RepeatStrategyQueue.MIN_BATCH_SIZE,
+                    parseBatchSize(params.getParam(parQueueBatchSize), RepeatStrategyQueue.DEFAULT_BATCH_SIZE),
+                    RepeatStrategyQueue.MAX_BATCH_SIZE
+                )
+                    : cache.getInt(parQueueBatchSize, RepeatStrategyQueue.DEFAULT_BATCH_SIZE);
                 yield 1;
             }
         };
@@ -139,13 +170,14 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         this.cache = cache;
         this.baseParamName = baseParamName;
         isReadonly = true;
-        parStrategyType = makeParamName("TYPE");
-        parCircleRndFactor = makeParamName("CIRCLE_RANDOMNESS_FACTOR");
-        parCircleNumOfRounds = makeParamName("CIRCLE_NUMBER_OF_ROUNDS");
-        parBucketsDelaysName = makeParamName("BUCKETS_DELAYS");
-        parBucketsUseBucketForNewTasks = makeParamName("BUCKETS_USE_BUCKET_FOR_NEW_TASKS");
-        parBucketsBatchSize = makeParamName("BUCKETS_BATCH_SIZE");
-        parBucketsPreferTasksWithLongerHistory = makeParamName("BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY");
+        parStrategyType = makeParamName(PAR_TYPE);
+        parCircleRndFactor = makeParamName(PAR_CIRCLE_RANDOMNESS_FACTOR);
+        parCircleNumOfRounds = makeParamName(PAR_CIRCLE_NUMBER_OF_ROUNDS);
+        parBucketsDelaysName = makeParamName(PAR_BUCKETS_DELAYS_NAME);
+        parBucketsUseBucketForNewTasks = makeParamName(PAR_BUCKETS_USE_BUCKET_FOR_NEW_TASKS);
+        parBucketsBatchSize = makeParamName(PAR_BUCKETS_BATCH_SIZE);
+        parBucketsPreferTasksWithLongerHistory = makeParamName(PAR_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY);
+        parQueueBatchSize = makeParamName(PAR_QUEUE_BATCH_SIZE);
 
         String strategyTypeStr = props.getProperty(PROP_REPEAT_STRATEGY);
         if (StringUtils.isBlank(strategyTypeStr)) {
@@ -175,6 +207,10 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                     configFile, props
                 );
                 valBucketsBatchSize = readBucketsBatchSizeFromProps(configFile, props);
+                yield 1;
+            }
+            case QUEUE -> {
+                valQueueBatchSize = readQueueBatchSizeFromProps(configFile, props);
                 yield 1;
             }
         };
@@ -207,6 +243,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             switch (valStrategyType) {
                 case CIRCLE -> rndCircleParams();
                 case BUCKETS -> rndBucketsParams();
+                case QUEUE -> rndQueueParams();
             }
         );
     }
@@ -222,6 +259,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valBucketsBatchSize, valBucketsPreferTasksWithLongerHistory,
                 tasks, getSelectedBucketDelays(), valBucketsUseBucketForNewTasks
             );
+            case QUEUE -> new RepeatStrategyQueue(utils, valQueueBatchSize, tasks);
         };
     }
 
@@ -253,6 +291,10 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 props.add(Pair.of(PROP_BUCKETS_BATCH_SIZE, String.valueOf(valBucketsBatchSize)));
                 yield 0;
             }
+            case QUEUE -> {
+                props.add(Pair.of(PROP_QUEUE_BATCH_SIZE, String.valueOf(valQueueBatchSize)));
+                yield 0;
+            }
         };
         return props;
     }
@@ -271,6 +313,10 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 cache.put(parBucketsUseBucketForNewTasks, valBucketsUseBucketForNewTasks);
                 cache.put(parBucketsPreferTasksWithLongerHistory, valBucketsPreferTasksWithLongerHistory);
                 cache.put(parBucketsBatchSize, valBucketsBatchSize);
+                yield 1;
+            }
+            case QUEUE -> {
+                cache.put(parQueueBatchSize, valQueueBatchSize);
                 yield 1;
             }
         };
@@ -315,12 +361,35 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             return DEFAULT_BATCH_SIZE;
         } else {
             try {
-                return Math.max(MIN_BATCH_SIZE, Math.min(Integer.parseInt(valBucketsBatchSizeStr), MAX_BATCH_SIZE));
+                return utils.getInRange(MIN_BATCH_SIZE, Integer.parseInt(valBucketsBatchSizeStr), MAX_BATCH_SIZE);
             } catch (Exception e) {
                 throw new Exn(format(
                     "Cannot parse %s=%s in %s, got an error %s.",
                     PROP_BUCKETS_BATCH_SIZE,
                     valBucketsBatchSizeStr,
+                    configFile.getAbsolutePath(),
+                    e.getMessage()
+                ));
+            }
+        }
+    }
+
+    private int readQueueBatchSizeFromProps(File configFile, Properties props) {
+        String valQueueBatchSizeStr = props.getProperty(PROP_QUEUE_BATCH_SIZE);
+        if (StringUtils.isBlank(valQueueBatchSizeStr)) {
+            return RepeatStrategyQueue.DEFAULT_BATCH_SIZE;
+        } else {
+            try {
+                return utils.getInRange(
+                    RepeatStrategyQueue.MIN_BATCH_SIZE,
+                    Integer.parseInt(valQueueBatchSizeStr),
+                    RepeatStrategyQueue.MAX_BATCH_SIZE
+                );
+            } catch (Exception e) {
+                throw new Exn(format(
+                    "Cannot parse %s=%s in %s, got an error %s.",
+                    PROP_QUEUE_BATCH_SIZE,
+                    valQueueBatchSizeStr,
                     configFile.getAbsolutePath(),
                     e.getMessage()
                 ));
@@ -383,11 +452,11 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         ));
     }
 
-    private int parseBatchSize(String str) {
+    private int parseBatchSize(String str, int defaultBatchSize) {
         try {
-            return Math.max(MIN_BATCH_SIZE, Math.min(Integer.parseInt(str), MAX_BATCH_SIZE));
+            return Integer.parseInt(str);
         } catch (Exception ex) {
-            return DEFAULT_BATCH_SIZE;
+            return defaultBatchSize;
         }
     }
 
@@ -436,6 +505,16 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             List.of(text("Bucket delays"), delaysSelector),
             List.of(text("Use a separate bucket for new tasks"), bucketForNewTasksSelector),
             List.of(text("Prefer tasks with longer history"), preferTasksWithLongerHistorySelector),
+            List.of(text("Batch size"), batchSize)
+        ));
+    }
+
+    private HtmlElem rndQueueParams() {
+        HtmlTag batchSize = inpText(parQueueBatchSize, String.valueOf(valQueueBatchSize), null).attr("size", "3");
+        if (isReadonly) {
+            batchSize.disabled();
+        }
+        return table(List.of(
             List.of(text("Batch size"), batchSize)
         ));
     }

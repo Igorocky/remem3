@@ -118,6 +118,21 @@ public class UtilsImpl implements Utils {
         return res.toString();
     }
 
+    @Override
+    public int getInRange(int min, int value, int max) {
+        return Math.max(min, Math.min(value, max));
+    }
+
+    @Override
+    public long getInRange(long min, long value, long max) {
+        return Math.max(min, Math.min(value, max));
+    }
+
+    @Override
+    public double getInRange(double min, double value, double max) {
+        return Math.max(min, Math.min(value, max));
+    }
+
     private Duration parseSingleDuration(String str) {
         Matcher matcher = DURATION_PATTERN.matcher(str);
         if (!matcher.matches()) {

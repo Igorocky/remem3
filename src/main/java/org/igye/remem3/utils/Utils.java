@@ -23,4 +23,10 @@ public interface Utils {
     String durationToStr(Duration duration);
 
     String replacePlaceholders(String text, Function<String, String> valueSupplier);
+
+    int getInRange(int min, int value, int max);
+
+    long getInRange(long min, long value, long max);
+
+    double getInRange(double min, double value, double max);
 }
