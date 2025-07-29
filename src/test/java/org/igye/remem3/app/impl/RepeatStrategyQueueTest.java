@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -63,58 +62,6 @@ class RepeatStrategyQueueTest {
             1,
             strat.countStreak(makeHist(BigDecimal.ONE))
         );
-    }
-
-    @Test
-    @Disabled
-    void compareTasks() {
-        int streakThreshold = 7;
-        RepeatStrategyQueue strat = new RepeatStrategyQueue(
-            new UtilsImpl(new ObjectMapper()), 3, streakThreshold, List.of()
-        );
-        //both are new tasks
-        assertCorrectOrder(strat.compare(makeTask(0, 0), makeTask(0, 0)));
-
-        assertCorrectOrder(strat.compare(makeTask(0, streakThreshold - 1), makeTask(0, 0)));
-        assertCorrectOrder(strat.compare(makeTask(0, 0), makeTask(0, streakThreshold - 1)));
-
-        assertCorrectOrder(strat.compare(makeTask(0, streakThreshold), makeTask(0, 0)));
-        assertCorrectOrder(strat.compare(makeTask(0, 0), makeTask(0, streakThreshold)));
-
-        assertCorrectOrder(strat.compare(makeTask(0, streakThreshold + 1), makeTask(0, 0)));
-        assertCorrectOrder(strat.compare(makeTask(0, 0), makeTask(0, streakThreshold + 1)));
-
-
-        //one task is new another is not
-        assertCorrectOrder(strat.compare(makeTask(1, streakThreshold - 1), makeTask(0, 0)));
-        assertIncorrectOrder(strat.compare(makeTask(0, 0), makeTask(1, streakThreshold - 1)));
-
-        assertCorrectOrder(strat.compare(makeTask(0, 0), makeTask(1, streakThreshold)));
-        assertIncorrectOrder(strat.compare(makeTask(1, streakThreshold), makeTask(0, 0)));
-
-        assertCorrectOrder(strat.compare(makeTask(0, 0), makeTask(1, streakThreshold + 1)));
-        assertIncorrectOrder(strat.compare(makeTask(1, streakThreshold + 1), makeTask(0, 0)));
-
-        //both tasks are old
-        assertCorrectOrder(strat.compare(makeTask(1, streakThreshold - 1), makeTask(1, streakThreshold - 1)));
-
-        assertCorrectOrder(strat.compare(makeTask(1, streakThreshold - 1), makeTask(1, streakThreshold)));
-        assertIncorrectOrder(strat.compare(makeTask(1, streakThreshold), makeTask(1, streakThreshold - 1)));
-
-        assertCorrectOrder(strat.compare(makeTask(1, streakThreshold), makeTask(1, streakThreshold + 1)));
-        assertIncorrectOrder(strat.compare(makeTask(1, streakThreshold + 1), makeTask(1, streakThreshold)));
-    }
-
-    private RepeatStrategyQueue.TaskDto makeTask(int histLen, int streak) {
-        return RepeatStrategyQueue.TaskDto.builder().histLen(histLen).streak(streak).build();
-    }
-
-    private void assertCorrectOrder(int cmpRes) {
-        Assertions.assertTrue(cmpRes == -1 || cmpRes == 0);
-    }
-
-    private void assertIncorrectOrder(int cmpRes) {
-        Assertions.assertEquals(1, cmpRes);
     }
 
     private List<HistRec> makeHist(BigDecimal... marks) {

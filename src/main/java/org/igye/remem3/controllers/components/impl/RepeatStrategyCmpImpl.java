@@ -259,7 +259,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valBucketsBatchSize, valBucketsPreferTasksWithLongerHistory,
                 tasks, getSelectedBucketDelays(), valBucketsUseBucketForNewTasks
             );
-            case QUEUE -> new RepeatStrategyQueue(utils, valQueueBatchSize, 7, tasks);
+            case QUEUE -> new RepeatStrategyQueue(utils, valQueueBatchSize, valQueueBatchSize, tasks);
         };
     }
 

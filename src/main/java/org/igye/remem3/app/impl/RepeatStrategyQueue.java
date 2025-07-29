@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,13 +28,15 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     public static final int MIN_BATCH_SIZE = 1;
     public static final int MAX_BATCH_SIZE = 10;
     public static final int DEFAULT_BATCH_SIZE = 5;
+    public static final int MIN_STEP = 1;
+    public static final int MAX_STEP = 10;
     private final int batchSize;
-    private final int streakThreshold;
+    private final int step;
     private final List<Task> allTasks;
     private final int maxStreak;
 
-    public RepeatStrategyQueue(Utils utils, int batchSize, int streakThreshold, List<Task> allTasks) {
-        this.streakThreshold = streakThreshold;
+    public RepeatStrategyQueue(Utils utils, int batchSize, int step, List<Task> allTasks) {
+        this.step = utils.getInRange(MIN_STEP, step, MAX_STEP);
         this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
         this.allTasks = Collections.unmodifiableList(allTasks);
         maxStreak = this.allTasks.size() - this.batchSize;
@@ -68,46 +71,6 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         return Optional.of(nextTasks);
     }
 
-    protected int compare(TaskDto a, TaskDto b) {
-        if (a.getHistLen() == 0) {
-            //A is a new task
-            if (b.getHistLen() == 0) {
-                //B is a new task
-                return 0;
-            } else {
-                //B is an old task
-                if (b.getStreak() >= streakThreshold) {
-                    //B is probably good memorized
-                    return -1;
-                } else {
-                    //B may be not memorized good
-                    return 1;
-                }
-            }
-        } else {
-            //A is an old task
-            if (b.getHistLen() == 0) {
-                //B is a new task
-                if (a.getStreak() >= streakThreshold) {
-                    //A is probably good memorized
-                    return 1;
-                } else {
-                    //A may be not memorized good
-                    return -1;
-                }
-            } else {
-                //B is an old task
-                if (a.getStreak() < b.getStreak()) {
-                    return -1;
-                } else if (a.getStreak() == b.getStreak()) {
-                    return 0;
-                } else {
-                    return 1;
-                }
-            }
-        }
-    }
-
     private static HistRecDto makeHistRecDto(TaskDto task, HistRec histRec) {
         return HistRecDto.builder()
             .histRec(histRec)
@@ -118,23 +81,41 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
 
     @Override
     public HtmlElem renderParams(boolean historyUpdated) {
+        String minStreaks = allTasks.stream()
+            .collect(Collectors.toMap(
+                task -> countStreak(getHistForTask(task)),
+                _ -> 1,
+                Integer::sum
+            ))
+            .entrySet()
+            .stream()
+            .sorted(Map.Entry.comparingByKey())
+//            .limit(10)
+            .map(entry -> format("%s(%s)", entry.getKey(), entry.getValue()))
+            .collect(Collectors.joining(", "));
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
-            div(text(format("Batch size: %s", batchSize)))
+            div(text(format("Batch size: %s", batchSize))),
+            div(text(format("Step: %s", step))),
+            div(text(format("Streaks (streak(tasks)): %s", minStreaks)))
         );
     }
 
-    private TaskDto makeTaskDto(Task t) {
-        String taskTypeCode = t.getTaskType().getCode();
-        List<HistRec> hist = t.getCard().getHistory().stream()
+    private List<HistRec> getHistForTask(Task task) {
+        String taskTypeCode = task.getTaskType().getCode();
+        return task.getCard().getHistory().stream()
             .filter(h -> h.getTaskType().equals(taskTypeCode))
             .toList();
+    }
+
+    private TaskDto makeTaskDto(Task task) {
+        List<HistRec> hist = getHistForTask(task);
         return TaskDto.builder()
-            .task(t)
-            .id(t.getId())
+            .task(task)
+            .id(task.getId())
             .hist(hist)
             .histLen(hist.size())
-            .streak(Math.min(countStreak(hist), maxStreak))
+            .streak(Math.min(countStreak(hist) * step, maxStreak))
             .build();
     }
 
