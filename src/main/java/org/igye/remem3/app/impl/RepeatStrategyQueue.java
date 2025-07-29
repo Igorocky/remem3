@@ -30,6 +30,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     public static final int DEFAULT_BATCH_SIZE = 5;
     public static final int MIN_STEP = 1;
     public static final int MAX_STEP = 10;
+    public static final int DEFAULT_STEP = 5;
     private final int batchSize;
     private final int step;
     private final List<Task> allTasks;
@@ -63,12 +64,34 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         }
         ArrayList<Task> nextTasks = allTasks.stream()
             .filter(task -> !inactiveTasks.contains(task.getId()))
-            .sorted(Comparator.comparing(TaskDto::getHistLen).reversed())
+            .sorted(Comparator.comparing(TaskDto::getHistLen).reversed().thenComparing(TaskDto::getStreak))
             .map(TaskDto::getTask)
             .limit(batchSize)
             .collect(Collectors.toCollection(ArrayList::new));
         Collections.shuffle(nextTasks);
         return Optional.of(nextTasks);
+    }
+
+    protected int compare(TaskDto a, TaskDto b) {
+        if (a.getHistLen() == 0) {
+            //A is a new task
+            if (b.getHistLen() == 0) {
+                //B is a new task
+                return 0;
+            } else {
+                //B is an old task
+                return 1;
+            }
+        } else {
+            //A is an old task
+            if (b.getHistLen() == 0) {
+                //B is a new task
+                return -1;
+            } else {
+                //B is an old task
+                return Integer.compare(a.getStreak(), b.getStreak());
+            }
+        }
     }
 
     private static HistRecDto makeHistRecDto(TaskDto task, HistRec histRec) {
@@ -82,22 +105,17 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     @Override
     public HtmlElem renderParams(boolean historyUpdated) {
         String minStreaks = allTasks.stream()
-            .collect(Collectors.toMap(
-                task -> countStreak(getHistForTask(task)),
-                _ -> 1,
-                Integer::sum
-            ))
+            .collect(Collectors.toMap(task -> countStreak(getHistForTask(task)), _ -> 1, Integer::sum))
             .entrySet()
             .stream()
             .sorted(Map.Entry.comparingByKey())
-//            .limit(10)
-            .map(entry -> format("%s(%s)", entry.getKey(), entry.getValue()))
+            .map(entry -> format("%s:%s", entry.getKey(), entry.getValue()))
             .collect(Collectors.joining(", "));
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
-            div(text(format("Streaks (streak(tasks)): %s", minStreaks)))
+            div(text(format("Streaks (streak:tasks): %s", minStreaks)))
         );
     }
 

@@ -49,6 +49,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private static final String PAR_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY =
         "BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY";
     private static final String PAR_QUEUE_BATCH_SIZE = "QUEUE_BATCH_SIZE";
+    private static final String PAR_QUEUE_STEP = "QUEUE_STEP";
 
     private static final String PROP_REPEAT_STRATEGY = "repeat_strategy";
     private static final String PROP_CIRCLE_ROUNDS = "rounds";
@@ -58,6 +59,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private static final String PROP_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY = "prefer_tasks_with_longer_history";
     private static final String PROP_BUCKETS_BATCH_SIZE = "batch_size";
     private static final String PROP_QUEUE_BATCH_SIZE = "batch_size";
+    private static final String PROP_QUEUE_STEP = "step";
 
     private final Settings settings;
     private final Utils utils;
@@ -90,6 +92,9 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
     private final String parQueueBatchSize;
     private int valQueueBatchSize;
 
+    private final String parQueueStep;
+    private int valQueueStep;
+
     public RepeatStrategyCmpImpl(
         Settings settings, Utils utils, Cache cache, String baseParamName, RequestParams params
     ) {
@@ -106,6 +111,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         parBucketsBatchSize = makeParamName(PAR_BUCKETS_BATCH_SIZE);
         parBucketsPreferTasksWithLongerHistory = makeParamName(PAR_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY);
         parQueueBatchSize = makeParamName(PAR_QUEUE_BATCH_SIZE);
+        parQueueStep = makeParamName(PAR_QUEUE_STEP);
 
         valStrategyType = params.hasParam(parStrategyType)
             ? RepeatStrategyType.valueOf(params.getParam(parStrategyType))
@@ -143,7 +149,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valBucketsBatchSize = params.hasParam(parBucketsBatchSize)
                     ? utils.getInRange(
                     MIN_BATCH_SIZE,
-                    parseBatchSize(params.getParam(parBucketsBatchSize), DEFAULT_BATCH_SIZE),
+                    parseInt(params.getParam(parBucketsBatchSize), DEFAULT_BATCH_SIZE),
                     MAX_BATCH_SIZE
                 )
                     : cache.getInt(parBucketsBatchSize, DEFAULT_BATCH_SIZE);
@@ -153,10 +159,18 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valQueueBatchSize = params.hasParam(parQueueBatchSize)
                     ? utils.getInRange(
                     RepeatStrategyQueue.MIN_BATCH_SIZE,
-                    parseBatchSize(params.getParam(parQueueBatchSize), RepeatStrategyQueue.DEFAULT_BATCH_SIZE),
+                    parseInt(params.getParam(parQueueBatchSize), RepeatStrategyQueue.DEFAULT_BATCH_SIZE),
                     RepeatStrategyQueue.MAX_BATCH_SIZE
                 )
                     : cache.getInt(parQueueBatchSize, RepeatStrategyQueue.DEFAULT_BATCH_SIZE);
+
+                valQueueStep = params.hasParam(parQueueStep)
+                    ? utils.getInRange(
+                    RepeatStrategyQueue.MIN_STEP,
+                    parseInt(params.getParam(parQueueStep), RepeatStrategyQueue.DEFAULT_STEP),
+                    RepeatStrategyQueue.MAX_STEP
+                )
+                    : cache.getInt(parQueueStep, RepeatStrategyQueue.DEFAULT_STEP);
                 yield 1;
             }
         };
@@ -178,6 +192,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         parBucketsBatchSize = makeParamName(PAR_BUCKETS_BATCH_SIZE);
         parBucketsPreferTasksWithLongerHistory = makeParamName(PAR_BUCKETS_PREFER_TASKS_WITH_LONGER_HISTORY);
         parQueueBatchSize = makeParamName(PAR_QUEUE_BATCH_SIZE);
+        parQueueStep = makeParamName(PAR_QUEUE_STEP);
 
         String strategyTypeStr = props.getProperty(PROP_REPEAT_STRATEGY);
         if (StringUtils.isBlank(strategyTypeStr)) {
@@ -211,6 +226,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             }
             case QUEUE -> {
                 valQueueBatchSize = readQueueBatchSizeFromProps(configFile, props);
+                valQueueStep = readQueueStepFromProps(configFile, props);
                 yield 1;
             }
         };
@@ -259,7 +275,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
                 valBucketsBatchSize, valBucketsPreferTasksWithLongerHistory,
                 tasks, getSelectedBucketDelays(), valBucketsUseBucketForNewTasks
             );
-            case QUEUE -> new RepeatStrategyQueue(utils, valQueueBatchSize, valQueueBatchSize, tasks);
+            case QUEUE -> new RepeatStrategyQueue(utils, valQueueBatchSize, valQueueStep, tasks);
         };
     }
 
@@ -293,6 +309,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             }
             case QUEUE -> {
                 props.add(Pair.of(PROP_QUEUE_BATCH_SIZE, String.valueOf(valQueueBatchSize)));
+                props.add(Pair.of(PROP_QUEUE_STEP, String.valueOf(valQueueStep)));
                 yield 0;
             }
         };
@@ -317,6 +334,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
             }
             case QUEUE -> {
                 cache.put(parQueueBatchSize, valQueueBatchSize);
+                cache.put(parQueueStep, valQueueStep);
                 yield 1;
             }
         };
@@ -397,6 +415,29 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         }
     }
 
+    private int readQueueStepFromProps(File configFile, Properties props) {
+        String valQueueStepStr = props.getProperty(PROP_QUEUE_STEP);
+        if (StringUtils.isBlank(valQueueStepStr)) {
+            return RepeatStrategyQueue.DEFAULT_STEP;
+        } else {
+            try {
+                return utils.getInRange(
+                    RepeatStrategyQueue.MIN_STEP,
+                    Integer.parseInt(valQueueStepStr),
+                    RepeatStrategyQueue.MAX_STEP
+                );
+            } catch (Exception e) {
+                throw new Exn(format(
+                    "Cannot parse %s=%s in %s, got an error %s.",
+                    PROP_QUEUE_STEP,
+                    valQueueStepStr,
+                    configFile.getAbsolutePath(),
+                    e.getMessage()
+                ));
+            }
+        }
+    }
+
     private List<Duration> readBucketsDelaysListFromProps(File configFile, Properties props) {
         String bucketsDelaysStr = props.getProperty(PROP_BUCKETS_BUCKET_DELAYS);
         try {
@@ -452,7 +493,7 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         ));
     }
 
-    private int parseBatchSize(String str, int defaultBatchSize) {
+    private int parseInt(String str, int defaultBatchSize) {
         try {
             return Integer.parseInt(str);
         } catch (Exception ex) {
@@ -514,8 +555,13 @@ public class RepeatStrategyCmpImpl extends HtmlBuilder implements RepeatStrategy
         if (isReadonly) {
             batchSize.disabled();
         }
+        HtmlTag step = inpText(parQueueStep, String.valueOf(valQueueStep), null).attr("size", "3");
+        if (isReadonly) {
+            step.disabled();
+        }
         return table(List.of(
-            List.of(text("Batch size"), batchSize)
+            List.of(text("Batch size"), batchSize),
+            List.of(text("Step"), step)
         ));
     }
 

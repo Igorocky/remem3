@@ -64,6 +64,52 @@ class RepeatStrategyQueueTest {
         );
     }
 
+    @Test
+    void compareTasks() {
+        RepeatStrategyQueue strat = new RepeatStrategyQueue(
+            new UtilsImpl(new ObjectMapper()), 3, 3, List.of()
+        );
+        //both are new tasks
+        assertCorrectOrder(strat.compare(makeTask(0, 0), makeTask(0, 0)));
+        assertCorrectOrder(strat.compare(makeTask(0, 1), makeTask(0, 0)));
+        assertCorrectOrder(strat.compare(makeTask(0, 0), makeTask(0, 1)));
+
+        //one task is new another is not
+        assertCorrectOrder(strat.compare(makeTask(1, 0), makeTask(0, 0)));
+        assertIncorrectOrder(strat.compare(makeTask(0, 0), makeTask(1, 0)));
+
+        assertCorrectOrder(strat.compare(makeTask(1, 0), makeTask(0, 1)));
+        assertIncorrectOrder(strat.compare(makeTask(0, 1), makeTask(1, 0)));
+
+        assertCorrectOrder(strat.compare(makeTask(1, 1), makeTask(0, 0)));
+        assertIncorrectOrder(strat.compare(makeTask(0, 0), makeTask(1, 1)));
+
+        //both tasks are old
+        assertCorrectOrder(strat.compare(makeTask(1, 0), makeTask(1, 0)));
+        assertCorrectOrder(strat.compare(makeTask(1, 0), makeTask(2, 0)));
+        assertCorrectOrder(strat.compare(makeTask(2, 0), makeTask(1, 0)));
+
+        assertCorrectOrder(strat.compare(makeTask(1, 0), makeTask(1, 1)));
+        assertCorrectOrder(strat.compare(makeTask(1, 0), makeTask(2, 1)));
+        assertCorrectOrder(strat.compare(makeTask(2, 0), makeTask(1, 1)));
+
+        assertIncorrectOrder(strat.compare(makeTask(1, 1), makeTask(1, 0)));
+        assertIncorrectOrder(strat.compare(makeTask(2, 1), makeTask(1, 0)));
+        assertIncorrectOrder(strat.compare(makeTask(1, 1), makeTask(2, 0)));
+    }
+
+    private RepeatStrategyQueue.TaskDto makeTask(int histLen, int streak) {
+        return RepeatStrategyQueue.TaskDto.builder().histLen(histLen).streak(streak).build();
+    }
+
+    private void assertCorrectOrder(int cmpRes) {
+        Assertions.assertTrue(cmpRes == -1 || cmpRes == 0);
+    }
+
+    private void assertIncorrectOrder(int cmpRes) {
+        Assertions.assertEquals(1, cmpRes);
+    }
+
     private List<HistRec> makeHist(BigDecimal... marks) {
         return Arrays.stream(marks).map(mark -> HistRec.builder().mark(mark).build()).toList();
     }
