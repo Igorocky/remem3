@@ -10,12 +10,14 @@ import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Utils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -67,7 +69,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
                 break;
             }
             TaskDto task = histRec.getTask();
-            if (inactiveTasks.contains(task.getId())) {
+            if (inactiveTasks.contains(task.getId()) || activeTasks.contains(task.getId())) {
                 continue;
             }
             boolean streakConditionMet = task.getStreak() <= histIdx;
@@ -77,14 +79,14 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
                 inactiveTasks.add(task.getId());
             }
         }
-        return Optional.of(
-            allTasks.stream()
-                .filter(task -> activeTasks.contains(task.getId()))
-                .sorted(Comparator.comparing(TaskDto::getStreak))
-                .map(TaskDto::getTask)
-                .limit(batchSize)
-                .toList()
-        );
+        ArrayList<Task> nextTasks = allTasks.stream()
+            .filter(task -> !inactiveTasks.contains(task.getId()))
+            .sorted(Comparator.comparing(TaskDto::getStreak))
+            .map(TaskDto::getTask)
+            .limit(batchSize)
+            .collect(Collectors.toCollection(ArrayList::new));
+        Collections.shuffle(nextTasks);
+        return Optional.of(nextTasks);
     }
 
     @Override
