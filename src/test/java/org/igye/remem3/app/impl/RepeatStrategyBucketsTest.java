@@ -1,7 +1,9 @@
 package org.igye.remem3.app.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +23,9 @@ class RepeatStrategyBucketsTest {
     @Test
     void getOverdue() {
         Instant curTime = Instant.now();
-        RepeatStrategyBuckets strat = new RepeatStrategyBuckets(null, null, 0, false, List.of(), List.of(), false);
+        RepeatStrategyBuckets strat = new RepeatStrategyBuckets(
+            new UtilsImpl(new ObjectMapper()), null, 0, false, List.of(), List.of(), false
+        );
         assertEquals(
             new BigDecimal("0"),
             strat.getOverdue(curTime, Duration.of(1, ChronoUnit.MINUTES), makeHist(curTime.minusSeconds(30)))
@@ -58,7 +62,9 @@ class RepeatStrategyBucketsTest {
 
     @Test
     void getBucketNum() {
-        RepeatStrategyBuckets strat = new RepeatStrategyBuckets(null, null, 0, false, List.of(), List.of(), false);
+        RepeatStrategyBuckets strat = new RepeatStrategyBuckets(
+            new UtilsImpl(new ObjectMapper()), null, 0, false, List.of(), List.of(), false
+        );
         Assertions.assertEquals(
             0,
             strat.getBucketNum(makeHist(BigDecimal.ZERO))
