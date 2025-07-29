@@ -64,6 +64,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         }
         ArrayList<Task> nextTasks = allTasks.stream()
             .filter(task -> !inactiveTasks.contains(task.getId()))
+            //prefer old tasks (they are not too frequent with big streak), then select less remembered (or repeated).
             .sorted(Comparator.comparing(TaskDto::getHistLen).reversed().thenComparing(TaskDto::getStreak))
             .map(TaskDto::getTask)
             .limit(batchSize)
