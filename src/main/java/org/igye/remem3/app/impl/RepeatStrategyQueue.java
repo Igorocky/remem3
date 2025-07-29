@@ -51,7 +51,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
                     .streak(Math.min(countStreak(hist), maxStreak))
                     .build();
             })
-            .sorted(Comparator.comparing(TaskDto::getHistLen).reversed())
+            .sorted(Comparator.comparing(TaskDto::getHistLen).reversed())//move new tasks to the end
             .toList();
         List<HistRecDto> allHistRev = allTasks.stream()
             .flatMap(task ->
@@ -81,7 +81,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         }
         ArrayList<Task> nextTasks = allTasks.stream()
             .filter(task -> !inactiveTasks.contains(task.getId()))
-            .sorted(Comparator.comparing(TaskDto::getStreak))
+            .sorted(Comparator.comparing(TaskDto::getStreak))//first repeat hard to memorize tasks
             .map(TaskDto::getTask)
             .limit(batchSize)
             .collect(Collectors.toCollection(ArrayList::new));
