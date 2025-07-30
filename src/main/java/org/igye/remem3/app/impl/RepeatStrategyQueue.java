@@ -2,11 +2,14 @@ package org.igye.remem3.app.impl;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
 import java.math.BigDecimal;
@@ -14,11 +17,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -44,29 +45,13 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
 
     @Override
     public Optional<List<Task>> getNextTasks() {
-        List<TaskDto> allTasks = this.allTasks.stream().map(this::makeTaskDto).toList();
-        List<HistRecDto> allHistRev = allTasks.stream()
-            .flatMap(task -> task.getHist().stream().map(histRec -> makeHistRecDto(task, histRec)))
-            .sorted(Comparator.comparing(HistRecDto::getTime).reversed())
-            .toList();
-        Set<String> inactiveTasks = new HashSet<>();
-        Set<String> checkedTasks = new HashSet<>();
-        for (int i = 0; i < allHistRev.size() && checkedTasks.size() < allTasks.size(); i++) {
-            TaskDto task = allHistRev.get(i).getTask();
-            if (checkedTasks.contains(task.getId())) {
-                continue;
-            }
-            if (task.getStreak() > i) {
-                inactiveTasks.add(task.getId());
-            }
-            checkedTasks.add(task.getId());
-        }
+        List<TaskDto> allTasks = getTasksWithStreakAndActivityFlag();
         ArrayList<Task> nextTasks = allTasks.stream()
-            .filter(task -> !inactiveTasks.contains(task.getId()))
-            //prefer old tasks (they are not too frequent with big streak), then select less remembered (or repeated).
+            .filter(TaskDto::isActiveExn)
+            //first repeat all the previously remembered tasks, then proceed to the new ones
             .sorted(Comparator.comparing(TaskDto::getHistLen).reversed().thenComparing(TaskDto::getStreak))
-            .map(TaskDto::getTask)
             .limit(batchSize)
+            .map(TaskDto::getTask)
             .collect(Collectors.toCollection(ArrayList::new));
         if (nextTasks.isEmpty()) {
             nextTasks = allTasks.stream()
@@ -79,29 +64,52 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         return Optional.of(nextTasks);
     }
 
+    @Override
+    public HtmlElem renderParams(boolean historyUpdated) {
+        List<TaskDto> allTasks = getTasksWithStreakAndActivityFlag();
+        String streaks = allTasks.stream()
+            .collect(Collectors.toMap(
+                TaskDto::getStreak,
+                (TaskDto task) -> task.isActiveExn() ? Pair.of(0, 1) : Pair.of(1, 0),
+                (cnt1, cnt2) -> Pair.of(cnt1.getLeft() + cnt2.getLeft(), cnt1.getRight() + cnt2.getRight())
+            ))
+            .entrySet()
+            .stream()
+            .sorted(Map.Entry.comparingByKey())
+            .map(entry -> format("%s(%s/%s)", entry.getKey(), entry.getValue().getLeft(), entry.getValue().getRight()))
+            .collect(Collectors.joining(" "));
+        return frag(
+            div(text(format("Number of tasks: %s", this.allTasks.size()))),
+            div(text(format("Batch size: %s", batchSize))),
+            div(text(format("Step: %s", step))),
+            div(text(format("Streaks: %s", streaks)))
+        );
+    }
+
+    private List<TaskDto> getTasksWithStreakAndActivityFlag() {
+        List<TaskDto> allTasks = this.allTasks.stream().map(this::makeTaskDto).toList();
+        List<HistRecDto> allHistRev = allTasks.stream()
+            .flatMap(task -> task.getHist().stream().map(histRec -> makeHistRecDto(task, histRec)))
+            .sorted(Comparator.comparing(HistRecDto::getTime).reversed())
+            .toList();
+        int checkedTasks = 0;
+        for (int i = 0; i < allHistRev.size() && checkedTasks < allTasks.size(); i++) {
+            TaskDto task = allHistRev.get(i).getTask();
+            if (task.getIsActive().isPresent()) {
+                continue;
+            }
+            task.setIsActive(Optional.of(task.getStreak() <= i));
+            checkedTasks++;
+        }
+        return allTasks;
+    }
+
     private static HistRecDto makeHistRecDto(TaskDto task, HistRec histRec) {
         return HistRecDto.builder()
             .histRec(histRec)
             .time(histRec.getTime())
             .task(task)
             .build();
-    }
-
-    @Override
-    public HtmlElem renderParams(boolean historyUpdated) {
-        String minStreaks = allTasks.stream()
-            .collect(Collectors.toMap(task -> countStreak(getHistForTask(task)), _ -> 1, Integer::sum))
-            .entrySet()
-            .stream()
-            .sorted(Map.Entry.comparingByKey())
-            .map(entry -> format("%s:%s", entry.getKey(), entry.getValue()))
-            .collect(Collectors.joining(", "));
-        return frag(
-            div(text(format("Number of tasks: %s", allTasks.size()))),
-            div(text(format("Batch size: %s", batchSize))),
-            div(text(format("Step: %s", step))),
-            div(text(format("Streaks (streak:tasks): %s", minStreaks)))
-        );
     }
 
     private List<HistRec> getHistForTask(Task task) {
@@ -150,7 +158,13 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         private List<HistRec> hist;
         private int histLen;
         private int streak;
-        private Optional<Boolean> isActive;
+        @Setter
+        @Builder.Default
+        private Optional<Boolean> isActive = Optional.empty();
+
+        public boolean isActiveExn() {
+            return isActive.orElseThrow(() -> new Exn("The isActive flag is not set."));
+        }
     }
 
     @Getter
