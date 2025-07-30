@@ -34,13 +34,12 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     private final int batchSize;
     private final int step;
     private final List<Task> allTasks;
-    private final int maxStreak;
+    private ArrayList<Integer> steps = new ArrayList<>();
 
     public RepeatStrategyQueue(Utils utils, int batchSize, int step, List<Task> allTasks) {
         this.step = utils.getInRange(MIN_STEP, step, MAX_STEP);
         this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
         this.allTasks = Collections.unmodifiableList(allTasks);
-        maxStreak = this.allTasks.size() - this.batchSize;
     }
 
     @Override
@@ -52,7 +51,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             .toList();
         Set<String> inactiveTasks = new HashSet<>();
         Set<String> checkedTasks = new HashSet<>();
-        for (int i = 0; i < allTasks.size() && i < allHistRev.size(); i++) {
+        for (int i = 0; i < allHistRev.size() && checkedTasks.size() < allTasks.size(); i++) {
             TaskDto task = allHistRev.get(i).getTask();
             if (checkedTasks.contains(task.getId())) {
                 continue;
@@ -69,6 +68,13 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             .map(TaskDto::getTask)
             .limit(batchSize)
             .collect(Collectors.toCollection(ArrayList::new));
+        if (nextTasks.isEmpty()) {
+            nextTasks = allTasks.stream()
+                .sorted(Comparator.comparing(TaskDto::getStreak))
+                .limit(batchSize)
+                .map(TaskDto::getTask)
+                .collect(Collectors.toCollection(ArrayList::new));
+        }
         Collections.shuffle(nextTasks);
         return Optional.of(nextTasks);
     }
@@ -112,10 +118,9 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             .id(task.getId())
             .hist(hist)
             .histLen(hist.size())
-            .streak(Math.min(countStreak(hist) * step, maxStreak))
+            .streak(countStreak(hist))
             .build();
     }
-
 
     protected int countStreak(List<HistRec> hist) {
         int res = 0;
@@ -125,7 +130,16 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             }
             res++;
         }
-        return res;
+        while (steps.size() < res + 1) {
+            if (steps.isEmpty()) {
+                steps.add(0);
+            } else if (steps.size() == 1 || steps.size() == 2) {
+                steps.add(step);
+            } else {
+                steps.add(steps.getLast() * 2);
+            }
+        }
+        return Math.min(steps.get(res), allTasks.size() * step);
     }
 
     @Getter
@@ -136,6 +150,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         private List<HistRec> hist;
         private int histLen;
         private int streak;
+        private Optional<Boolean> isActive;
     }
 
     @Getter
