@@ -30,7 +30,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     public static final int MAX_BATCH_SIZE = 10;
     public static final int DEFAULT_BATCH_SIZE = 5;
     public static final int MIN_STEP = 1;
-    public static final int MAX_STEP = 10;
+    public static final int MAX_STEP = 20;
     public static final int DEFAULT_STEP = 5;
     private final int batchSize;
     private final int step;
