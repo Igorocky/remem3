@@ -3,6 +3,7 @@ package org.igye.remem3.utils;
 import java.io.File;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 public interface Utils {
@@ -29,4 +30,6 @@ public interface Utils {
     long getInRange(long min, long value, long max);
 
     double getInRange(double min, double value, double max);
+
+    <T> Optional<T> try_(Producer<T> producer);
 }

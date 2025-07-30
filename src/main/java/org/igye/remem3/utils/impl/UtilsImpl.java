@@ -7,6 +7,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.Producer;
 import org.igye.remem3.utils.Utils;
 
 import java.io.File;
@@ -16,9 +17,12 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.lang.String.format;
 
 @RequiredArgsConstructor
 public class UtilsImpl implements Utils {
@@ -133,10 +137,19 @@ public class UtilsImpl implements Utils {
         return Math.max(min, Math.min(value, max));
     }
 
+    @Override
+    public <T> Optional<T> try_(Producer<T> producer) {
+        try {
+            return Optional.of(producer.get());
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
     private Duration parseSingleDuration(String str) {
         Matcher matcher = DURATION_PATTERN.matcher(str);
         if (!matcher.matches()) {
-            throw new Exn(String.format("Cannot parse duration '%s'.", str));
+            throw new Exn(format("Cannot parse duration '%s'.", str));
         }
         return Duration.ofSeconds(Long.parseLong(matcher.group(1)) * UNIT_TO_SECONDS.get(matcher.group(2)));
     }

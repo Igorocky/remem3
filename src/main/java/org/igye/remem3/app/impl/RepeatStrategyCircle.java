@@ -10,6 +10,7 @@ import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy {
 
     public static final int MAX_NUM_OF_ROUNDS = 1_000_000;
+    public static final BigDecimal DEFAULT_RND_FACTOR = new BigDecimal("0.3");
 
     private final List<Task> allTasks;
     private final Instant startTime;
