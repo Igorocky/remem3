@@ -67,22 +67,58 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     @Override
     public HtmlElem renderParams(boolean historyUpdated) {
         List<TaskDto> allTasks = getTasksWithStreakAndActivityFlag();
-        String streaks = allTasks.stream()
-            .collect(Collectors.toMap(
-                TaskDto::getStreak,
-                (TaskDto task) -> task.isActiveExn() ? Pair.of(0, 1) : Pair.of(1, 0),
-                (cnt1, cnt2) -> Pair.of(cnt1.getLeft() + cnt2.getLeft(), cnt1.getRight() + cnt2.getRight())
-            ))
-            .entrySet()
-            .stream()
+        Map<Integer, Pair<Pair<Integer, Integer>, Integer>> streaks =
+            allTasks.stream()
+                .collect(Collectors.toMap(
+                    TaskDto::getStreak,
+                    (TaskDto task) -> Pair.of(
+                        task.isActiveExn() ? Pair.of(0, 1) : Pair.of(1, 0),
+                        task.getWaitTillActivationExn()
+                    ),
+                    (cnt1, cnt2) -> Pair.of(
+                        Pair.of(
+                            cnt1.getLeft().getLeft() + cnt2.getLeft().getLeft(),
+                            cnt1.getLeft().getRight() + cnt2.getLeft().getRight()
+                        ),
+                        Math.min(cnt1.getRight(), cnt1.getRight())
+                    )
+                ));
+
+        ArrayList<List<? extends HtmlElem>> rows = new ArrayList<>();
+        List<HtmlElem> streakRow = new ArrayList<>();
+        List<HtmlElem> activeRow = new ArrayList<>();
+        List<HtmlElem> waitRow = new ArrayList<>();
+        List<HtmlElem> inactiveRow = new ArrayList<>();
+        List<HtmlElem> totalRow = new ArrayList<>();
+        rows.add(streakRow);
+        rows.add(activeRow);
+        rows.add(waitRow);
+        rows.add(inactiveRow);
+        rows.add(totalRow);
+        streakRow.add(text("Streak"));
+        activeRow.add(text("Active"));
+        waitRow.add(text("Wait"));
+        inactiveRow.add(text("Inactive"));
+        totalRow.add(text("Total"));
+
+        streaks.entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
-            .map(entry -> format("%s(%s/%s)", entry.getKey(), entry.getValue().getLeft(), entry.getValue().getRight()))
-            .collect(Collectors.joining(" "));
+            .forEach(entry -> {
+                streakRow.add(text(entry.getKey() + ""));
+                Pair<Integer, Integer> counts = entry.getValue().getLeft();
+                int inactive = counts.getLeft();
+                int active = counts.getRight();
+                activeRow.add(text(active + ""));
+                waitRow.add(text(entry.getValue().getRight() + ""));
+                inactiveRow.add(text(inactive + ""));
+                totalRow.add(text((active + inactive) + ""));
+            });
+
         return frag(
             div(text(format("Number of tasks: %s", this.allTasks.size()))),
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
-            div(text(format("Streaks: %s", streaks)))
+            div(table(rows).attr("class", "table-single-border bucket-params"))
         );
     }
 
@@ -95,10 +131,10 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         int checkedTasks = 0;
         for (int i = 0; i < allHistRev.size() && checkedTasks < allTasks.size(); i++) {
             TaskDto task = allHistRev.get(i).getTask();
-            if (task.getIsActive().isPresent()) {
+            if (task.getWaitTillActivation().isPresent()) {
                 continue;
             }
-            task.setIsActive(Optional.of(task.getStreak() <= i));
+            task.setWaitTillActivation(Optional.of(task.getStreak() - i));
             checkedTasks++;
         }
         return allTasks;
@@ -160,10 +196,14 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         private int streak;
         @Setter
         @Builder.Default
-        private Optional<Boolean> isActive = Optional.empty();
+        private Optional<Integer> waitTillActivation = Optional.empty();
+
+        public int getWaitTillActivationExn() {
+            return waitTillActivation.orElseThrow(() -> new Exn("The waitTillActivation flag is not set."));
+        }
 
         public boolean isActiveExn() {
-            return isActive.orElseThrow(() -> new Exn("The isActive flag is not set."));
+            return getWaitTillActivationExn() <= 0;
         }
     }
 
