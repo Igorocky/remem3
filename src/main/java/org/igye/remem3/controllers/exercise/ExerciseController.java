@@ -44,8 +44,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -70,7 +72,6 @@ public class ExerciseController extends HtmlBuilder
 
     private final App app;
     private final Utils utils;
-    private ExerciseState.Started startedState;
 
     public ExerciseController(App app) {
         this.app = app;
@@ -84,31 +85,30 @@ public class ExerciseController extends HtmlBuilder
 
     @Override
     public ExerciseState loadState(RequestParams params) {
+        ExerciseState prevState = params.hasParam(PAR_EXERCISE_STAGE) ? StateHolder.state.get() : null;
         try {
             app.reloadProperties();
             Settings settings = SettingsImpl.load(app);
             Cache cache = CacheImpl.load(utils, settings);
-            ExerciseStage stage = params.hasParam(PAR_EXERCISE_STAGE)
-                ? ExerciseStage.valueOf(params.getParam(PAR_EXERCISE_STAGE))
-                : ExerciseStage.SET_PARAMS;
+            ExerciseStage stage = params.getParamOpt(PAR_EXERCISE_STAGE)
+                .map(ExerciseStage::valueOf)
+                .orElse(ExerciseStage.SET_PARAMS);
             return switch (stage) {
-                case SET_PARAMS -> makeSetParamsState(settings, cache, params);
-                case STARTED -> startedState != null
-                    ? startedState.withCardPathCopied(false)
-                    : makeSetParamsState(settings, cache, params);
+                case SET_PARAMS -> makeSetParamsState(settings, cache, params, prevState);
+                case STARTED -> switch (prevState) {
+                    case null -> makeSetParamsState(settings, cache, params, null);
+                    case ExerciseState.SetParams _ -> makeSetParamsState(settings, cache, params, null);
+                    case ExerciseState.Started st -> st.withCardPathCopied(false);
+                };
             };
         } catch (Exception ex1) {
             try {
                 Settings settings = SettingsImpl.load(app);
                 Cache cache = CacheImpl.load(utils, settings);
-                return makeSetParamsState(settings, cache, params);
+                return makeSetParamsState(settings, cache, params, prevState);
             } catch (Exception ex2) {
                 return ExerciseState.SetParams.builder()
-                    .errors(
-                        List.of(ex1.getMessage(), ex2.getMessage()).stream()
-                            .distinct()
-                            .toList()
-                    )
+                    .errors(Stream.of(ex1.getMessage(), ex2.getMessage()).distinct().toList())
                     .build();
             }
         }
@@ -162,16 +162,7 @@ public class ExerciseController extends HtmlBuilder
 
     @Override
     public void saveState(ExerciseState state) {
-        int _ = switch (state) {
-            case ExerciseState.SetParams _ -> {
-                this.startedState = null;
-                yield 1;
-            }
-            case ExerciseState.Started st -> {
-                this.startedState = st;
-                yield 1;
-            }
-        };
+        StateHolder.state.set(state);
     }
 
     @Override
@@ -256,7 +247,7 @@ public class ExerciseController extends HtmlBuilder
         return st.getNextTasks()
             .flatMap(nextTasks -> nextTasks.isEmpty() ? Optional.empty() : Optional.of(nextTasks.getFirst()))
             .map(Task::getCard)
-            .orElseThrow(() -> new Exn("Cannot get the card for the curent task."));
+            .orElseThrow(() -> new Exn("Cannot get the card for the current task."));
     }
 
     private Optional<File> getCurrentCardFile(ExerciseState.Started st) {
@@ -294,7 +285,7 @@ public class ExerciseController extends HtmlBuilder
         cache.put(PAR_EXERCISE_CONFIG, st.getConfig());
         if (StringUtils.isBlank(st.getConfig())) {
             cache.put(PAR_DIR_TO_READ_TASKS_FROM, st.getDirSelector().getSelectedDirectoryStr());
-            cache.put(PAR_TASK_TYPE, selectedTaskTypes.stream().collect(Collectors.joining(",")));
+            cache.put(PAR_TASK_TYPE, String.join(",", selectedTaskTypes));
             st.getRepeatStrategyCmp().cacheState();
         }
         return ExerciseState.Started.builder()
@@ -331,7 +322,7 @@ public class ExerciseController extends HtmlBuilder
         if (StringUtils.isNotBlank(config)) {
             return settings.getExercises().stream()
                 .filter(e -> config.equals(e.getLeft()))
-                .map(e -> makeSetParamsStateWithPredefinedConfig(settings, cache, e))
+                .map(e -> makeSetParamsStateWithPredefinedConfig(settings, cache, e, null))
                 .findFirst()
                 .orElseThrow(() -> new Exn(String.format("Cannot find the exercise with name '%s'", config)));
         }
@@ -345,7 +336,7 @@ public class ExerciseController extends HtmlBuilder
             .config(config)
             .dirSelector(dirSelector)
             .taskTypes(getTaskTypes(
-                getAvailableTaskTypes(st.getCardUtils(), dirSelector.getSelectedDirectory()),
+                getAvailableTaskTypes(st.getCardUtils(), dirSelector.getSelectedDirectory(), null),
                 new HashSet<>(st.getTaskTypes())
             ))
             .repeatStrategyCmp(st.getRepeatStrategyCmp())
@@ -478,7 +469,9 @@ public class ExerciseController extends HtmlBuilder
         );
     }
 
-    private ExerciseState.SetParams makeSetParamsState(Settings settings, Cache cache, RequestParams params) {
+    private ExerciseState.SetParams makeSetParamsState(
+        Settings settings, Cache cache, RequestParams params, ExerciseState prevState
+    ) {
         String config = params.getParam(PAR_EXERCISE_CONFIG, cache.getStr(PAR_EXERCISE_CONFIG, ""));
         if (StringUtils.isNotBlank(config)) {
             String finalConfig = config;
@@ -492,17 +485,17 @@ public class ExerciseController extends HtmlBuilder
             String finalConfig1 = config;
             return settings.getExercises().stream()
                 .filter(e -> finalConfig1.equals(e.getLeft()))
-                .map(e -> makeSetParamsStateWithPredefinedConfig(settings, cache, e))
+                .map(e -> makeSetParamsStateWithPredefinedConfig(settings, cache, e, prevState))
                 .findFirst()
                 .orElseThrow(() -> new Exn(String.format("Cannot find the exercise with name '%s'", finalConfig1)));
         } else {
-            return makeSetParamsStateWithCustomConfig(settings, cache, params);
+            return makeSetParamsStateWithCustomConfig(settings, cache, params, prevState);
         }
     }
 
     @SneakyThrows
     private ExerciseState.SetParams makeSetParamsStateWithPredefinedConfig(
-        Settings settings, Cache cache, Pair<String, File> config
+        Settings settings, Cache cache, Pair<String, File> config, ExerciseState prevState
     ) {
         File configFile = config.getRight();
         Properties props = new Properties();
@@ -530,7 +523,7 @@ public class ExerciseController extends HtmlBuilder
             .config(config.getLeft())
             .dirSelector(dirSelector)
             .taskTypes(getTaskTypesForPredefinedConfig(
-                getAvailableTaskTypes(cardUtils, dirSelector.getSelectedDirectory()),
+                getAvailableTaskTypes(cardUtils, dirSelector.getSelectedDirectory(), prevState),
                 TaskTypeMatcher.fromList(selectedTasks)
             ))
             .repeatStrategyCmp(new RepeatStrategyCmpImpl(
@@ -540,7 +533,7 @@ public class ExerciseController extends HtmlBuilder
     }
 
     private ExerciseState.SetParams makeSetParamsStateWithCustomConfig(
-        Settings settings, Cache cache, RequestParams params
+        Settings settings, Cache cache, RequestParams params, ExerciseState prevState
     ) {
         DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, params, PAR_DIR_TO_READ_TASKS_FROM);
         CardUtils cardUtils = new CardUtilsImpl(utils, settings);
@@ -550,13 +543,25 @@ public class ExerciseController extends HtmlBuilder
             .cardUtils(cardUtils)
             .config("")
             .dirSelector(dirSelector)
-            .taskTypes(getTaskTypes(getAvailableTaskTypes(cardUtils, dirSelector.getSelectedDirectory()), params,
-                cache))
+            .taskTypes(getTaskTypes(
+                getAvailableTaskTypes(cardUtils, dirSelector.getSelectedDirectory(), prevState), params, cache
+            ))
             .repeatStrategyCmp(new RepeatStrategyCmpImpl(settings, utils, cache, "PAR_REPEAT_STRATEGY", params))
             .build();
     }
 
-    private static List<TaskType> getAvailableTaskTypes(CardUtils cardUtils, File dir) {
+    private List<TaskType> getAvailableTaskTypes(CardUtils cardUtils, File dir, ExerciseState prevState) {
+        File prevDir = switch (prevState) {
+            case null -> null;
+            case ExerciseState.SetParams st -> st.getDirSelector().getSelectedDirectory();
+            case ExerciseState.Started _ -> throw new Exn(
+                "getAvailableTaskTypes() should never be called for ExerciseState.Started"
+            );
+        };
+        if (dir.equals(prevDir)) {
+            ExerciseState.SetParams st = (ExerciseState.SetParams) prevState;
+            return st.getTaskTypes().stream().map(Pair::getLeft).toList();
+        }
         return cardUtils.loadAllCards(dir).stream()
             .flatMap(card -> card.getTaskTypes().stream())
             .distinct()
@@ -615,5 +620,9 @@ public class ExerciseController extends HtmlBuilder
             text("Directory"),
             frag(st.getDirSelector().render())
         )));
+    }
+
+    private static final class StateHolder {
+        private static final AtomicReference<ExerciseState> state = new AtomicReference<>();
     }
 }

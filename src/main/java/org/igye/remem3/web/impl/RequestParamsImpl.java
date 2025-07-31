@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class RequestParamsImpl implements RequestParams {
     private final Map<String, String[]> params;
@@ -63,6 +64,11 @@ public class RequestParamsImpl implements RequestParams {
             throw new Exn(String.format("Param '%s' is not present.", paramName));
         }
         return res;
+    }
+
+    @Override
+    public Optional<String> getParamOpt(String paramName) {
+        return Optional.ofNullable(getParam(paramName, null));
     }
 
     @Override

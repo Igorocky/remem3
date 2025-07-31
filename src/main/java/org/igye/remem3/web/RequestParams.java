@@ -1,6 +1,7 @@
 package org.igye.remem3.web;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RequestParams {
     boolean hasParam(String paramName);
@@ -10,6 +11,8 @@ public interface RequestParams {
     String getParam(String paramName, String defaultValue);
 
     String getParam(String paramName);
+
+    Optional<String> getParamOpt(String paramName);
 
     boolean hasKeyValueParam(String key);
 
