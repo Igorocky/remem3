@@ -102,7 +102,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             .collect(Collectors.toMap(
                 Task::getId,
                 task ->
-                    task.loadHistory().stream()
+                    task.getHist().stream()
                         .filter(histRec -> startTime.isBefore(histRec.getTime()))
                         .toList()
             ));

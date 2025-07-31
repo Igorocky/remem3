@@ -298,10 +298,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
 
     private Stats getStats() {
         Map<String, List<HistRec>> taskToHist = allTasks.stream()
-            .collect(Collectors.toMap(
-                Task::getId,
-                task -> task.loadHistory().stream().toList()
-            ));
+            .collect(Collectors.toMap(Task::getId, Task::getHist));
         List<Task> newTasks = new ArrayList<>();
         List<Pair<List<Task>, List<Task>>> buckets = new ArrayList<>(bucketDelays.size());
         for (int i = 0; i < bucketDelays.size(); i++) {

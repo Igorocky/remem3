@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.List;
 
 public interface Task {
-    List<HistRec> loadHistory();
+    List<HistRec> getHist();
 
     File getFile();
 

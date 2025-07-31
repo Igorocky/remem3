@@ -149,7 +149,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     }
 
     private TaskDto makeTaskDto(Task task) {
-        List<HistRec> hist = task.loadHistory();
+        List<HistRec> hist = task.getHist();
         return TaskDto.builder()
             .task(task)
             .id(task.getId())

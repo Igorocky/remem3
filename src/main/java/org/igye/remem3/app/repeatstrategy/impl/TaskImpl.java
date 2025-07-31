@@ -17,6 +17,8 @@ public class TaskImpl implements Task, HasBaseTask {
     private final Instant historyStartsAt;
     private final RepeatStrategyType repeatStrategyType;
 
+    private int allHistSize;
+    private List<HistRec> hist;
     private File file;
     private String id;
     private String dir;
@@ -32,8 +34,13 @@ public class TaskImpl implements Task, HasBaseTask {
     }
 
     @Override
-    public List<HistRec> loadHistory() {
-        return baseTask.getCard().getHistory().stream()
+    public List<HistRec> getHist() {
+        List<org.igye.remem3.app.dto.HistRec> allHist = baseTask.getCard().getHistory();
+        if (hist != null && allHistSize == allHist.size()) {
+            return hist;
+        }
+        allHistSize = allHist.size();
+        hist = allHist.stream()
             .filter(histRec ->
                 histRec.getTime().compareTo(historyStartsAt) >= 0
                     && histRec.getStrategy() == repeatStrategyType
@@ -41,6 +48,7 @@ public class TaskImpl implements Task, HasBaseTask {
             )
             .map(HistRec.class::cast)
             .toList();
+        return hist;
     }
 
     @Override
