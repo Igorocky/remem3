@@ -1,12 +1,12 @@
-package org.igye.remem3.app.impl;
+package org.igye.remem3.app.repeatstrategy.impl;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.RepeatStrategy;
-import org.igye.remem3.app.dto.HistRec;
-import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.repeatstrategy.HistRec;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
@@ -148,15 +148,8 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             .build();
     }
 
-    private List<HistRec> getHistForTask(Task task) {
-        String taskTypeCode = task.getTaskType().getCode();
-        return task.getCard().getHistory().stream()
-            .filter(h -> h.getTaskType().equals(taskTypeCode))
-            .toList();
-    }
-
     private TaskDto makeTaskDto(Task task) {
-        List<HistRec> hist = getHistForTask(task);
+        List<HistRec> hist = task.loadHistory();
         return TaskDto.builder()
             .task(task)
             .id(task.getId())

@@ -1,11 +1,11 @@
-package org.igye.remem3.app.impl;
+package org.igye.remem3.app.repeatstrategy.impl;
 
 import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
-import org.igye.remem3.app.RepeatStrategy;
-import org.igye.remem3.app.dto.HistRec;
-import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.repeatstrategy.HistRec;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -103,8 +102,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             .collect(Collectors.toMap(
                 Task::getId,
                 task ->
-                    task.getCard().getHistory().stream()
-                        .filter(histRec -> Objects.equals(histRec.getTaskType(), task.getTaskType().getCode()))
+                    task.loadHistory().stream()
                         .filter(histRec -> startTime.isBefore(histRec.getTime()))
                         .toList()
             ));
@@ -131,7 +129,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     @Getter
     @Builder
     private static class Stats {
-        private Map<String, List<HistRec>> hist;
+        private Map<String, List<org.igye.remem3.app.repeatstrategy.HistRec>> hist;
         private Map<String, Integer> counts;
         private int minCnt;
         private Set<String> taskIdsWithMinCnt;

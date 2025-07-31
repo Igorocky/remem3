@@ -2,11 +2,11 @@ package org.igye.remem3.datamigration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Card;
-import org.igye.remem3.app.impl.CardsImpl;
+import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.impl.UtilsImpl;
 
@@ -20,7 +20,7 @@ public class SortByFormMain {
     }
 
     public void run() {
-        Cards cardUtils = new CardsImpl(new UtilsImpl(new ObjectMapper()), makeSettings());
+        CardUtils cardUtils = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), makeSettings());
         File sentensesDir = new File("");
         List<Card> allCards = cardUtils.loadAllCards(
             sentensesDir

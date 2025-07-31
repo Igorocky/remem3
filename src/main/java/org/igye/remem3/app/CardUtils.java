@@ -8,7 +8,7 @@ import org.igye.remem3.controllers.newcard.CardDto;
 import java.io.File;
 import java.util.List;
 
-public interface Cards {
+public interface CardUtils {
     Card loadCard(File file);
 
     List<Card> loadAllCards(File dir);

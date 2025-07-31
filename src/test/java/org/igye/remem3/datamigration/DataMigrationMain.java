@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.TaskType;
-import org.igye.remem3.app.impl.CardsImpl;
+import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.impl.UtilsImpl;
@@ -28,8 +28,8 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.igye.remem3.app.impl.CardsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
-import static org.igye.remem3.app.impl.CardsImpl.CARD_TRANSLATE_FILE_EXTENSION;
+import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
+import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_TRANSLATE_FILE_EXTENSION;
 
 public class DataMigrationMain {
     public static void main(String[] args) {
@@ -44,13 +44,13 @@ public class DataMigrationMain {
         Settings settings = makeSettings();
         ObjectMapper objectMapper = new ObjectMapper();
         Utils utils = new UtilsImpl(objectMapper);
-        Cards cardUtils = new CardsImpl(utils, settings);
+        CardUtils cardUtils = new CardUtilsImpl(utils, settings);
         Map<Integer, Card> cardsWithoutHistory = selectCards(database, langs, dirs, cardUtils);
         List<Card> cards = loadHistForCards(database, cardsWithoutHistory);
         saveCards(new File("/home/igor/tmp/remem_migrated"), cards, cardUtils);
     }
 
-    private void saveCards(File baseDir, List<Card> cards, Cards cardUtils) {
+    private void saveCards(File baseDir, List<Card> cards, CardUtils cardUtils) {
         for (Card card : cards) {
             File dir = new File(baseDir, card.getFile().get().getPath());
             cardUtils.saveCard(new File(dir, makeFileName(card)), card);
@@ -70,7 +70,7 @@ public class DataMigrationMain {
         Database database,
         Map<Integer, String> langs,
         Map<Integer, File> dirs,
-        Cards cardUtils
+        CardUtils cardUtils
     ) {
         Set<String> expectedCardTypes = Set.of("fill_gaps", "translate");
         return database.select("""

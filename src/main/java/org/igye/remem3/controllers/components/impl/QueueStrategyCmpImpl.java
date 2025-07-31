@@ -2,10 +2,10 @@ package org.igye.remem3.controllers.components.impl;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Task;
-import org.igye.remem3.app.impl.RepeatStrategyQueue;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyQueue;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Utils;
@@ -85,7 +85,7 @@ public class QueueStrategyCmpImpl extends BaseStrategyCmpImpl {
 
     @Override
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
-        return new RepeatStrategyQueue(utils, valBatchSize, valStep, tasks);
+        return new RepeatStrategyQueue(utils, valBatchSize, valStep, makeTasksForStrategy(tasks));
     }
 
     @Override

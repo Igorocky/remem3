@@ -6,16 +6,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.Cards;
-import org.igye.remem3.app.RepeatStrategy;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.TaskTypeMatcher;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.CacheImpl;
-import org.igye.remem3.app.impl.CardsImpl;
+import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.app.task.impl.TaskStateFillGaps;
@@ -190,8 +190,8 @@ public class ExerciseController extends HtmlBuilder
     private ExerciseState actProcessTaskResults(ExerciseState.Started st, TaskResult taskResult) {
         if (taskResult.getHistRec().isPresent()) {
             File file = getCurrentCardFileExn(st);
-            st.getCards().appendHistRecToFile(file, taskResult.getHistRec().get());
-            getCurrentCardExn(st).copyFrom(st.getCards().loadCard(file));
+            st.getCardUtils().appendHistRecToFile(file, taskResult.getHistRec().get());
+            getCurrentCardExn(st).copyFrom(st.getCardUtils().loadCard(file));
         }
         if (taskResult.isCompleted()) {
             return actGoToNextTask(st);
@@ -217,13 +217,13 @@ public class ExerciseController extends HtmlBuilder
 
     private ExerciseState.Started actGoToNextTask(ExerciseState.Started st) {
         getCurrentCard(st).ifPresent(card ->
-            card.copyFrom(st.getCards().loadCard(getCurrentCardFileExn(st)))
+            card.copyFrom(st.getCardUtils().loadCard(getCurrentCardFileExn(st)))
         );
         Optional<List<Task>> nextTasksOpt = st.getNextTasks().flatMap(tasks -> {
             if (tasks.size() < 2) {
-                return st.getRepeatStrategy().getNextTasks();
+                return st.getRepeatStrategy().getNextTasks().map(ExerciseController::getListOfBaseTasks);
             } else {
-                ArrayList<Task> tail = new ArrayList<>(tasks);
+                List<Task> tail = new ArrayList<>(tasks);
                 tail.removeFirst();
                 return Optional.of(tail);
             }
@@ -236,7 +236,14 @@ public class ExerciseController extends HtmlBuilder
         Task nextTask = nextTasksOpt.get().getFirst();
         return st
             .withNextTasks(nextTasksOpt)
-            .withTaskState(makeTaskState(st.getCards(), nextTask));
+            .withTaskState(makeTaskState(st.getCardUtils(), nextTask));
+    }
+
+    private static List<Task> getListOfBaseTasks(List<org.igye.remem3.app.repeatstrategy.Task> ts) {
+        return ts.stream()
+            .map(HasBaseTask.class::cast)
+            .map(HasBaseTask::getBaseTask)
+            .toList();
     }
 
     private Optional<Card> getCurrentCard(ExerciseState.Started st) {
@@ -274,7 +281,7 @@ public class ExerciseController extends HtmlBuilder
             .collect(Collectors.toSet());
         TaskTypeMatcher taskTypeMatcher = TaskTypeMatcher.fromList(selectedTaskTypes);
         File selectedDir = st.getDirSelector().getSelectedDirectory();
-        List<Task> tasks = st.getCards().loadAllCards(selectedDir).stream()
+        List<Task> tasks = st.getCardUtils().loadAllCards(selectedDir).stream()
             .flatMap(card -> card.getTasks().stream())
             .filter(task -> taskTypeMatcher.matches(task.getTaskType()))
             .toList();
@@ -282,7 +289,7 @@ public class ExerciseController extends HtmlBuilder
             return st.withErrors(List.of("There are no tasks."));
         }
         RepeatStrategy repeatStrategy = st.getRepeatStrategyCmp().makeRepeatStrategy(tasks);
-        Optional<List<Task>> nextTasks = repeatStrategy.getNextTasks();
+        Optional<List<Task>> nextTasks = repeatStrategy.getNextTasks().map(ExerciseController::getListOfBaseTasks);
         Cache cache = st.getCache();
         cache.put(PAR_EXERCISE_CONFIG, st.getConfig());
         if (StringUtils.isBlank(st.getConfig())) {
@@ -293,7 +300,7 @@ public class ExerciseController extends HtmlBuilder
         return ExerciseState.Started.builder()
             .settings(st.getSettings())
             .cache(cache)
-            .cards(st.getCards())
+            .cardUtils(st.getCardUtils())
             .config(st.getConfig())
             .repeatStrategyCmp(st.getRepeatStrategyCmp())
             .dir(selectedDir.getAbsolutePath())
@@ -302,17 +309,18 @@ public class ExerciseController extends HtmlBuilder
             .showParams(cache.getBool(PAR_SHOW_EXERCISE_PARAMS, false))
             .nextTasks(nextTasks)
             .taskState(nextTasks.flatMap(nt ->
-                nt.isEmpty() ? Optional.empty() : makeTaskState(st.getCards(), nt.getFirst())
+                nt.isEmpty() ? Optional.empty() : makeTaskState(st.getCardUtils(), nt.getFirst())
             ))
             .build();
     }
 
-    private Optional<TaskState> makeTaskState(Cards cards, Task task) {
+    private Optional<TaskState> makeTaskState(CardUtils cardUtils, Task task) {
         return switch (task.getTaskType()) {
             case TaskType.FillGaps t ->
-                Optional.of(new TaskStateFillGaps(app.getClock(), utils, cards, (Card.FillGaps) task.getCard(), t));
+                Optional.of(new TaskStateFillGaps(app.getClock(), utils, cardUtils, (Card.FillGaps) task.getCard(), t));
             case TaskType.Translate t ->
-                Optional.of(new TaskStateTranslate(app.getClock(), utils, cards, (Card.Translate) task.getCard(), t));
+                Optional.of(new TaskStateTranslate(app.getClock(), utils, cardUtils, (Card.Translate) task.getCard(),
+                    t));
         };
     }
 
@@ -333,11 +341,11 @@ public class ExerciseController extends HtmlBuilder
         return ExerciseState.SetParams.builder()
             .settings(settings)
             .cache(cache)
-            .cards(st.getCards())
+            .cardUtils(st.getCardUtils())
             .config(config)
             .dirSelector(dirSelector)
             .taskTypes(getTaskTypes(
-                getAvailableTaskTypes(st.getCards(), dirSelector.getSelectedDirectory()),
+                getAvailableTaskTypes(st.getCardUtils(), dirSelector.getSelectedDirectory()),
                 new HashSet<>(st.getTaskTypes())
             ))
             .repeatStrategyCmp(st.getRepeatStrategyCmp())
@@ -508,7 +516,7 @@ public class ExerciseController extends HtmlBuilder
         dirStr = dirStr.trim();
         File dir = dirStr.startsWith("/") ? new File(dirStr) : new File(configFile.getParentFile(), dirStr);
         DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, dir, PAR_DIR_TO_READ_TASKS_FROM);
-        Cards cards = new CardsImpl(utils, settings);
+        CardUtils cardUtils = new CardUtilsImpl(utils, settings);
         String tasksStr = props.getProperty(PROP_TASKS);
         tasksStr = StringUtils.isBlank(dirStr) ? "" : tasksStr;
         Set<String> selectedTasks = Arrays.stream(tasksStr.split(","))
@@ -518,11 +526,11 @@ public class ExerciseController extends HtmlBuilder
         return ExerciseState.SetParams.builder()
             .settings(settings)
             .cache(cache)
-            .cards(cards)
+            .cardUtils(cardUtils)
             .config(config.getLeft())
             .dirSelector(dirSelector)
             .taskTypes(getTaskTypesForPredefinedConfig(
-                getAvailableTaskTypes(cards, dirSelector.getSelectedDirectory()),
+                getAvailableTaskTypes(cardUtils, dirSelector.getSelectedDirectory()),
                 TaskTypeMatcher.fromList(selectedTasks)
             ))
             .repeatStrategyCmp(new RepeatStrategyCmpImpl(
@@ -535,20 +543,21 @@ public class ExerciseController extends HtmlBuilder
         Settings settings, Cache cache, RequestParams params
     ) {
         DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, params, PAR_DIR_TO_READ_TASKS_FROM);
-        Cards cards = new CardsImpl(utils, settings);
+        CardUtils cardUtils = new CardUtilsImpl(utils, settings);
         return ExerciseState.SetParams.builder()
             .settings(settings)
             .cache(cache)
-            .cards(cards)
+            .cardUtils(cardUtils)
             .config("")
             .dirSelector(dirSelector)
-            .taskTypes(getTaskTypes(getAvailableTaskTypes(cards, dirSelector.getSelectedDirectory()), params, cache))
+            .taskTypes(getTaskTypes(getAvailableTaskTypes(cardUtils, dirSelector.getSelectedDirectory()), params,
+                cache))
             .repeatStrategyCmp(new RepeatStrategyCmpImpl(settings, utils, cache, "PAR_REPEAT_STRATEGY", params))
             .build();
     }
 
-    private static List<TaskType> getAvailableTaskTypes(Cards cards, File dir) {
-        return cards.loadAllCards(dir).stream()
+    private static List<TaskType> getAvailableTaskTypes(CardUtils cardUtils, File dir) {
+        return cardUtils.loadAllCards(dir).stream()
             .flatMap(card -> card.getTaskTypes().stream())
             .distinct()
             .sorted(Comparator.comparing(TaskType::getCode))

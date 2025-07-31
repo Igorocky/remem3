@@ -3,10 +3,10 @@ package org.igye.remem3.controllers.validatecards;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
-import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
-import org.igye.remem3.app.impl.CardsImpl;
+import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
@@ -126,7 +126,7 @@ public class ValidateCardsController extends HtmlBuilder
         }
         app.reloadProperties();
         Settings settings = SettingsImpl.load(app);
-        Cards cardUtils = new CardsImpl(app.getUtils(), settings);
+        CardUtils cardUtils = new CardUtilsImpl(app.getUtils(), settings);
         List<Card> cards = cardUtils.loadAllCards(dir);
         if (cards.isEmpty()) {
             return st.withErrors(List.of(String.format("The specified directory doesn't contains cards: %s", dirStr)));

@@ -2,10 +2,10 @@ package org.igye.remem3.controllers.components.impl;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;

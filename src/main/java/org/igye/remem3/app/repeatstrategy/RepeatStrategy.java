@@ -1,6 +1,5 @@
-package org.igye.remem3.app;
+package org.igye.remem3.app.repeatstrategy;
 
-import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.html.HtmlElem;
 
 import java.util.List;

@@ -1,7 +1,7 @@
-package org.igye.remem3.app.impl;
+package org.igye.remem3.app.repeatstrategy.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.igye.remem3.app.dto.HistRec;
+import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -65,6 +65,8 @@ class RepeatStrategyQueueTest {
     }
 
     private List<HistRec> makeHist(BigDecimal... marks) {
-        return Arrays.stream(marks).map(mark -> HistRec.builder().mark(mark).build()).toList();
+        return Arrays.stream(marks)
+            .map(mark -> (HistRec) org.igye.remem3.app.dto.HistRec.builder().mark(mark).build())
+            .toList();
     }
 }

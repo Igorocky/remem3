@@ -1,12 +1,12 @@
-package org.igye.remem3.app.impl;
+package org.igye.remem3.app.repeatstrategy.impl;
 
 import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.RepeatStrategy;
-import org.igye.remem3.app.dto.HistRec;
-import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.repeatstrategy.HistRec;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlText;
@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -301,9 +300,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         Map<String, List<HistRec>> taskToHist = allTasks.stream()
             .collect(Collectors.toMap(
                 Task::getId,
-                task -> task.getCard().getHistory().stream()
-                    .filter(histRec -> Objects.equals(histRec.getTaskType(), task.getTaskType().getCode()))
-                    .toList()
+                task -> task.loadHistory().stream().toList()
             ));
         List<Task> newTasks = new ArrayList<>();
         List<Pair<List<Task>, List<Task>>> buckets = new ArrayList<>(bucketDelays.size());

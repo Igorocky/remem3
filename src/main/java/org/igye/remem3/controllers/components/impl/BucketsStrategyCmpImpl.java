@@ -3,12 +3,12 @@ package org.igye.remem3.controllers.components.impl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Task;
-import org.igye.remem3.app.impl.RepeatStrategyBuckets;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyBuckets;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;
@@ -136,7 +136,7 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
         return new RepeatStrategyBuckets(
             utils, Clock.systemDefaultZone(),
             valBatchSize, false,
-            tasks, getSelectedBucketDelays(), valUseBucketForNewTasks
+            makeTasksForStrategy(tasks), getSelectedBucketDelays(), valUseBucketForNewTasks
         );
     }
 

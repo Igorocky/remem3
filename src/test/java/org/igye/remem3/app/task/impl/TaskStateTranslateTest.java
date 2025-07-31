@@ -5,7 +5,7 @@ import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.TaskType;
-import org.igye.remem3.app.impl.CardsImpl;
+import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.html.HtmlBuilder;
@@ -37,7 +37,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final UtilsImpl utils = new UtilsImpl(objectMapper);
     private final Settings settings = Mockito.mock(Settings.class);
-    private final CardsImpl cards = new CardsImpl(utils, settings);
+    private final CardUtilsImpl cards = new CardUtilsImpl(utils, settings);
 
     @BeforeEach
     void setup() {

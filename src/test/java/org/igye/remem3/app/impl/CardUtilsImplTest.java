@@ -14,10 +14,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
-class CardsImplTest {
+class CardUtilsImplTest {
     @Test
     void parseText() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Assertions.assertEquals(
             List.of(TextPart.Text.builder().text("abc def ghi").build()),
             cards.parseText("abc def ghi")
@@ -70,7 +70,7 @@ class CardsImplTest {
 
     @Test
     void parseHistoryRec() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Assertions.assertEquals(
             HistRec.builder()
                 .time(Instant.parse("2025-07-04T14:14:08Z"))
@@ -102,7 +102,7 @@ class CardsImplTest {
 
     @Test
     void parseHistory() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Assertions.assertEquals(
             List.of(
                 HistRec.builder()
@@ -148,7 +148,7 @@ class CardsImplTest {
 
     @Test
     void parseFillGapsCard_full() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Card.FillGaps card = Card.FillGaps.builder()
             .createdAt(Optional.of(Instant.now().truncatedTo(ChronoUnit.SECONDS)))
             .lang("Lang1")
@@ -189,7 +189,7 @@ class CardsImplTest {
 
     @Test
     void parseFillGapsCard_empty() {
-        CardsImpl cards = new CardsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Card.FillGaps card = Card.FillGaps.builder().build();
 
         Assertions.assertEquals(
@@ -200,7 +200,7 @@ class CardsImplTest {
 
     @Test
     void validateCard_CardFillGaps() {
-        CardsImpl cards = new CardsImpl(
+        CardUtilsImpl cards = new CardUtilsImpl(
             new UtilsImpl(new ObjectMapper()),
             SettingsImpl.builder().languages(List.of("EN")).build()
         );
@@ -287,7 +287,7 @@ class CardsImplTest {
 
     @Test
     void histRecToStr() {
-        CardsImpl cards = new CardsImpl(
+        CardUtilsImpl cards = new CardUtilsImpl(
             new UtilsImpl(new ObjectMapper()),
             SettingsImpl.builder().languages(List.of("EN")).build()
         );

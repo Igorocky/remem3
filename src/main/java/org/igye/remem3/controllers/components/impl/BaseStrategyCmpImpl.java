@@ -1,6 +1,8 @@
 package org.igye.remem3.controllers.components.impl;
 
 import org.apache.commons.lang3.StringUtils;
+import org.igye.remem3.app.repeatstrategy.Task;
+import org.igye.remem3.app.repeatstrategy.impl.TaskImpl;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.utils.Exn;
@@ -8,6 +10,8 @@ import org.igye.remem3.utils.Func;
 import org.igye.remem3.web.RequestParams;
 
 import java.io.File;
+import java.time.Instant;
+import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -57,5 +61,12 @@ public abstract class BaseStrategyCmpImpl extends HtmlBuilder implements RepeatS
                 e.getMessage()
             ), e);
         }
+    }
+
+    protected List<Task> makeTasksForStrategy(List<org.igye.remem3.app.dto.Task> tasks) {
+        return tasks.stream()
+            .map(t -> new TaskImpl(t, Instant.MIN, getStrategyType()))
+            .map(Task.class::cast)
+            .toList();
     }
 }

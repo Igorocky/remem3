@@ -1,7 +1,7 @@
 package org.igye.remem3.app.task.impl;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.TaskType;
@@ -42,12 +42,13 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     private Optional<HistRec> histRec = Optional.empty();
     private boolean showAnswer;
 
-    public TaskStateTranslate(Clock clock, Utils utils, Cards cards, Card.Translate card, TaskType.Translate taskType) {
+    public TaskStateTranslate(Clock clock, Utils utils, CardUtils cardUtils, Card.Translate card,
+                              TaskType.Translate taskType) {
         this.clock = clock;
         this.utils = utils;
         this.card = card;
         this.taskType = taskType;
-        cardErrors = new ArrayList<>(cards.validateCard(card));
+        cardErrors = new ArrayList<>(cardUtils.validateCard(card));
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             textToTranslate = null;
             expAnswer = null;

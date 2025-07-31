@@ -4,12 +4,12 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.impl.CacheImpl;
-import org.igye.remem3.app.impl.CardsImpl;
+import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.impl.DirSelectorCmpImpl;
@@ -27,8 +27,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import static org.igye.remem3.app.impl.CardsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
-import static org.igye.remem3.app.impl.CardsImpl.CARD_TRANSLATE_FILE_EXTENSION;
+import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
+import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_TRANSLATE_FILE_EXTENSION;
 
 public class NewCardController extends HtmlBuilder
     implements StatefulWebController<NewCardState, Supplier<NewCardState>> {
@@ -144,10 +144,10 @@ public class NewCardController extends HtmlBuilder
             } else if (!dir.isDirectory()) {
                 return st.withErrors(List.of(String.format("Not a directory: %s", dirStr)));
             }
-            Cards cards = new CardsImpl(utils, st.getSettings());
+            CardUtils cardUtils = new CardUtilsImpl(utils, st.getSettings());
             CardDto cardDto = st.getCardParams();
-            Card card = cards.makeCard(cardDto);
-            List<String> errors = cards.validateCard(card);
+            Card card = cardUtils.makeCard(cardDto);
+            List<String> errors = cardUtils.validateCard(card);
             if (CollectionUtils.isNotEmpty(errors)) {
                 return st.withErrors(errors);
             }
@@ -163,7 +163,7 @@ public class NewCardController extends HtmlBuilder
                     yield 1;
                 }
             };
-            cards.saveCard(new File(dir, makeFileName(card)), card);
+            cardUtils.saveCard(new File(dir, makeFileName(card)), card);
             return st.withCardParams(clearParams(cardDto));
         } catch (Exception ex) {
             return st.withErrors(List.of(ex.getMessage()));

@@ -2,7 +2,7 @@ package org.igye.remem3.app.task.impl;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.TaskType;
@@ -45,12 +45,13 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private boolean showHints;
     private boolean showAnswers;
 
-    public TaskStateFillGaps(Clock clock, Utils utils, Cards cards, Card.FillGaps card, TaskType.FillGaps taskType) {
+    public TaskStateFillGaps(Clock clock, Utils utils, CardUtils cardUtils, Card.FillGaps card,
+                             TaskType.FillGaps taskType) {
         this.clock = clock;
         this.utils = utils;
         this.card = card;
         this.taskType = taskType;
-        cardErrors = cards.validateCard(card);
+        cardErrors = cardUtils.validateCard(card);
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             gaps = null;
             return;

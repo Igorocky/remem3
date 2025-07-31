@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.igye.remem3.app.Cards;
+import org.igye.remem3.app.CardUtils;
+import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
@@ -32,10 +33,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @RequiredArgsConstructor
-public class CardsImpl implements Cards {
+public class CardUtilsImpl implements CardUtils {
     private static final Pattern GAP_PATTERN = Pattern.compile("\\[\\[([^\\[\\]]*)\\]\\]");
     private static final Pattern HIST_PATTERN = Pattern.compile(
-        "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
+        "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
     );
     private static final String ATTR_LANG = "###lang";
     private static final String ATTR_LANG_1 = "###lang1";
@@ -328,6 +329,7 @@ public class CardsImpl implements Cards {
     protected String histRecToStr(HistRec histRec) {
         StringBuilder sb = new StringBuilder();
         sb.append(instantToStr(histRec.getTime()))
+            .append(" ").append(histRec.getStrategy())
             .append(" ").append(histRec.getTaskType())
             .append(" ").append(histRec.getMark())
             .append(" ").append(histRec.getNotes().replace("\n", "\\n").replace("\r", "\\r"));
@@ -414,11 +416,12 @@ public class CardsImpl implements Cards {
         if (!matcher.matches()) {
             throw new Exn(String.format("Cannot parse a history record: %s", str));
         }
-        String notes = matcher.group(5);
+        String notes = matcher.group(6);
         return HistRec.builder()
             .time(Instant.parse(matcher.group(1)))
-            .taskType(matcher.group(2))
-            .mark(new BigDecimal(matcher.group(3)))
+            .strategy(RepeatStrategyType.valueOf(matcher.group(2)))
+            .taskType(matcher.group(3))
+            .mark(new BigDecimal(matcher.group(4)))
             .notes(StringUtils.isNotBlank(notes) ? notes.trim() : "")
             .build();
     }

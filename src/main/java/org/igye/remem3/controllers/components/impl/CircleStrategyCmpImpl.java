@@ -2,10 +2,10 @@ package org.igye.remem3.controllers.components.impl;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.RepeatStrategy;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Task;
-import org.igye.remem3.app.impl.RepeatStrategyCircle;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Utils;
@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
-import static org.igye.remem3.app.impl.RepeatStrategyCircle.DEFAULT_RND_FACTOR;
-import static org.igye.remem3.app.impl.RepeatStrategyCircle.MAX_NUM_OF_ROUNDS;
+import static org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle.DEFAULT_RND_FACTOR;
+import static org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle.MAX_NUM_OF_ROUNDS;
 
 public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
     private static final String PAR_RANDOMNESS_FACTOR = "RANDOMNESS_FACTOR";
@@ -85,7 +85,9 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
 
     @Override
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
-        return new RepeatStrategyCircle(tasks, Instant.now(), valRndFactor.doubleValue(), valNumOfRounds);
+        return new RepeatStrategyCircle(
+            makeTasksForStrategy(tasks), Instant.now(), valRndFactor.doubleValue(), valNumOfRounds
+        );
     }
 
     @Override
