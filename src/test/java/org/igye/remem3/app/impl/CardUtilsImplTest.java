@@ -1,6 +1,7 @@
 package org.igye.remem3.app.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
@@ -74,29 +75,32 @@ class CardUtilsImplTest {
         Assertions.assertEquals(
             HistRec.builder()
                 .time(Instant.parse("2025-07-04T14:14:08Z"))
+                .strategy(RepeatStrategyType.CIRCLE)
                 .taskType("task1")
                 .mark(BigDecimal.ONE)
                 .notes("notes")
                 .build(),
-            cards.parseHistoryRec("2025-07-04T14:14:08Z task1 1 notes")
+            cards.parseHistoryRec("2025-07-04T14:14:08Z CIRCLE task1 1 notes")
         );
         Assertions.assertEquals(
             HistRec.builder()
                 .time(Instant.parse("2025-07-04T14:14:08Z"))
+                .strategy(RepeatStrategyType.QUEUE)
                 .taskType("task1")
                 .mark(BigDecimal.ONE)
                 .notes("")
                 .build(),
-            cards.parseHistoryRec("2025-07-04T14:14:08Z task1 1 ")
+            cards.parseHistoryRec("2025-07-04T14:14:08Z QUEUE task1 1 ")
         );
         Assertions.assertEquals(
             HistRec.builder()
                 .time(Instant.parse("2025-07-04T14:14:08Z"))
+                .strategy(RepeatStrategyType.BUCKETS)
                 .taskType("task1")
                 .mark(BigDecimal.ZERO)
                 .notes("")
                 .build(),
-            cards.parseHistoryRec("2025-07-04T14:14:08Z task1 0 ")
+            cards.parseHistoryRec("2025-07-04T14:14:08Z BUCKETS task1 0 ")
         );
     }
 
@@ -107,42 +111,47 @@ class CardUtilsImplTest {
             List.of(
                 HistRec.builder()
                     .time(Instant.parse("2025-07-04T14:14:08Z"))
+                    .strategy(RepeatStrategyType.CIRCLE)
                     .taskType("task1")
                     .mark(BigDecimal.ONE)
                     .notes("notes")
                     .build()
             ),
-            cards.parseHistory(List.of("2025-07-04T14:14:08Z task1 1 notes"))
+            cards.parseHistory(List.of("2025-07-04T14:14:08Z CIRCLE task1 1 notes"))
         );
         Assertions.assertEquals(
             List.of(
                 HistRec.builder()
                     .time(Instant.parse("2025-07-04T14:14:08Z"))
+                    .strategy(RepeatStrategyType.BUCKETS)
                     .taskType("task1")
                     .mark(BigDecimal.ONE)
                     .notes("notes")
                     .build()
             ),
-            cards.parseHistory(List.of("\r\n\n2025-07-04T14:14:08Z task1 1 notes\r\n\r\n"))
+            cards.parseHistory(List.of("\r\n\n2025-07-04T14:14:08Z BUCKETS task1 1 notes\r\n\r\n"))
         );
         Assertions.assertEquals(
             List.of(
                 HistRec.builder()
                     .time(Instant.parse("2025-07-03T14:14:08Z"))
+                    .strategy(RepeatStrategyType.QUEUE)
                     .taskType("task1")
                     .mark(BigDecimal.ZERO)
                     .notes("notes")
                     .build(),
                 HistRec.builder()
                     .time(Instant.parse("2025-07-04T14:14:08Z"))
+                    .strategy(RepeatStrategyType.CIRCLE)
                     .taskType("task1")
                     .mark(BigDecimal.ONE)
                     .notes("notes")
                     .build()
             ),
-            cards.parseHistory(
-                List.of("\r\n\n2025-07-03T14:14:08Z task1 0 notes\r\n", "\n2025-07-04T14:14:08Z task1 1 notes\r\n\r\n")
-            )
+            cards.parseHistory(List.of(
+                "\r\n\n2025-07-03T14:14:08Z QUEUE task1 0 notes\r\n",
+                "\n2025-07-04T14:14:08Z CIRCLE task1 1 notes\r\n\r\n"
+            ))
         );
     }
 
@@ -167,12 +176,14 @@ class CardUtilsImplTest {
                 List.of(
                     HistRec.builder()
                         .time(Instant.parse("2025-07-03T14:14:08Z"))
+                        .strategy(RepeatStrategyType.QUEUE)
                         .taskType("task1")
                         .mark(BigDecimal.ZERO)
                         .notes("notes")
                         .build(),
                     HistRec.builder()
                         .time(Instant.parse("2025-07-04T14:14:08Z"))
+                        .strategy(RepeatStrategyType.BUCKETS)
                         .taskType("task1")
                         .mark(BigDecimal.ONE)
                         .notes("notes")
@@ -292,10 +303,11 @@ class CardUtilsImplTest {
             SettingsImpl.builder().languages(List.of("EN")).build()
         );
         Assertions.assertEquals(
-            "2025-07-04T14:14:08Z task-type-123 0.5 NOTES-ABC",
+            "2025-07-04T14:14:08Z QUEUE task-type-123 0.5 NOTES-ABC",
             cards.histRecToStr(
                 HistRec.builder()
                     .time(Instant.parse("2025-07-04T14:14:08.038Z"))
+                    .strategy(RepeatStrategyType.QUEUE)
                     .taskType("task-type-123")
                     .mark(new BigDecimal("0.5"))
                     .notes("NOTES-ABC")
