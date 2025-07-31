@@ -7,4 +7,8 @@ public interface HistRec {
     Instant getTime();
 
     BigDecimal getMark();
+
+    default boolean passed() {
+        return BigDecimal.ONE.compareTo(getMark()) <= 0;
+    }
 }

@@ -181,7 +181,10 @@ public class ExerciseController extends HtmlBuilder
     private ExerciseState actProcessTaskResults(ExerciseState.Started st, TaskResult taskResult) {
         if (taskResult.getHistRec().isPresent()) {
             File file = getCurrentCardFileExn(st);
-            st.getCardUtils().appendHistRecToFile(file, taskResult.getHistRec().get());
+            st.getCardUtils().appendHistRecToFile(
+                file,
+                taskResult.getHistRec().get().withStrategy(st.getRepeatStrategyCmp().getStrategyType())
+            );
             getCurrentCardExn(st).copyFrom(st.getCardUtils().loadCard(file));
         }
         if (taskResult.isCompleted()) {
@@ -437,6 +440,8 @@ public class ExerciseController extends HtmlBuilder
             taskContent = frag(
                 text("You have completed this exercise. "),
                 inpSubmit(ACT_CANCEL_EXERCISE, "Done")
+                    .attr("class", "border-on-focus").attr("autofocus", "")
+                    .attr("style", format("background-color: %s;", GREEN))
             );
         } else if (st.getTaskState().isPresent()) {
             taskContent = st.getTaskState().get().render();

@@ -86,7 +86,7 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
     @Override
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
         return new RepeatStrategyCircle(
-            makeTasksForStrategy(tasks), Instant.now(), valRndFactor.doubleValue(), valNumOfRounds
+            utils, makeTasksForStrategy(tasks), Instant.now(), valRndFactor.doubleValue(), valNumOfRounds
         );
     }
 

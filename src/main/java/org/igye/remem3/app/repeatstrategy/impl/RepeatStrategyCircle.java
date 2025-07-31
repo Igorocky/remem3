@@ -9,18 +9,17 @@ import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.Utils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 
 public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy {
 
@@ -34,6 +33,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     private final Random rnd;
 
     public RepeatStrategyCircle(
+        Utils utils,
         List<Task> allTasks,
         Instant startTime,
         double randomnessFactor,
@@ -44,7 +44,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         }
         this.allTasks = Collections.unmodifiableList(allTasks);
         this.startTime = startTime;
-        this.randomnessFactor = Math.max(0, Math.min(randomnessFactor, 1));
+        this.randomnessFactor = utils.getInRange(0, randomnessFactor, 1);
         this.numOfRounds = numOfRounds.map(n -> Math.max(1, Math.min(n, MAX_NUM_OF_ROUNDS)));
         rnd = new Random();
     }
@@ -52,21 +52,10 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     @Override
     public Optional<List<Task>> getNextTasks() {
         Stats stats = getStats();
-        Map<String, Instant> taskLastTime = stats.getHist().entrySet().stream()
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                ent -> ent.getValue().isEmpty() ? startTime : ent.getValue().getLast().getTime()
-            ));
-        Set<String> taskIdsWithMinCnt = stats.getTaskIdsWithMinCnt();
-        List<Task> tasksWithMinCnt = new ArrayList<>(
-            allTasks.stream()
-                .filter(task -> taskIdsWithMinCnt.contains(task.getId()))
-                .toList()
-        );
-        Collections.shuffle(tasksWithMinCnt);
-        List<Task> tasksToSelectFrom = tasksWithMinCnt.stream()
-            .sorted(Comparator.comparing(task -> taskLastTime.get(task.getId())))
-            .limit(Math.max(1L, Math.round(allTasks.size() * randomnessFactor)))
+        List<Task> tasksToSelectFrom = stats.getTasksWithMinHistLen().stream()
+            .sorted(Comparator.comparing(TaskDto::getLastTime))
+            .limit(stats.getNumOfTasksToSelectFrom())
+            .map(TaskDto::getTask)
             .toList();
         if (tasksToSelectFrom.isEmpty()) {
             return Optional.empty();
@@ -78,60 +67,82 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     @Override
     public HtmlElem renderParams(boolean historyUpdated) {
         Stats stats = getStats();
-        int minCnt = stats.getMinCnt();
-        int numOfTasksWithMinCnt = stats.getTaskIdsWithMinCnt().size();
-        int round = historyUpdated && numOfTasksWithMinCnt == allTasks.size() ? minCnt : minCnt + 1;
+        int minHistLen = stats.getMinHistLen();
+        int numOfTasksWithMinHistLen = stats.getTasksWithMinHistLen().size();
+        //numOfTasksWithMinHistLen == 0 this will be at the end of the last round
+        int round = historyUpdated && (numOfTasksWithMinHistLen == allTasks.size() || numOfTasksWithMinHistLen == 0)
+            ? minHistLen
+            : minHistLen + 1;
         int roundProgress;
-        if (numOfTasksWithMinCnt == allTasks.size()) {
+        if (numOfTasksWithMinHistLen == allTasks.size()) {
             roundProgress = historyUpdated ? allTasks.size() : 1;
         } else {
-            roundProgress = allTasks.size() - numOfTasksWithMinCnt + (historyUpdated ? 0 : 1);
+            roundProgress = allTasks.size() - numOfTasksWithMinHistLen + (historyUpdated ? 0 : 1);
         }
+        long numOfTasksToSelectFrom = stats.getNumOfTasksToSelectFrom();
+        String tasksStr = numOfTasksToSelectFrom == 1 ? "task" : "tasks";
         return frag(
-            div(text(String.format("Total number of tasks: %s", allTasks.size()))),
-            div(text(String.format("Randomness: %s", randomnessFactor))),
+            div(text(format("Number of tasks: %s", allTasks.size()))),
+            div(text(format("Randomness: %s (%s %s)", randomnessFactor, numOfTasksToSelectFrom, tasksStr))),
             numOfRounds.isPresent()
-                ? div(text(String.format("Round: %s/%s", round, numOfRounds.get())))
-                : div(text(String.format("Round: %s", round))),
-            div(text(String.format("Round progress: %s/%s", roundProgress, allTasks.size())))
+                ? div(text(format("Round: %s/%s", round, numOfRounds.get())))
+                : div(text(format("Round: %s", round))),
+            div(text(format("Round progress: %s/%s", roundProgress, allTasks.size())))
         );
     }
 
     private Stats getStats() {
-        Map<String, List<HistRec>> hist = allTasks.stream()
-            .collect(Collectors.toMap(
-                Task::getId,
-                task ->
-                    task.getHist().stream()
-                        .filter(histRec -> startTime.isBefore(histRec.getTime()))
-                        .toList()
-            ));
-        Map<String, Integer> counts = hist.entrySet().stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().size()));
-        int minCnt = counts.values().stream().min(Integer::compareTo).orElseThrow(() ->
-            new Exn("allTasks must not be empty.")
-        );
-        Set<String> taskIdsWithMinCnt = counts.entrySet().stream()
-            .filter(e -> {
-                int cnt = counts.get(e.getKey());
-                return numOfRounds.map(nr -> cnt < nr).orElse(true) && cnt == minCnt;
-            })
-            .map(Map.Entry::getKey)
-            .collect(Collectors.toSet());
+        List<TaskDto> tasks = getTaskDtos();
+        int minHistLen = tasks.isEmpty() ? 0 : tasks.stream()
+            .map(TaskDto::getHist)
+            .map(List::size)
+            .reduce(Integer.MAX_VALUE, Math::min);
         return Stats.builder()
-            .hist(hist)
-            .counts(counts)
-            .minCnt(minCnt)
-            .taskIdsWithMinCnt(taskIdsWithMinCnt)
+            .tasks(tasks)
+            .minHistLen(minHistLen)
+            .tasksWithMinHistLen(
+                tasks.stream()
+                    .filter(task -> {
+                        int histLen = task.getHist().size();
+                        return numOfRounds.map(nr -> histLen < nr).orElse(true) && histLen == minHistLen;
+                    })
+                    .toList()
+            )
+            .numOfTasksToSelectFrom(Math.max(1L, Math.round(allTasks.size() * randomnessFactor)))
             .build();
+    }
+
+    private List<TaskDto> getTaskDtos() {
+        return allTasks.stream()
+            .map(task -> {
+                List<HistRec> hist = task.getHist().stream()
+                    .filter(histRec -> startTime.isBefore(histRec.getTime()))
+                    .toList();
+                return TaskDto.builder()
+                    .task(task)
+                    .hist(
+                        hist
+                    )
+                    .lastTime(hist.isEmpty() ? startTime : hist.getLast().getTime())
+                    .build();
+            })
+            .toList();
     }
 
     @Getter
     @Builder
     private static class Stats {
-        private Map<String, List<org.igye.remem3.app.repeatstrategy.HistRec>> hist;
-        private Map<String, Integer> counts;
-        private int minCnt;
-        private Set<String> taskIdsWithMinCnt;
+        private List<TaskDto> tasks;
+        private int minHistLen;
+        private List<TaskDto> tasksWithMinHistLen;
+        private long numOfTasksToSelectFrom;
+    }
+
+    @Builder
+    @Getter
+    private static class TaskDto {
+        private Task task;
+        private List<HistRec> hist;
+        private Instant lastTime;
     }
 }
