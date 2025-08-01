@@ -40,9 +40,6 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
     private String valDelaysName;
     private List<Duration> valDelaysList;
 
-    private final String parUseBucketForNewTasks;
-    private boolean valUseBucketForNewTasks;
-
     private final String parBatchSize;
     private int valBatchSize;
 
@@ -56,7 +53,6 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
         this.utils = utils;
         this.cache = cache;
         this.parDelaysName = makeParamName(PAR_DELAYS_NAME);
-        this.parUseBucketForNewTasks = makeParamName(PAR_USE_BUCKET_FOR_NEW_TASKS);
         this.parBatchSize = makeParamName(PAR_BATCH_SIZE);
     }
 
@@ -68,7 +64,6 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
             () -> parseDelaysName(cache.getStr(parDelaysName, ""))
         );
         valDelaysList = null;
-        valUseBucketForNewTasks = readParam(params, parUseBucketForNewTasks, Boolean::parseBoolean, () -> true);
         valBatchSize = readParam(params, parBatchSize, this::parseBatchSizeExn,
             () -> RepeatStrategyBuckets.DEFAULT_BATCH_SIZE
         );
@@ -80,9 +75,6 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
         this(settings, utils, cache, baseParamName, true);
         valDelaysName = null;
         valDelaysList = readPropExn(configFile, props, PROP_BUCKET_DELAYS, utils::parseDurations, null);
-        valUseBucketForNewTasks = readPropExn(configFile, props, PROP_USE_SEPARATE_BUCKET_FOR_NEW_TASKS,
-            Boolean::parseBoolean, () -> true
-        );
         valBatchSize = readPropExn(configFile, props, PROP_BATCH_SIZE, this::parseBatchSizeExn,
             () -> RepeatStrategyBuckets.DEFAULT_BATCH_SIZE
         );
@@ -111,22 +103,12 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
                     .toList()
             );
         }
-        HtmlTag bucketForNewTasksSelector = select(parUseBucketForNewTasks, valUseBucketForNewTasks + "",
-            List.of(
-                Pair.of(Boolean.TRUE.toString(), text("Yes")),
-                Pair.of(Boolean.FALSE.toString(), text("No"))
-            )
-        );
-        if (isReadonly) {
-            bucketForNewTasksSelector.disabled();
-        }
         HtmlTag batchSize = inpText(parBatchSize, String.valueOf(valBatchSize), null).attr("size", "3");
         if (isReadonly) {
             batchSize.disabled();
         }
         return table(List.of(
             List.of(text("Bucket delays"), delaysSelector),
-            List.of(text("Use a separate bucket for new tasks"), bucketForNewTasksSelector),
             List.of(text("Batch size"), batchSize)
         ));
     }
@@ -134,9 +116,7 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
     @Override
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
         return new RepeatStrategyBuckets(
-            utils, Clock.systemDefaultZone(),
-            valBatchSize, false,
-            makeTasksForStrategy(tasks), getSelectedBucketDelays(), valUseBucketForNewTasks
+            utils, Clock.systemDefaultZone(), valBatchSize, makeTasksForStrategy(tasks), getSelectedBucketDelays()
         );
     }
 
@@ -149,10 +129,6 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
                     .map(utils::durationToStr)
                     .collect(Collectors.joining(", "))
             ),
-            Pair.of(
-                PROP_USE_SEPARATE_BUCKET_FOR_NEW_TASKS,
-                valUseBucketForNewTasks ? "y" : "n"
-            ),
             Pair.of(PROP_BATCH_SIZE, String.valueOf(valBatchSize))
         );
     }
@@ -160,7 +136,6 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
     @Override
     public void cacheState() {
         cache.put(parDelaysName, valDelaysName);
-        cache.put(parUseBucketForNewTasks, valUseBucketForNewTasks);
         cache.put(parBatchSize, valBatchSize);
     }
 

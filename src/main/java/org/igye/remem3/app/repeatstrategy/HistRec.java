@@ -8,7 +8,7 @@ public interface HistRec {
 
     BigDecimal getMark();
 
-    default boolean passed() {
+    default boolean isPassed() {
         return BigDecimal.ONE.compareTo(getMark()) <= 0;
     }
 }

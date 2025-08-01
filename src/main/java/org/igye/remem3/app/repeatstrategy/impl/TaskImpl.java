@@ -52,14 +52,6 @@ public class TaskImpl implements Task, HasBaseTask {
     }
 
     @Override
-    public File getFile() {
-        if (file == null) {
-            file = baseTask.getCard().getFile().orElseThrow(() -> new Exn("A file is not set for a card."));
-        }
-        return file;
-    }
-
-    @Override
     public String getId() {
         if (id == null) {
             id = getFile().getAbsolutePath() + ":::" + baseTask.getTaskType().getCode();
@@ -73,5 +65,12 @@ public class TaskImpl implements Task, HasBaseTask {
             dir = getFile().getParentFile().getAbsolutePath();
         }
         return dir;
+    }
+
+    private File getFile() {
+        if (file == null) {
+            file = baseTask.getCard().getFile().orElseThrow(() -> new Exn("A file is not set for a card."));
+        }
+        return file;
     }
 }

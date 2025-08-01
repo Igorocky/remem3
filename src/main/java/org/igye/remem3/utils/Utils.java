@@ -1,6 +1,9 @@
 package org.igye.remem3.utils;
 
+import org.igye.remem3.app.repeatstrategy.HistRec;
+
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -32,4 +35,8 @@ public interface Utils {
     double getInRange(double min, double value, double max);
 
     <T> Optional<T> try_(Producer<T> producer);
+
+    int getStreak(List<HistRec> hist);
+
+    BigDecimal calOverdue(BigDecimal minDelay, BigDecimal actualDelay);
 }

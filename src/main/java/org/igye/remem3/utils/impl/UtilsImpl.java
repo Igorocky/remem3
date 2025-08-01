@@ -6,11 +6,14 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Producer;
 import org.igye.remem3.utils.Utils;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
@@ -144,6 +147,23 @@ public class UtilsImpl implements Utils {
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public int getStreak(List<HistRec> hist) {
+        int res = 0;
+        for (int i = hist.size() - 1; i >= 0; i--) {
+            if (!hist.get(i).isPassed()) {
+                break;
+            }
+            res++;
+        }
+        return res;
+    }
+
+    @Override
+    public BigDecimal calOverdue(BigDecimal minDelay, BigDecimal actualDelay) {
+        return actualDelay.subtract(minDelay).divide(minDelay, RoundingMode.HALF_UP);
     }
 
     private Duration parseSingleDuration(String str) {

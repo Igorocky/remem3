@@ -1,10 +1,14 @@
 package org.igye.remem3.utils.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 class UtilsImplTest {
@@ -71,6 +75,60 @@ class UtilsImplTest {
             "ABC1DEF2GHI",
             utils.replacePlaceholders("${x1}1${x2}2${x3}", Map.of("x1", "ABC", "x2", "DEF", "x3", "GHI")::get)
         );
+    }
+
+    @Test
+    void getStreak() {
+        Assertions.assertEquals(
+            0,
+            utils.getStreak(makeHist(BigDecimal.ZERO))
+        );
+        Assertions.assertEquals(
+            0,
+            utils.getStreak(makeHist(BigDecimal.ZERO, BigDecimal.ZERO))
+        );
+        Assertions.assertEquals(
+            0,
+            utils.getStreak(makeHist(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO))
+        );
+        Assertions.assertEquals(
+            0,
+            utils.getStreak(makeHist(BigDecimal.ONE, BigDecimal.ZERO, BigDecimal.ZERO))
+        );
+        Assertions.assertEquals(
+            0,
+            utils.getStreak(makeHist(BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ZERO))
+        );
+        Assertions.assertEquals(
+            0,
+            utils.getStreak(makeHist(BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.ZERO))
+        );
+        Assertions.assertEquals(
+            1,
+            utils.getStreak(makeHist(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ONE))
+        );
+        Assertions.assertEquals(
+            2,
+            utils.getStreak(makeHist(BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.ONE))
+        );
+        Assertions.assertEquals(
+            3,
+            utils.getStreak(makeHist(BigDecimal.ONE, BigDecimal.ONE, BigDecimal.ONE))
+        );
+        Assertions.assertEquals(
+            2,
+            utils.getStreak(makeHist(BigDecimal.ONE, BigDecimal.ONE))
+        );
+        Assertions.assertEquals(
+            1,
+            utils.getStreak(makeHist(BigDecimal.ONE))
+        );
+    }
+
+    private List<HistRec> makeHist(BigDecimal... marks) {
+        return Arrays.stream(marks)
+            .map(mark -> (HistRec) org.igye.remem3.app.dto.HistRec.builder().mark(mark).build())
+            .toList();
     }
 
 }

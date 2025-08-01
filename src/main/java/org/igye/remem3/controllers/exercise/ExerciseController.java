@@ -449,6 +449,8 @@ public class ExerciseController extends HtmlBuilder
             taskContent = frag(
                 text("There are no active tasks. "),
                 inpSubmit(ACT_REFRESH_EXERCISE, "Refresh")
+                    .attr("class", "border-on-focus").attr("autofocus", "")
+                    .attr("style", format("background-color: %s;", GREEN))
             );
         }
         return frag(
