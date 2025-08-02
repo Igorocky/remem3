@@ -99,7 +99,8 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             bucketDelays.stream()
                 .map(_ -> Pair.of(new ArrayList<TaskDto>(), new ArrayList<TaskDto>()))
                 .toList();
-        for (TaskDto task : getTaskDtos()) {
+        List<TaskDto> allTasks = getTaskDtos();
+        for (TaskDto task : allTasks) {
             Pair<ArrayList<TaskDto>, ArrayList<TaskDto>> bucket = buckets.get(task.getBucketNum());
             if (task.isActive()) {
                 bucket.getRight().add(task);
@@ -126,10 +127,13 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             }
             totalRow.add(text(activeCnt + waitingCnt));
         }
+        int minStreak = allTasks.stream().map(TaskDto::getStreak).min(Integer::compareTo).get();
+        int maxStreak = allTasks.stream().map(TaskDto::getStreak).max(Integer::compareTo).get();
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
+            div(text(format("Min streak: %s, max streak: %s", minStreak, maxStreak))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
     }
@@ -214,6 +218,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         return TaskDto.builder()
             .task(task)
             .histLen(hist.size())
+            .streak(utils.getStreak(hist))
             .bucketNum(bucketNum)
             .bucketDelay(bucketDelays.get(bucketNum))
             .build();
@@ -232,6 +237,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     protected static class TaskDto {
         private Task task;
         private int histLen;
+        private int streak;
         private int bucketNum;
         private int bucketDelay;
         @Setter
