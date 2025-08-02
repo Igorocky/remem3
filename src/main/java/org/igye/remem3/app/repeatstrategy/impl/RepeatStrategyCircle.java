@@ -40,7 +40,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         Optional<Integer> numOfRounds
     ) {
         if (CollectionUtils.isEmpty(allTasks)) {
-            throw new Exn("allTasks cannot be empty.");
+            throw new Exn("There are no tasks.");
         }
         this.allTasks = Collections.unmodifiableList(allTasks);
         this.startTime = startTime;

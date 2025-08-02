@@ -1,6 +1,9 @@
 package org.igye.remem3.app.repeatstrategy.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.igye.remem3.app.RepeatStrategyType;
+import org.igye.remem3.app.dto.Card;
+import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.impl.UtilsImpl;
@@ -21,8 +24,12 @@ class RepeatStrategyBucketsTest {
     @Test
     void calOverdue() {
         Instant curTime = Instant.now();
+        Card.FillGaps dummyCard = Card.FillGaps.builder().build();
+        TaskImpl dummyTask = new TaskImpl(
+            new Task(dummyCard, dummyCard.getTaskTypes().getFirst()), Instant.MIN, RepeatStrategyType.CIRCLE
+        );
         RepeatStrategyBuckets strat = new RepeatStrategyBuckets(
-            new UtilsImpl(new ObjectMapper()), null, 0, List.of(), List.of(Duration.of(1, ChronoUnit.MINUTES))
+            new UtilsImpl(new ObjectMapper()), null, 0, List.of(dummyTask), List.of(Duration.of(1, ChronoUnit.MINUTES))
         );
         assertEquals(
             new BigDecimal("-0.5"),

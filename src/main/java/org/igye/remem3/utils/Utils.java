@@ -38,5 +38,7 @@ public interface Utils {
 
     int getStreak(List<HistRec> hist);
 
+    int getStreak(List<HistRec> hist, int maxStreak);
+
     BigDecimal calOverdue(BigDecimal minDelay, BigDecimal actualDelay);
 }

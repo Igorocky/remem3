@@ -6,9 +6,12 @@ import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.controllers.ParamName;
+import org.igye.remem3.controllers.PropName;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 
@@ -21,18 +24,15 @@ import java.util.Properties;
 public class RepeatStrategyCmpImpl extends BaseStrategyCmpImpl {
 
     private static final String PAR_TYPE = "TYPE";
-    private static final String PROP_REPEAT_STRATEGY = "repeat_strategy";
+    private static final PropName PROP_REPEAT_STRATEGY = new PropName("repeat_strategy");
 
-    private final Cache cache;
-
-    private final String parStrategyType;
+    private final ParamName parStrategyType;
     private RepeatStrategyType valStrategyType;
 
     private RepeatStrategyCmp childCmp;
 
     public RepeatStrategyCmpImpl(Cache cache, String baseParamName, boolean isReadonly) {
-        super(baseParamName, isReadonly);
-        this.cache = cache;
+        super(cache, baseParamName, isReadonly);
         this.parStrategyType = makeParamName(PAR_TYPE);
     }
 
@@ -41,8 +41,8 @@ public class RepeatStrategyCmpImpl extends BaseStrategyCmpImpl {
     ) {
         this(cache, baseParamName, false);
 
-        valStrategyType = readParam(params, parStrategyType, RepeatStrategyType::valueOf,
-            () -> RepeatStrategyType.valueOf(cache.getStr(parStrategyType, RepeatStrategyType.CIRCLE.toString()))
+        valStrategyType = readCachableParam(parStrategyType, params, RepeatStrategyType::valueOf,
+            () -> RepeatStrategyType.CIRCLE
         );
 
         childCmp = switch (valStrategyType) {
@@ -57,7 +57,7 @@ public class RepeatStrategyCmpImpl extends BaseStrategyCmpImpl {
     ) {
         this(cache, baseParamName, true);
 
-        valStrategyType = readPropExn(configFile, props, PROP_REPEAT_STRATEGY, RepeatStrategyType::valueOf, null);
+        valStrategyType = readProp(PROP_REPEAT_STRATEGY, configFile, props, RepeatStrategyType::valueOf, null);
 
         childCmp = switch (valStrategyType) {
             case CIRCLE -> new CircleStrategyCmpImpl(utils, cache, baseParamName, configFile, props);
@@ -74,7 +74,7 @@ public class RepeatStrategyCmpImpl extends BaseStrategyCmpImpl {
     @Override
     public HtmlElem render() {
         HtmlTag strategySelector = select(
-            parStrategyType,
+            parStrategyType.name(),
             true,
             valStrategyType.toString(),
             Arrays.stream(RepeatStrategyType.values())
@@ -102,15 +102,24 @@ public class RepeatStrategyCmpImpl extends BaseStrategyCmpImpl {
     @Override
     public List<Pair<String, String>> getProperties() {
         ArrayList<Pair<String, String>> props = new ArrayList<>();
-        props.add(Pair.of(PROP_REPEAT_STRATEGY, valStrategyType.toString()));
+        props.add(Pair.of(PROP_REPEAT_STRATEGY.name(), valStrategyType.toString()));
         props.addAll(childCmp.getProperties());
         return props;
     }
 
     @Override
     public void cacheState() {
-        cache.put(parStrategyType, valStrategyType.toString());
+        super.cacheState();
         childCmp.cacheState();
     }
 
+    @Override
+    protected List<Pair<PropName, String>> getPropertiesPriv() {
+        throw new Exn("This method should not be called.");
+    }
+
+    @Override
+    protected List<Pair<ParamName, String>> getParamsToCache() {
+        return List.of(Pair.of(parStrategyType, valStrategyType.toString()));
+    }
 }

@@ -9,6 +9,8 @@ import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyBuckets;
+import org.igye.remem3.controllers.ParamName;
+import org.igye.remem3.controllers.PropName;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;
@@ -26,21 +28,18 @@ import static java.lang.String.format;
 
 public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
     private static final String PAR_DELAYS_NAME = "DELAYS_NAME";
-    private static final String PAR_USE_BUCKET_FOR_NEW_TASKS = "USE_BUCKET_FOR_NEW_TASKS";
     private static final String PAR_BATCH_SIZE = "BATCH_SIZE";
-    private static final String PROP_BUCKET_DELAYS = "bucket_delays";
-    private static final String PROP_USE_SEPARATE_BUCKET_FOR_NEW_TASKS = "use_separate_bucket_for_new_tasks";
-    private static final String PROP_BATCH_SIZE = "batch_size";
+    private static final PropName PROP_BUCKET_DELAYS = new PropName("bucket_delays");
+    private static final PropName PROP_BATCH_SIZE = new PropName("batch_size");
 
     private final Settings settings;
     private final Utils utils;
-    private final Cache cache;
 
-    private final String parDelaysName;
+    private final ParamName parDelaysName;
     private String valDelaysName;
     private List<Duration> valDelaysList;
 
-    private final String parBatchSize;
+    private final ParamName parBatchSize;
     private int valBatchSize;
 
     public BucketsStrategyCmpImpl(
@@ -48,10 +47,9 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
         String baseParamName,
         boolean isReadonly
     ) {
-        super(baseParamName + "__BUCKETS", isReadonly);
+        super(cache, baseParamName + "__BUCKETS", isReadonly);
         this.settings = settings;
         this.utils = utils;
-        this.cache = cache;
         this.parDelaysName = makeParamName(PAR_DELAYS_NAME);
         this.parBatchSize = makeParamName(PAR_BATCH_SIZE);
     }
@@ -60,11 +58,9 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
         Settings settings, Utils utils, Cache cache, String baseParamName, RequestParams params
     ) {
         this(settings, utils, cache, baseParamName, false);
-        valDelaysName = readParam(params, parDelaysName, this::parseDelaysName,
-            () -> parseDelaysName(cache.getStr(parDelaysName, ""))
-        );
+        valDelaysName = readCachableParam(parDelaysName, params, this::parseDelaysName, () -> parseDelaysName(""));
         valDelaysList = null;
-        valBatchSize = readParam(params, parBatchSize, this::parseBatchSizeExn,
+        valBatchSize = readCachableParam(parBatchSize, params, this::parseBatchSize,
             () -> RepeatStrategyBuckets.DEFAULT_BATCH_SIZE
         );
     }
@@ -74,8 +70,8 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
     ) {
         this(settings, utils, cache, baseParamName, true);
         valDelaysName = null;
-        valDelaysList = readPropExn(configFile, props, PROP_BUCKET_DELAYS, utils::parseDurations, null);
-        valBatchSize = readPropExn(configFile, props, PROP_BATCH_SIZE, this::parseBatchSizeExn,
+        valDelaysList = readProp(PROP_BUCKET_DELAYS, configFile, props, utils::parseDurations, null);
+        valBatchSize = readProp(PROP_BATCH_SIZE, configFile, props, this::parseBatchSize,
             () -> RepeatStrategyBuckets.DEFAULT_BATCH_SIZE
         );
     }
@@ -93,7 +89,7 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
                 valDelaysList.stream().map(utils::durationToStr).collect(Collectors.joining(", "))
             );
         } else {
-            delaysSelector = select(parDelaysName, valDelaysName,
+            delaysSelector = select(parDelaysName.name(), valDelaysName,
                 settings.getBucketDelays().stream()
                     .map(delays ->
                         Pair.of(
@@ -103,7 +99,7 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
                     .toList()
             );
         }
-        HtmlTag batchSize = inpText(parBatchSize, String.valueOf(valBatchSize), null).attr("size", "3");
+        HtmlTag batchSize = inpText(parBatchSize.name(), String.valueOf(valBatchSize), null).attr("size", "3");
         if (isReadonly) {
             batchSize.disabled();
         }
@@ -121,7 +117,7 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
     }
 
     @Override
-    public List<Pair<String, String>> getProperties() {
+    protected List<Pair<PropName, String>> getPropertiesPriv() {
         return List.of(
             Pair.of(
                 PROP_BUCKET_DELAYS,
@@ -134,9 +130,11 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
     }
 
     @Override
-    public void cacheState() {
-        cache.put(parDelaysName, valDelaysName);
-        cache.put(parBatchSize, valBatchSize);
+    protected List<Pair<ParamName, String>> getParamsToCache() {
+        return List.of(
+            Pair.of(parDelaysName, valDelaysName),
+            Pair.of(parBatchSize, String.valueOf(valBatchSize))
+        );
     }
 
     private String parseDelaysName(String str) {
@@ -145,7 +143,7 @@ public class BucketsStrategyCmpImpl extends BaseStrategyCmpImpl {
             : settings.getBucketDelays().getFirst().getName();
     }
 
-    private int parseBatchSizeExn(String str) {
+    private int parseBatchSize(String str) {
         return utils.getInRange(
             RepeatStrategyBuckets.MIN_BATCH_SIZE,
             Integer.parseInt(str),

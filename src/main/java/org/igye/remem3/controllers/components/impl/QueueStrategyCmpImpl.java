@@ -6,6 +6,8 @@ import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyQueue;
+import org.igye.remem3.controllers.ParamName;
+import org.igye.remem3.controllers.PropName;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Utils;
@@ -18,16 +20,15 @@ import java.util.Properties;
 public class QueueStrategyCmpImpl extends BaseStrategyCmpImpl {
     private static final String PAR_BATCH_SIZE = "BATCH_SIZE";
     private static final String PAR_STEP = "STEP";
-    private static final String PROP_BATCH_SIZE = "batch_size";
-    private static final String PROP_STEP = "step";
+    private static final PropName PROP_BATCH_SIZE = new PropName("batch_size");
+    private static final PropName PROP_STEP = new PropName("step");
 
     private final Utils utils;
-    private final Cache cache;
 
-    private final String parBatchSize;
+    private final ParamName parBatchSize;
     private int valBatchSize;
 
-    private final String parStep;
+    private final ParamName parStep;
     private int valStep;
 
     public QueueStrategyCmpImpl(
@@ -35,31 +36,26 @@ public class QueueStrategyCmpImpl extends BaseStrategyCmpImpl {
         String baseParamName,
         boolean isReadonly
     ) {
-        super(baseParamName + "__QUEUE", isReadonly);
+        super(cache, baseParamName + "__QUEUE", isReadonly);
         this.utils = utils;
-        this.cache = cache;
         this.parBatchSize = makeParamName(PAR_BATCH_SIZE);
         this.parStep = makeParamName(PAR_STEP);
     }
 
     public QueueStrategyCmpImpl(Utils utils, Cache cache, String baseParamName, RequestParams params) {
         this(utils, cache, baseParamName, false);
-        valBatchSize = readParam(params, parBatchSize, this::parseBatchSizeExn,
+        valBatchSize = readCachableParam(parBatchSize, params, this::parseBatchSize,
             () -> RepeatStrategyQueue.DEFAULT_BATCH_SIZE
         );
-        valStep = readParam(params, parStep, this::parseStepExn,
-            () -> RepeatStrategyQueue.DEFAULT_STEP
-        );
+        valStep = readCachableParam(parStep, params, this::parseStep, () -> RepeatStrategyQueue.DEFAULT_STEP);
     }
 
     public QueueStrategyCmpImpl(Utils utils, Cache cache, String baseParamName, File configFile, Properties props) {
         this(utils, cache, baseParamName, true);
-        valBatchSize = readPropExn(configFile, props, PROP_BATCH_SIZE, this::parseBatchSizeExn,
+        valBatchSize = readProp(PROP_BATCH_SIZE, configFile, props, this::parseBatchSize,
             () -> RepeatStrategyQueue.DEFAULT_BATCH_SIZE
         );
-        valStep = readPropExn(configFile, props, PROP_STEP, this::parseStepExn,
-            () -> RepeatStrategyQueue.DEFAULT_STEP
-        );
+        valStep = readProp(PROP_STEP, configFile, props, this::parseStep, () -> RepeatStrategyQueue.DEFAULT_STEP);
     }
 
     @Override
@@ -69,11 +65,11 @@ public class QueueStrategyCmpImpl extends BaseStrategyCmpImpl {
 
     @Override
     public HtmlElem render() {
-        HtmlTag batchSize = inpText(parBatchSize, String.valueOf(valBatchSize), null).attr("size", "3");
+        HtmlTag batchSize = inpText(parBatchSize.name(), String.valueOf(valBatchSize), null).attr("size", "3");
         if (isReadonly) {
             batchSize.disabled();
         }
-        HtmlTag step = inpText(parStep, String.valueOf(valStep), null).attr("size", "3");
+        HtmlTag step = inpText(parStep.name(), String.valueOf(valStep), null).attr("size", "3");
         if (isReadonly) {
             step.disabled();
         }
@@ -89,7 +85,7 @@ public class QueueStrategyCmpImpl extends BaseStrategyCmpImpl {
     }
 
     @Override
-    public List<Pair<String, String>> getProperties() {
+    protected List<Pair<PropName, String>> getPropertiesPriv() {
         return List.of(
             Pair.of(PROP_BATCH_SIZE, String.valueOf(valBatchSize)),
             Pair.of(PROP_STEP, String.valueOf(valStep))
@@ -97,12 +93,14 @@ public class QueueStrategyCmpImpl extends BaseStrategyCmpImpl {
     }
 
     @Override
-    public void cacheState() {
-        cache.put(parBatchSize, valBatchSize);
-        cache.put(parStep, valStep);
+    protected List<Pair<ParamName, String>> getParamsToCache() {
+        return List.of(
+            Pair.of(parBatchSize, String.valueOf(valBatchSize)),
+            Pair.of(parStep, String.valueOf(valStep))
+        );
     }
 
-    private int parseBatchSizeExn(String str) {
+    private int parseBatchSize(String str) {
         return utils.getInRange(
             RepeatStrategyQueue.MIN_BATCH_SIZE,
             Integer.parseInt(str),
@@ -110,7 +108,7 @@ public class QueueStrategyCmpImpl extends BaseStrategyCmpImpl {
         );
     }
 
-    private int parseStepExn(String str) {
+    private int parseStep(String str) {
         return utils.getInRange(
             RepeatStrategyQueue.MIN_STEP,
             Integer.parseInt(str),

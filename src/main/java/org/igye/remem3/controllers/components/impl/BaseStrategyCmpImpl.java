@@ -1,8 +1,12 @@
 package org.igye.remem3.controllers.components.impl;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.app.repeatstrategy.impl.TaskImpl;
+import org.igye.remem3.controllers.ParamName;
+import org.igye.remem3.controllers.PropName;
 import org.igye.remem3.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.utils.Exn;
@@ -19,31 +23,59 @@ import static java.lang.String.format;
 
 public abstract class BaseStrategyCmpImpl extends HtmlBuilder implements RepeatStrategyCmp {
 
+    private final Cache cache;
     private final String baseParamName;
     protected final boolean isReadonly;
 
 
-    public BaseStrategyCmpImpl(String baseParamName, boolean isReadonly) {
+    public BaseStrategyCmpImpl(Cache cache, String baseParamName, boolean isReadonly) {
+        this.cache = cache;
         this.baseParamName = baseParamName;
         this.isReadonly = isReadonly;
     }
 
-    protected String makeParamName(String suffix) {
-        return baseParamName + "__" + suffix;
+    @Override
+    public List<Pair<String, String>> getProperties() {
+        return getPropertiesPriv().stream()
+            .map(pair -> Pair.of(pair.getLeft().name(), pair.getRight()))
+            .toList();
     }
 
-    protected <T> T readParam(RequestParams params, String parName, Func<String, T> parser, Supplier<T> defVal) {
-        try {
-            return params.hasParam(parName) ? parser.apply(params.getParam(parName)) : defVal.get();
-        } catch (Exception e) {
-            return defVal.get();
-        }
+    @Override
+    public void cacheState() {
+        getParamsToCache().forEach(pair -> cache.put(pair.getLeft().name(), pair.getRight()));
     }
 
-    protected <T> T readPropExn(
-        File file, Properties props, String propName, Func<String, T> parser, Supplier<T> defVal
+    protected abstract List<Pair<PropName, String>> getPropertiesPriv();
+
+    protected abstract List<Pair<ParamName, String>> getParamsToCache();
+
+    protected ParamName makeParamName(String suffix) {
+        return new ParamName(baseParamName + "__" + suffix);
+    }
+
+    protected <T> T readCachableParam(
+        ParamName parName,
+        RequestParams params,
+        Func<String, T> parser,
+        Supplier<T> defVal
     ) {
-        String valStr = props.getProperty(propName);
+        return readParam(parName, params, cache, parser, defVal);
+    }
+
+    protected <T> T readParam(
+        ParamName parName,
+        RequestParams params,
+        Func<String, T> parser,
+        Supplier<T> defVal
+    ) {
+        return readParam(parName, params, null, parser, defVal);
+    }
+
+    protected <T> T readProp(
+        PropName propName, File file, Properties props, Func<String, T> parser, Supplier<T> defVal
+    ) {
+        String valStr = props.getProperty(propName.name());
         if (StringUtils.isBlank(valStr)) {
             if (defVal == null) {
                 throw new Exn(format("Missing required property %s in %s.", propName, file.getAbsolutePath()));
@@ -68,5 +100,23 @@ public abstract class BaseStrategyCmpImpl extends HtmlBuilder implements RepeatS
             .map(t -> new TaskImpl(t, Instant.MIN, getStrategyType()))
             .map(Task.class::cast)
             .toList();
+    }
+
+    private <T> T readParam(
+        ParamName parName,
+        RequestParams params,
+        Cache cache,
+        Func<String, T> parser,
+        Supplier<T> defVal
+    ) {
+        try {
+            String name = parName.name();
+            String valStr = params.hasParam(name)
+                ? params.getParam(name)
+                : cache == null ? null : cache.getStr(name, null);
+            return valStr == null ? defVal.get() : parser.apply(valStr);
+        } catch (Exception e) {
+            return defVal.get();
+        }
     }
 }

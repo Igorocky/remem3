@@ -2,6 +2,7 @@ package org.igye.remem3.app.repeatstrategy.impl;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -51,6 +53,9 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     ) {
         if (CollectionUtils.isEmpty(bucketDelays)) {
             throw new Exn("At least one bucket must be defined.");
+        }
+        if (CollectionUtils.isEmpty(allTasks)) {
+            throw new Exn("There are no tasks.");
         }
         this.utils = utils;
         this.clock = clock;
@@ -101,13 +106,13 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             }
         }
         for (int b = 0; b < buckets.size(); b++) {
-            headerRow.add(text(String.valueOf(b + 1)));
+            headerRow.add(text(b + 1));
             Duration bucketDelay = bucketDelays.get(b);
             delayRow.add(text(utils.durationToStr(bucketDelay)));
             int activeCnt = buckets.get(b).getRight().size();
             List<TaskDto> waitingTasks = buckets.get(b).getLeft();
             int waitingCnt = waitingTasks.size();
-            activeRow.add(text(String.valueOf(activeCnt)));
+            activeRow.add(text(activeCnt));
             if (activeCnt == 0 && waitingCnt > 0) {
                 Duration timeToWait = waitingTasks.stream()
                     .map(TaskDto::getOverdue)
@@ -119,9 +124,9 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                     .get();
                 waitingRow.add(text(format("%s (%s)", waitingCnt, getApproxDurationStr(timeToWait))));
             } else {
-                waitingRow.add(text(String.valueOf(waitingCnt)));
+                waitingRow.add(text(waitingCnt));
             }
-            totalRow.add(text(String.valueOf(activeCnt + waitingCnt)));
+            totalRow.add(text(activeCnt + waitingCnt));
         }
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
@@ -195,16 +200,16 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         return utils.calOverdue(bucketDelay, taskDelay);
     }
 
-    private int getBucketNum(List<HistRec> hist) {
-        return utils.getInRange(0, utils.getStreak(hist), maxBucketNum);
-    }
-
     private List<TaskDto> getTaskDtos() {
         Instant curTime = clock.instant();
-        return allTasks.stream()
+        AtomicBoolean emptyHistIsPresent = new AtomicBoolean(false);
+        List<TaskDto> res = allTasks.stream()
             .map(task -> {
                 List<HistRec> hist = task.getHist();
-                int bucketNum = getBucketNum(hist);
+                if (hist.isEmpty()) {
+                    emptyHistIsPresent.set(true);
+                }
+                int bucketNum = utils.getStreak(hist, maxBucketNum);
                 BigDecimal overdue = calOverdue(curTime, bucketDelaysBigDec.get(bucketNum), hist);
                 return TaskDto.builder()
                     .task(task)
@@ -216,6 +221,18 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                     .build();
             })
             .toList();
+        if (emptyHistIsPresent.get()) {
+            BigDecimal overdueForNewTasks = res.stream()
+                .map(TaskDto::getOverdue)
+                .max(BigDecimal::compareTo)
+                .filter(maxOverdue -> BigDecimal.ZERO.compareTo(maxOverdue) <= 0)
+                .map(new BigDecimal("1.01")::multiply)
+                .orElse(BigDecimal.ZERO);
+            res.stream()
+                .filter(t -> t.getTask().getHist().isEmpty())
+                .forEach(t -> t.setOverdue(overdueForNewTasks));
+        }
+        return res;
     }
 
     @Builder
@@ -225,6 +242,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         private String dir;
         private Instant lastTime;
         private int bucketNum;
+        @Setter
         private BigDecimal overdue;
         private boolean active;
     }

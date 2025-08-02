@@ -30,6 +30,7 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
+import org.igye.remem3.web.impl.RequestParamsImpl;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -39,7 +40,6 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -131,7 +131,7 @@ public class ExerciseController extends HtmlBuilder
             }
             case ExerciseState.Started st -> {
                 if (params.hasParam(ACT_CANCEL_EXERCISE)) {
-                    yield Optional.of(() -> actCancelExercise(st));
+                    yield Optional.of(this::actCancelExercise);
                 }
                 if (params.hasParam(ACT_TOGGLE_SHOW_EXERCISE_PARAMS)) {
                     yield Optional.of(() -> actToggleShowParams(st));
@@ -318,32 +318,11 @@ public class ExerciseController extends HtmlBuilder
         };
     }
 
-    private ExerciseState actCancelExercise(ExerciseState.Started st) {
-        Settings settings = st.getSettings();
-        String config = st.getConfig();
-        Cache cache = st.getCache();
-        if (StringUtils.isNotBlank(config)) {
-            return settings.getExercises().stream()
-                .filter(e -> config.equals(e.getLeft()))
-                .map(e -> makeSetParamsStateWithPredefinedConfig(settings, cache, e, null))
-                .findFirst()
-                .orElseThrow(() -> new Exn(String.format("Cannot find the exercise with name '%s'", config)));
-        }
-        DirSelectorCmpImpl dirSelector = new DirSelectorCmpImpl(
-            settings, cache, st.getDir(), PAR_DIR_TO_READ_TASKS_FROM
-        );
-        return ExerciseState.SetParams.builder()
-            .settings(settings)
-            .cache(cache)
-            .cardUtils(st.getCardUtils())
-            .config(config)
-            .dirSelector(dirSelector)
-            .taskTypes(getTaskTypes(
-                getAvailableTaskTypes(st.getCardUtils(), dirSelector.getSelectedDirectory(), null),
-                new HashSet<>(st.getTaskTypes())
-            ))
-            .repeatStrategyCmp(st.getRepeatStrategyCmp())
-            .build();
+    private ExerciseState actCancelExercise() {
+        app.reloadProperties();
+        Settings settings = SettingsImpl.load(app);
+        Cache cache = CacheImpl.load(utils, settings);
+        return makeSetParamsState(settings, cache, RequestParamsImpl.empty(), null);
     }
 
     private HtmlElem rndStage(ExerciseState state) {

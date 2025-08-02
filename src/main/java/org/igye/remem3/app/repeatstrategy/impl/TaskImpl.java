@@ -52,14 +52,6 @@ public class TaskImpl implements Task, HasBaseTask {
     }
 
     @Override
-    public String getId() {
-        if (id == null) {
-            id = getFile().getAbsolutePath() + ":::" + baseTask.getTaskType().getCode();
-        }
-        return id;
-    }
-
-    @Override
     public String getDir() {
         if (dir == null) {
             dir = getFile().getParentFile().getAbsolutePath();

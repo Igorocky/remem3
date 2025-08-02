@@ -1,11 +1,14 @@
 package org.igye.remem3.controllers.components.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle;
+import org.igye.remem3.controllers.ParamName;
+import org.igye.remem3.controllers.PropName;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Utils;
@@ -22,44 +25,36 @@ import static org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle.DEFAU
 import static org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle.MAX_NUM_OF_ROUNDS;
 
 public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
-    private static final String PAR_RANDOMNESS_FACTOR = "RANDOMNESS_FACTOR";
     private static final String PAR_NUMBER_OF_ROUNDS = "NUMBER_OF_ROUNDS";
-    private static final String PROP_ROUNDS = "rounds";
-    private static final String PROP_RANDOMNESS = "randomness";
+    private static final String PAR_RANDOMNESS_FACTOR = "RANDOMNESS_FACTOR";
+    private static final PropName PROP_ROUNDS = new PropName("rounds");
+    private static final PropName PROP_RANDOMNESS = new PropName("randomness");
 
     private final Utils utils;
-    private final Cache cache;
 
-    private final String parNumOfRounds;
+    private final ParamName parNumOfRounds;
     private Optional<Integer> valNumOfRounds;
 
-    private final String parRndFactor;
+    private final ParamName parRndFactor;
     private BigDecimal valRndFactor;
 
     public CircleStrategyCmpImpl(Utils utils, Cache cache, String baseParamName, boolean isReadonly) {
-        super(baseParamName + "__CIRCLE", isReadonly);
+        super(cache, baseParamName + "__CIRCLE", isReadonly);
         this.utils = utils;
-        this.cache = cache;
         this.parRndFactor = makeParamName(PAR_RANDOMNESS_FACTOR);
         this.parNumOfRounds = makeParamName(PAR_NUMBER_OF_ROUNDS);
     }
 
     public CircleStrategyCmpImpl(Utils utils, Cache cache, String baseParamName, RequestParams params) {
         this(utils, cache, baseParamName, false);
-        valNumOfRounds = utils.try_(() -> parseNumOfRoundsExn(
-            readParam(params, parNumOfRounds, str -> str, () -> cache.getStr(parNumOfRounds, ""))
-        ));
-        valRndFactor = readParam(params, parRndFactor, this::parseRndFactorExn, () -> DEFAULT_RND_FACTOR);
+        valNumOfRounds = readCachableParam(parNumOfRounds, params, this::parseNumOfRounds, Optional::empty);
+        valRndFactor = readCachableParam(parRndFactor, params, this::parseRndFactor, () -> DEFAULT_RND_FACTOR);
     }
 
     public CircleStrategyCmpImpl(Utils utils, Cache cache, String baseParamName, File configFile, Properties props) {
         this(utils, cache, baseParamName, true);
-        valNumOfRounds = readPropExn(configFile, props, PAR_NUMBER_OF_ROUNDS,
-            str -> Optional.of(parseNumOfRoundsExn(str)), Optional::empty
-        );
-        valRndFactor = readPropExn(configFile, props, PROP_RANDOMNESS, this::parseRndFactorExn,
-            () -> DEFAULT_RND_FACTOR
-        );
+        valNumOfRounds = readProp(PROP_ROUNDS, configFile, props, this::parseNumOfRounds, Optional::empty);
+        valRndFactor = readProp(PROP_RANDOMNESS, configFile, props, this::parseRndFactor, () -> DEFAULT_RND_FACTOR);
     }
 
     @Override
@@ -69,11 +64,11 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
 
     @Override
     public HtmlElem render() {
-        HtmlTag roundsInput = inpText(parNumOfRounds, valNumOfRounds.map(String::valueOf).orElse(""), null);
+        HtmlTag roundsInput = inpText(parNumOfRounds.name(), valNumOfRounds.map(String::valueOf).orElse(""), null);
         if (isReadonly) {
             roundsInput.disabled();
         }
-        HtmlTag randomnessInput = inpText(parRndFactor, String.valueOf(valRndFactor), null);
+        HtmlTag randomnessInput = inpText(parRndFactor.name(), String.valueOf(valRndFactor), null);
         if (isReadonly) {
             randomnessInput.disabled();
         }
@@ -91,7 +86,7 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
     }
 
     @Override
-    public List<Pair<String, String>> getProperties() {
+    protected List<Pair<PropName, String>> getPropertiesPriv() {
         return List.of(
             Pair.of(PROP_ROUNDS, valNumOfRounds.map(String::valueOf).orElse("")),
             Pair.of(PROP_RANDOMNESS, String.valueOf(valRndFactor))
@@ -99,16 +94,21 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
     }
 
     @Override
-    public void cacheState() {
-        cache.put(parNumOfRounds, valNumOfRounds.map(String::valueOf).orElse(""));
-        cache.put(parRndFactor, String.valueOf(valRndFactor));
+    protected List<Pair<ParamName, String>> getParamsToCache() {
+        return List.of(
+            Pair.of(parNumOfRounds, valNumOfRounds.map(String::valueOf).orElse("")),
+            Pair.of(parRndFactor, String.valueOf(valRndFactor))
+        );
     }
 
-    private Integer parseNumOfRoundsExn(String intStr) {
-        return utils.getInRange(1, Integer.parseInt(intStr), MAX_NUM_OF_ROUNDS);
+    private Optional<Integer> parseNumOfRounds(String intStr) {
+        if (StringUtils.isBlank(intStr)) {
+            return Optional.empty();
+        }
+        return Optional.of(utils.getInRange(1, Integer.parseInt(intStr), MAX_NUM_OF_ROUNDS));
     }
 
-    private BigDecimal parseRndFactorExn(String str) {
+    private BigDecimal parseRndFactor(String str) {
         BigDecimal res = new BigDecimal(str);
         if (res.compareTo(BigDecimal.ZERO) < 0) {
             return BigDecimal.ZERO;

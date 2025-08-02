@@ -162,6 +162,11 @@ public class UtilsImpl implements Utils {
     }
 
     @Override
+    public int getStreak(List<HistRec> hist, int maxStreak) {
+        return Math.min(getStreak(hist), maxStreak);
+    }
+
+    @Override
     public BigDecimal calOverdue(BigDecimal minDelay, BigDecimal actualDelay) {
         return actualDelay.subtract(minDelay).divide(minDelay, RoundingMode.HALF_UP);
     }

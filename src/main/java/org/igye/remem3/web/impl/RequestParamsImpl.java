@@ -12,12 +12,13 @@ import java.util.Map;
 import java.util.Optional;
 
 public class RequestParamsImpl implements RequestParams {
-    private final Map<String, String[]> params;
-    private final Map<String, List<String>> keyValueParams;
+    private final Map<String, String[]> params = new HashMap<>();
+    private final Map<String, List<String>> keyValueParams = new HashMap<>();
 
     public RequestParamsImpl(HttpServletRequest req) {
-        params = new HashMap<>();
-        keyValueParams = new HashMap<>();
+        if (req == null) {
+            return;
+        }
         req.getParameterMap().forEach((param, value) -> {
             params.put(param, value);
             int colonIdx = param.indexOf(':');
@@ -28,6 +29,10 @@ public class RequestParamsImpl implements RequestParams {
                 ).add(param.substring(colonIdx + 1));
             }
         });
+    }
+
+    public static RequestParamsImpl empty() {
+        return new RequestParamsImpl(null);
     }
 
     @Override

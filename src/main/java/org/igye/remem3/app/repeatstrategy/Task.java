@@ -5,7 +5,5 @@ import java.util.List;
 public interface Task {
     List<HistRec> getHist();
 
-    String getId();
-
     String getDir();
 }
