@@ -121,7 +121,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
                     .map(TaskDto::getRemainingDelayExn)
                     .min(Integer::compareTo)
                     .get();
-                waitingRow.add(text(format("%s (remaining delay %s)", waitingCnt, minRemainingDelay)));
+                waitingRow.add(text(format("%s (%s)", waitingCnt, minRemainingDelay)));
             } else {
                 waitingRow.add(text(waitingCnt));
             }
