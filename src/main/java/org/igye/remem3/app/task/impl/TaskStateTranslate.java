@@ -1,6 +1,7 @@
 package org.igye.remem3.app.task.impl;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
@@ -37,6 +38,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     private final String expAnswer;
     private final boolean exactMatch;
 
+    private boolean hasMissingAnswer;
     private String userAnswer;
     private Optional<Boolean> userAnswerIsCorrect = Optional.empty();
     private Optional<HistRec> histRec = Optional.empty();
@@ -80,6 +82,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             return new TaskResult();
         }
         TaskResult res = new TaskResult();
+        hasMissingAnswer = false;
         if (
             params.hasParam(ACT_SUBMIT_ANSWER)
                 || params.hasParam(ACT_SHOW_ANS)
@@ -87,7 +90,10 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                 || params.hasKeyValueParam(ACT_COMPLETE_TASK_WITH_MARK)
         ) {
             userAnswer = params.getParam(PAR_USER_ANS).trim();
-            userAnswerIsCorrect = exactMatch ? Optional.of(expAnswer.equals(userAnswer)) : Optional.empty();
+            hasMissingAnswer = exactMatch && StringUtils.isBlank(userAnswer);
+            userAnswerIsCorrect = exactMatch
+                ? (hasMissingAnswer ? Optional.empty() : Optional.of(expAnswer.equals(userAnswer)))
+                : Optional.empty();
             if (histRec.isEmpty() && (userAnswerIsCorrect.isPresent() || params.hasParam(ACT_SHOW_ANS))) {
                 BigDecimal mark = params.hasParam(ACT_SHOW_ANS)
                     ? BigDecimal.ZERO
@@ -151,6 +157,8 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             div(text(textToTranslate)),
             br(),
             div(rndUserAnswer()),
+            br(),
+            hasMissingAnswer ? div("color:red;margin-bottom:20px;", text("Please provide an answer.")) : null,
             br(),
             div(rndButtons()),
             br(),

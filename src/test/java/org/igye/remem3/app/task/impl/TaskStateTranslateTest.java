@@ -324,6 +324,101 @@ class TaskStateTranslateTest extends HtmlBuilder {
     }
 
     @Test
+    void exactMatch_ansEmpty_ansX_ansV() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T11:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(true)
+            .lang2("L2").text2("T2").exactMatch2(true)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang2(), card.getLang1());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "");
+
+        //submit an empty answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer("  ", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "");
+
+        //submit an incorrect answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T3", html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T11:03:20Z"))
+                .taskType("translate:L2->L1")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP T1 ###ACT T3")
+                .build()
+        );
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "T3");
+
+        //submit the correct answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T1", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchHasCorrectAnswer(html, "T1");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
+    @Test
+    void exactMatch_ansEmpty_ansV() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T11:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(true)
+            .lang2("L2").text2("T2").exactMatch2(true)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang2(), card.getLang1());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "");
+
+        //submit an empty answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer("  ", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswer(html, "");
+
+        //submit the correct answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T1", html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T11:03:20Z"))
+                .taskType("translate:L2->L1")
+                .mark(BigDecimal.ONE)
+                .notes("")
+                .build()
+        );
+        html = state.render();
+        assertHtmlExactMatchHasCorrectAnswer(html, "T1");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
+    @Test
     void approxMatch_ans_V() {
         //given
         TestClock clock = new TestClock(Instant.parse("2025-07-14T10:03:00Z"));
@@ -361,6 +456,43 @@ class TaskStateTranslateTest extends HtmlBuilder {
     }
 
     @Test
+    void approxMatch_ansEmpty_V() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T10:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(false)
+            .lang2("L2").text2("T2").exactMatch2(false)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlApproxMatchNoAnswer(html, "");
+
+        //submit an empty answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer("", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlApproxMatchHasAnswer(html, "");
+
+        //click "answer is correct" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTaskWithMark(true, html, state);
+        assertTaskResult(taskResult, true,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T10:03:20Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ONE)
+                .notes("###EXP <<<assessed_by_user>>> ###ACT ")
+                .build()
+        );
+    }
+
+    @Test
     void approxMatch_ans_X() {
         //given
         TestClock clock = new TestClock(Instant.parse("2025-07-14T10:03:00Z"));
@@ -393,6 +525,43 @@ class TaskStateTranslateTest extends HtmlBuilder {
                 .taskType("translate:L1->L2")
                 .mark(BigDecimal.ZERO)
                 .notes("###EXP <<<assessed_by_user>>> ###ACT T")
+                .build()
+        );
+    }
+
+    @Test
+    void approxMatch_ansEmpty_X() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T10:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(false)
+            .lang2("L2").text2("T2").exactMatch2(false)
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlApproxMatchNoAnswer(html, "");
+
+        //submit an empty answer
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitAnswer("", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlApproxMatchHasAnswer(html, "");
+
+        //click "answer is incorrect" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTaskWithMark(false, html, state);
+        assertTaskResult(taskResult, true,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T10:03:20Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP <<<assessed_by_user>>> ###ACT ")
                 .build()
         );
     }
