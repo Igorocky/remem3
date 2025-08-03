@@ -93,7 +93,9 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                 activeRow.add(text(activeCnt));
             }
         }
-        return table(List.of(activeRow)).attr("class", "table-single-border bucket-params");
+        return table(List.of(activeRow))
+            .attr("class", "table-single-border")
+            .attr("style", "display:inline-table;padding-top:1px;padding-bottom:1px;");
     }
 
     @Override
