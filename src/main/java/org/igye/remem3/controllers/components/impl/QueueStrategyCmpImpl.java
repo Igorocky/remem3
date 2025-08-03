@@ -14,6 +14,7 @@ import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 
 import java.io.File;
+import java.time.Instant;
 import java.util.List;
 import java.util.Properties;
 
@@ -81,7 +82,7 @@ public class QueueStrategyCmpImpl extends BaseStrategyCmpImpl {
 
     @Override
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
-        return new RepeatStrategyQueue(utils, valBatchSize, valStep, makeTasksForStrategy(tasks));
+        return new RepeatStrategyQueue(utils, Instant.now(), valBatchSize, valStep, makeTasksForStrategy(tasks));
     }
 
     @Override

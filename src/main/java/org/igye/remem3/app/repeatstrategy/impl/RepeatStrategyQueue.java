@@ -32,17 +32,19 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     public static final int DEFAULT_STEP = 5;
 
     private final Utils utils;
+    private final Instant startTime;
     private final int batchSize;
     private final int step;
     private final List<Task> allTasks;
     private final List<Integer> bucketDelays;
     private final int maxBucketNum;
 
-    public RepeatStrategyQueue(Utils utils, int batchSize, int step, List<Task> allTasks) {
+    public RepeatStrategyQueue(Utils utils, Instant startTime, int batchSize, int step, List<Task> allTasks) {
         if (CollectionUtils.isEmpty(allTasks)) {
             throw new Exn("There are no tasks.");
         }
         this.utils = utils;
+        this.startTime = startTime;
         this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
         this.step = utils.getInRange(MIN_STEP, step, MAX_STEP);
         this.allTasks = Collections.unmodifiableList(allTasks);
@@ -127,13 +129,13 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             }
             totalRow.add(text(activeCnt + waitingCnt));
         }
-        int minStreak = allTasks.stream().map(TaskDto::getStreak).min(Integer::compareTo).get();
-        int maxStreak = allTasks.stream().map(TaskDto::getStreak).max(Integer::compareTo).get();
+        int minStreak = allTasks.stream().map(TaskDto::getSessionStreak).min(Integer::compareTo).get();
+        int maxStreak = allTasks.stream().map(TaskDto::getSessionStreak).max(Integer::compareTo).get();
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
-            div(text(format("Min streak: %s, max streak: %s", minStreak, maxStreak))),
+            div(text(format("Session min/max streak: %s/%s", minStreak, maxStreak))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
     }
@@ -218,9 +220,9 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         return TaskDto.builder()
             .task(task)
             .histLen(hist.size())
-            .streak(utils.getStreak(hist))
             .bucketNum(bucketNum)
             .bucketDelay(bucketDelays.get(bucketNum))
+            .sessionStreak(utils.getStreak(hist, startTime))
             .build();
     }
 
@@ -237,12 +239,12 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     protected static class TaskDto {
         private Task task;
         private int histLen;
-        private int streak;
         private int bucketNum;
         private int bucketDelay;
         @Setter
         @Builder.Default
         private Optional<Integer> remainingDelay = Optional.empty();
+        private int sessionStreak;
 
         public int getRemainingDelayExn() {
             return remainingDelay.orElseThrow(() -> new Exn("The remainingDelay property is not set."));

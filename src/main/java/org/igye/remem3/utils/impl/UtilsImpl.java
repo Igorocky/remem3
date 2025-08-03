@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -151,19 +152,25 @@ public class UtilsImpl implements Utils {
 
     @Override
     public int getStreak(List<HistRec> hist) {
-        int res = 0;
-        for (int i = hist.size() - 1; i >= 0; i--) {
-            if (!hist.get(i).isPassed()) {
-                break;
-            }
-            res++;
-        }
-        return res;
+        return getStreak(hist, Instant.MIN);
     }
 
     @Override
     public int getStreak(List<HistRec> hist, int maxStreak) {
         return Math.min(getStreak(hist), maxStreak);
+    }
+
+    @Override
+    public int getStreak(List<HistRec> hist, Instant startTime) {
+        int res = 0;
+        for (int i = hist.size() - 1; i >= 0; i--) {
+            HistRec rec = hist.get(i);
+            if (rec.getTime().isBefore(startTime) || !rec.isPassed()) {
+                break;
+            }
+            res++;
+        }
+        return res;
     }
 
     @Override
