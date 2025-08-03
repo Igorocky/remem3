@@ -1,11 +1,13 @@
 package org.igye.remem3.utils;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -44,4 +46,6 @@ public interface Utils {
     int getStreak(List<HistRec> hist, Instant startTime);
 
     BigDecimal calOverdue(BigDecimal minDelay, BigDecimal actualDelay);
+
+    <E, V> Pair<V, V> getMinMax(List<E> elems, Function<E, V> prop, Comparator<V> cmp, Pair<V, V> dflt);
 }

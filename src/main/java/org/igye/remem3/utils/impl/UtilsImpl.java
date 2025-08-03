@@ -3,6 +3,7 @@ package org.igye.remem3.utils.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -176,6 +178,25 @@ public class UtilsImpl implements Utils {
     @Override
     public BigDecimal calOverdue(BigDecimal minDelay, BigDecimal actualDelay) {
         return actualDelay.subtract(minDelay).divide(minDelay, RoundingMode.HALF_UP);
+    }
+
+    @Override
+    public <E, V> Pair<V, V> getMinMax(List<E> elems, Function<E, V> prop, Comparator<V> cmp, Pair<V, V> dflt) {
+        if (CollectionUtils.isEmpty(elems)) {
+            return dflt;
+        }
+        V min = null;
+        V max = null;
+        for (E elem : elems) {
+            V val = prop.apply(elem);
+            if (min == null || cmp.compare(val, min) < 0) {
+                min = val;
+            }
+            if (max == null || cmp.compare(max, val) < 0) {
+                max = val;
+            }
+        }
+        return Pair.of(min, max);
     }
 
     private Duration parseSingleDuration(String str) {

@@ -129,13 +129,21 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             }
             totalRow.add(text(activeCnt + waitingCnt));
         }
-        int minStreak = allTasks.stream().map(TaskDto::getSessionStreak).min(Integer::compareTo).get();
-        int maxStreak = allTasks.stream().map(TaskDto::getSessionStreak).max(Integer::compareTo).get();
+        List<List<HistRec>> sessionHist = allTasks.stream()
+            .map(TaskDto::getTask)
+            .map(Task::getHist)
+            .map(h -> h.stream().filter(r -> startTime.isBefore(r.getTime())).toList())
+            .toList();
+        Pair<Integer, Integer> count = utils.getMinMax(sessionHist, List::size, Integer::compareTo, Pair.of(0, 0));
+        Pair<Integer, Integer> streak = utils.getMinMax(
+            sessionHist, utils::getStreak, Integer::compareTo, Pair.of(0, 0)
+        );
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
-            div(text(format("Session min/max streak: %s/%s", minStreak, maxStreak))),
+            div(text(format("Session min/max count: %s/%s", count.getLeft(), count.getRight()))),
+            div(text(format("Session min/max streak: %s/%s", streak.getLeft(), streak.getRight()))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
     }
@@ -222,7 +230,6 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             .histLen(hist.size())
             .bucketNum(bucketNum)
             .bucketDelay(bucketDelays.get(bucketNum))
-            .sessionStreak(utils.getStreak(hist, startTime))
             .build();
     }
 
@@ -244,7 +251,6 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         @Setter
         @Builder.Default
         private Optional<Integer> remainingDelay = Optional.empty();
-        private int sessionStreak;
 
         public int getRemainingDelayExn() {
             return remainingDelay.orElseThrow(() -> new Exn("The remainingDelay property is not set."));
