@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Optional;
 
 public class IndexController extends HtmlBuilder implements StatefulWebController<Void, Void> {
-    private final List<String> paths;
+    private final List<StatefulWebController> controllers;
 
-    public IndexController(List<String> paths) {
-        this.paths = paths;
+    public IndexController(List<StatefulWebController> controllers) {
+        this.controllers = controllers;
     }
 
     @Override
@@ -44,10 +44,10 @@ public class IndexController extends HtmlBuilder implements StatefulWebControlle
     public String renderState(Void state) {
         return simplePageWithTitle(
             "Example Web App Index",
-            paths.stream()
-                .map(path -> frag(
+            controllers.stream()
+                .map(controller -> frag(
                     br(),
-                    h("a", Map.of("href", path), text(path))
+                    h("a", Map.of("href", controller.getPath()), text(controller.getTitle()))
                 ))
                 .toList()
         ).toString();

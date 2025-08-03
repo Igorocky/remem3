@@ -64,6 +64,11 @@ public class NewCardController extends HtmlBuilder
     }
 
     @Override
+    public String getTitle() {
+        return "Create new cards";
+    }
+
+    @Override
     public NewCardState loadState(RequestParams params) {
         try {
             app.reloadProperties();

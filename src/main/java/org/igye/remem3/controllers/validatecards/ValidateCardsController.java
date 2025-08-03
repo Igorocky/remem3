@@ -39,6 +39,11 @@ public class ValidateCardsController extends HtmlBuilder
     }
 
     @Override
+    public String getTitle() {
+        return "Validate cards";
+    }
+
+    @Override
     public ValidateCardsState loadState(RequestParams params) {
         return ValidateCardsState.builder()
             .dir(params.hasParam(PAR_DIR) ? params.getParam(PAR_DIR) : "")

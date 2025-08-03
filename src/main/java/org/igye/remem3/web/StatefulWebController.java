@@ -5,6 +5,10 @@ import java.util.Optional;
 public interface StatefulWebController<S, A> {
     String getPath();
 
+    default String getTitle() {
+        return getPath();
+    }
+
     S loadState(RequestParams params);
 
     Optional<A> decodeAction(RequestParams params, S state);

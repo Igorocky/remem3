@@ -85,6 +85,11 @@ public class ExerciseController extends HtmlBuilder
     }
 
     @Override
+    public String getTitle() {
+        return "Exercises";
+    }
+
+    @Override
     public ExerciseState loadState(RequestParams params) {
         ExerciseState prevState = params.hasParam(PAR_EXERCISE_STAGE) ? StateHolder.state.get() : null;
         try {

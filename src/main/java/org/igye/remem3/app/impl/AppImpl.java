@@ -23,6 +23,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -59,7 +60,11 @@ public class AppImpl implements App {
         ).collect(Collectors.toMap(StatefulWebController::getPath, Function.identity()));
         allControllers.put(
             "",
-            new IndexController(allControllers.values().stream().map(StatefulWebController::getPath).sorted().toList())
+            new IndexController(
+                allControllers.values().stream()
+                    .sorted(Comparator.comparing(StatefulWebController::getTitle))
+                    .toList()
+            )
         );
         this.controllers = Collections.unmodifiableMap(allControllers);
     }
