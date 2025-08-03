@@ -64,6 +64,7 @@ public class ExerciseController extends HtmlBuilder
     private static final String ACT_CANCEL_EXERCISE = "ACT_CANCEL_EXERCISE";
     private static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
     private static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
+    private static final String ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS";
     private static final String ACT_SKIP_TASK = "ACT_SKIP_TASK";
     private static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "ACT_COPY_CARD_PATH_TO_CLIPBOARD";
     private static final String ACT_OPEN_CARD = "ACT_OPEN_CARD";
@@ -135,6 +136,9 @@ public class ExerciseController extends HtmlBuilder
                 }
                 if (params.hasParam(ACT_TOGGLE_SHOW_EXERCISE_PARAMS)) {
                     yield Optional.of(() -> actToggleShowParams(st));
+                }
+                if (params.hasParam(ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS)) {
+                    yield Optional.of(() -> actToggleShowLessMoreParams(st));
                 }
                 if (params.hasParam(ACT_SKIP_TASK) || params.hasParam(ACT_REFRESH_EXERCISE)) {
                     yield Optional.of(() -> actGoToNextTask(st));
@@ -262,9 +266,29 @@ public class ExerciseController extends HtmlBuilder
     }
 
     private ExerciseState actToggleShowParams(ExerciseState.Started st) {
-        boolean newShowParams = !st.isShowParams();
-        st.getCache().put(PAR_SHOW_EXERCISE_PARAMS, newShowParams);
-        return st.withShowParams(newShowParams);
+        ExerciseState.Started newState;
+        if (st.getShowMoreParams().isEmpty()) {
+            newState = st.withShowMoreParams(Optional.of(true));
+        } else {
+            newState = st.withShowMoreParams(Optional.empty());
+        }
+        cacheShowMoreParams(newState);
+        return newState;
+    }
+
+    private ExerciseState actToggleShowLessMoreParams(ExerciseState.Started st) {
+        ExerciseState.Started newState;
+        if (st.getShowMoreParams().isEmpty()) {
+            newState = st.withShowMoreParams(Optional.of(true));
+        } else {
+            newState = st.withShowMoreParams(Optional.of(!st.getShowMoreParams().get()));
+        }
+        cacheShowMoreParams(newState);
+        return newState;
+    }
+
+    private void cacheShowMoreParams(ExerciseState.Started st) {
+        st.getCache().put(PAR_SHOW_EXERCISE_PARAMS, st.getShowMoreParams().map(Object::toString).orElse(""));
     }
 
     private ExerciseState actStartExercise(ExerciseState.SetParams st) {
@@ -300,7 +324,9 @@ public class ExerciseController extends HtmlBuilder
             .dir(selectedDir.getAbsolutePath())
             .taskTypes(selectedTaskTypes)
             .repeatStrategy(repeatStrategy)
-            .showParams(cache.getBool(PAR_SHOW_EXERCISE_PARAMS, false))
+            .showMoreParams(utils.try_(
+                () -> Boolean.parseBoolean(cache.getStr(PAR_SHOW_EXERCISE_PARAMS, "false"))
+            ))
             .nextTasks(nextTasks)
             .taskState(nextTasks.flatMap(nt ->
                 nt.isEmpty() ? Optional.empty() : makeTaskState(st.getCardUtils(), nt.getFirst())
@@ -388,28 +414,35 @@ public class ExerciseController extends HtmlBuilder
     private HtmlElem rndExercise(ExerciseState.Started st) {
         HtmlElem params;
         Optional<String> cardPath = getCurrentCardFile(st).map(File::getAbsolutePath);
-        if (st.isShowParams()) {
-            String taskTypesStr = st.getTaskTypes().isEmpty()
-                ? "All available in the directory"
-                : st.getTaskTypes().stream().sorted().collect(Collectors.joining(", "));
+        if (st.getShowMoreParams().isPresent()) {
             Boolean historyUpdated = st.getTaskState().map(TaskState::isHistoryUpdated).orElse(false);
-            params = frag(
-                div(text(String.format("Directory: %s", st.getDir()))),
-                div(text(String.format("Task types: %s", taskTypesStr))),
-                div(frag(
-                    text(String.format("Current card: %s ", cardPath.orElse("not available"))),
-                    cardPath.isEmpty() ? null : frag(
-                        inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy path"),
-                        inpSubmit(ACT_OPEN_CARD, "open")
-                    )
-                )),
-                cardPath
-                    .map(_ -> div(text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))))
-                    .orElse(null),
-                br(),
-                div(text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
-                div(st.getRepeatStrategy().renderParams(historyUpdated))
-            );
+            if (st.getShowMoreParams().get()) {
+                String taskTypesStr = st.getTaskTypes().isEmpty()
+                    ? "All available in the directory"
+                    : st.getTaskTypes().stream().sorted().collect(Collectors.joining(", "));
+                params = frag(
+                    div(text(String.format("Directory: %s", st.getDir()))),
+                    div(text(String.format("Task types: %s", taskTypesStr))),
+                    div(frag(
+                        text(String.format("Current card: %s ", cardPath.orElse("not available"))),
+                        cardPath.isEmpty() ? null : frag(
+                            inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy path"),
+                            inpSubmit(ACT_OPEN_CARD, "open")
+                        )
+                    )),
+                    cardPath
+                        .map(_ -> div(text(String.format("History updated: %s", historyUpdated ? "Yes" : "No"))))
+                        .orElse(null),
+                    br(),
+                    div(text(String.format("Repeat strategy: %s", st.getRepeatStrategyCmp().getStrategyType()))),
+                    div(st.getRepeatStrategy().renderMoreParams(historyUpdated))
+                );
+            } else {
+                params = frag(
+                    text(String.format("%s: ", st.getRepeatStrategyCmp().getStrategyType())),
+                    st.getRepeatStrategy().renderLessParams(historyUpdated)
+                );
+            }
         } else {
             params = null;
         }
@@ -434,7 +467,14 @@ public class ExerciseController extends HtmlBuilder
         }
         return frag(
             h4(text("Exercise")),
-            inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS, st.isShowParams() ? "Hide parameters" : "Show parameters"),
+            inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS,
+                st.getShowMoreParams().isPresent() ? "Hide parameters" : "Show parameters"
+            ),
+            st.getShowMoreParams().map(showMoreParams ->
+                inpSubmit(ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS,
+                    showMoreParams ? "Show less parameters" : "Show more parameters"
+                )
+            ).orElse(null),
             cardPath.isPresent() ? inpSubmit(ACT_OPEN_CARD, "Edit this card") : null,
             st.getTaskState().isPresent() ? inpSubmit(ACT_SKIP_TASK, "Skip this task") : null,
             params,

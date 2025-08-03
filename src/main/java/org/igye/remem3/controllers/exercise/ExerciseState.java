@@ -55,7 +55,7 @@ public sealed interface ExerciseState {
         private String dir;
         private Set<String> taskTypes;
         private RepeatStrategy repeatStrategy;
-        private boolean showParams;
+        private Optional<Boolean> showMoreParams;
         private Optional<List<Task>> nextTasks;
         private Optional<TaskState> taskState;
         private boolean cardPathCopied;

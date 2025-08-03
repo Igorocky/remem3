@@ -77,7 +77,27 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     }
 
     @Override
-    public HtmlElem renderParams(boolean historyUpdated) {
+    public HtmlElem renderLessParams(boolean historyUpdated) {
+        List<HtmlElem> activeRow = new ArrayList<>();
+        activeRow.add(text("Active tasks"));
+        List<Pair<ArrayList<TaskDto>, ArrayList<TaskDto>>> buckets = calcBuckets();
+        for (int b = 0; b < buckets.size(); b++) {
+            Duration bucketDelay = bucketDelays.get(b);
+            int activeCnt = buckets.get(b).getRight().size();
+            List<TaskDto> waitingTasks = buckets.get(b).getLeft();
+            int waitingCnt = waitingTasks.size();
+            if (activeCnt == 0 && waitingCnt > 0) {
+                Duration timeToWait = getTimeToWait(bucketDelay, waitingTasks);
+                activeRow.add(text(format("%s", getApproxDurationStr(timeToWait))));
+            } else {
+                activeRow.add(text(activeCnt));
+            }
+        }
+        return table(List.of(activeRow)).attr("class", "table-single-border bucket-params");
+    }
+
+    @Override
+    public HtmlElem renderMoreParams(boolean historyUpdated) {
         ArrayList<List<? extends HtmlElem>> rows = new ArrayList<>();
         List<HtmlElem> headerRow = new ArrayList<>();
         List<HtmlElem> delayRow = new ArrayList<>();
@@ -94,17 +114,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         activeRow.add(text("Active"));
         waitingRow.add(text("Waiting"));
         totalRow.add(text("Total"));
-        List<Pair<ArrayList<TaskDto>, ArrayList<TaskDto>>> buckets = bucketDelays.stream()
-            .map(_ -> Pair.of(new ArrayList<TaskDto>(), new ArrayList<TaskDto>()))
-            .toList();
-        for (TaskDto task : getTaskDtos()) {
-            Pair<ArrayList<TaskDto>, ArrayList<TaskDto>> bucket = buckets.get(task.getBucketNum());
-            if (task.isActive()) {
-                bucket.getRight().add(task);
-            } else {
-                bucket.getLeft().add(task);
-            }
-        }
+        List<Pair<ArrayList<TaskDto>, ArrayList<TaskDto>>> buckets = calcBuckets();
         for (int b = 0; b < buckets.size(); b++) {
             headerRow.add(text(b + 1));
             Duration bucketDelay = bucketDelays.get(b);
@@ -114,14 +124,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             int waitingCnt = waitingTasks.size();
             activeRow.add(text(activeCnt));
             if (activeCnt == 0 && waitingCnt > 0) {
-                Duration timeToWait = waitingTasks.stream()
-                    .map(TaskDto::getOverdue)
-                    .max(BigDecimal::compareTo)
-                    .map(BigDecimal::negate)
-                    .map(durToBigDec(bucketDelay)::multiply)
-                    .map(BigDecimal::longValue)
-                    .map(Duration::ofSeconds)
-                    .get();
+                Duration timeToWait = getTimeToWait(bucketDelay, waitingTasks);
                 waitingRow.add(text(format("%s (%s)", waitingCnt, getApproxDurationStr(timeToWait))));
             } else {
                 waitingRow.add(text(waitingCnt));
@@ -133,6 +136,35 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             div(text(format("Batch size: %s", batchSize))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
+    }
+
+    private Duration getTimeToWait(Duration bucketDelay, List<TaskDto> waitingTasks) {
+        if (waitingTasks.isEmpty()) {
+            throw new Exn("waitingTasks must not be empty.");
+        }
+        return waitingTasks.stream()
+            .map(TaskDto::getOverdue)
+            .max(BigDecimal::compareTo)
+            .map(BigDecimal::negate)
+            .map(durToBigDec(bucketDelay)::multiply)
+            .map(BigDecimal::longValue)
+            .map(Duration::ofSeconds)
+            .get();
+    }
+
+    private List<Pair<ArrayList<TaskDto>, ArrayList<TaskDto>>> calcBuckets() {
+        List<Pair<ArrayList<TaskDto>, ArrayList<TaskDto>>> buckets = bucketDelays.stream()
+            .map(_ -> Pair.of(new ArrayList<TaskDto>(), new ArrayList<TaskDto>()))
+            .toList();
+        for (TaskDto task : getTaskDtos()) {
+            Pair<ArrayList<TaskDto>, ArrayList<TaskDto>> bucket = buckets.get(task.getBucketNum());
+            if (task.isActive()) {
+                bucket.getRight().add(task);
+            } else {
+                bucket.getLeft().add(task);
+            }
+        }
+        return buckets;
     }
 
     private ArrayList<TaskDto> selectActiveTasksToRepeat(

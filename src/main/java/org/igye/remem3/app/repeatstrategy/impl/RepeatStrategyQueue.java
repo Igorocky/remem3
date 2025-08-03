@@ -80,7 +80,16 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     }
 
     @Override
-    public HtmlElem renderParams(boolean historyUpdated) {
+    public HtmlElem renderLessParams(boolean historyUpdated) {
+        CountAndStreak countAndStreak = calcCountAndStreak(getTaskDtos());
+        return frag(
+            text(format("Counts: %s/%s", countAndStreak.getMinCount(), countAndStreak.getMaxCount())),
+            text(format("Streak: %s/%s", countAndStreak.getMinStreak(), countAndStreak.getMaxStreak()))
+        );
+    }
+
+    @Override
+    public HtmlElem renderMoreParams(boolean historyUpdated) {
         ArrayList<List<? extends HtmlElem>> rows = new ArrayList<>();
         List<HtmlElem> headerRow = new ArrayList<>();
         List<HtmlElem> delayRow = new ArrayList<>();
@@ -129,6 +138,24 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             }
             totalRow.add(text(activeCnt + waitingCnt));
         }
+        CountAndStreak countAndStreak = calcCountAndStreak(allTasks);
+        return frag(
+            div(text(format("Number of tasks: %s", allTasks.size()))),
+            div(text(format("Batch size: %s", batchSize))),
+            div(text(format("Step: %s", step))),
+            div(text(format(
+                "Session min/max count: %s/%s",
+                countAndStreak.getMinCount(), countAndStreak.getMaxCount()
+            ))),
+            div(text(format(
+                "Session min/max streak: %s/%s",
+                countAndStreak.getMinStreak(), countAndStreak.getMaxStreak()
+            ))),
+            div(table(rows).attr("class", "table-single-border bucket-params"))
+        );
+    }
+
+    private CountAndStreak calcCountAndStreak(List<TaskDto> allTasks) {
         List<List<HistRec>> sessionHist = allTasks.stream()
             .map(TaskDto::getTask)
             .map(Task::getHist)
@@ -138,14 +165,12 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         Pair<Integer, Integer> streak = utils.getMinMax(
             sessionHist, utils::getStreak, Integer::compareTo, Pair.of(0, 0)
         );
-        return frag(
-            div(text(format("Number of tasks: %s", allTasks.size()))),
-            div(text(format("Batch size: %s", batchSize))),
-            div(text(format("Step: %s", step))),
-            div(text(format("Session min/max count: %s/%s", count.getLeft(), count.getRight()))),
-            div(text(format("Session min/max streak: %s/%s", streak.getLeft(), streak.getRight()))),
-            div(table(rows).attr("class", "table-single-border bucket-params"))
-        );
+        return CountAndStreak.builder()
+            .minCount(count.getLeft())
+            .maxCount(count.getRight())
+            .minStreak(streak.getLeft())
+            .maxStreak(streak.getRight())
+            .build();
     }
 
     private int compare(TaskDto a, TaskDto b) {
@@ -267,5 +292,14 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         private HistRec histRec;
         private Instant time;
         private TaskDto task;
+    }
+
+    @Getter
+    @Builder
+    private static class CountAndStreak {
+        private Integer minCount;
+        private Integer maxCount;
+        private Integer minStreak;
+        private Integer maxStreak;
     }
 }

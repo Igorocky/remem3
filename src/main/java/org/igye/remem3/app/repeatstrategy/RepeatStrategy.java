@@ -8,5 +8,7 @@ import java.util.Optional;
 public interface RepeatStrategy {
     Optional<List<Task>> getNextTasks();
 
-    HtmlElem renderParams(boolean historyUpdated);
+    HtmlElem renderLessParams(boolean historyUpdated);
+
+    HtmlElem renderMoreParams(boolean historyUpdated);
 }

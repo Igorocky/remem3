@@ -65,8 +65,33 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     }
 
     @Override
-    public HtmlElem renderParams(boolean historyUpdated) {
+    public HtmlElem renderLessParams(boolean historyUpdated) {
+        ProgressInfo progressInfo = calcRoundProgress(historyUpdated, getStats());
+        return frag(
+            numOfRounds.isPresent()
+                ? text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get()))
+                : text(format("Round: %s", progressInfo.getRound())),
+            text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), allTasks.size()))
+        );
+    }
+
+    @Override
+    public HtmlElem renderMoreParams(boolean historyUpdated) {
         Stats stats = getStats();
+        ProgressInfo progressInfo = calcRoundProgress(historyUpdated, stats);
+        long numOfTasksToSelectFrom = stats.getNumOfTasksToSelectFrom();
+        String tasksStr = numOfTasksToSelectFrom == 1 ? "task" : "tasks";
+        return frag(
+            div(text(format("Number of tasks: %s", allTasks.size()))),
+            div(text(format("Randomness: %s (%s %s)", randomnessFactor, numOfTasksToSelectFrom, tasksStr))),
+            numOfRounds.isPresent()
+                ? div(text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get())))
+                : div(text(format("Round: %s", progressInfo.getRound()))),
+            div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), allTasks.size())))
+        );
+    }
+
+    private ProgressInfo calcRoundProgress(boolean historyUpdated, Stats stats) {
         int minHistLen = stats.getMinHistLen();
         int numOfTasksWithMinHistLen = stats.getTasksWithMinHistLen().size();
         //numOfTasksWithMinHistLen == 0 this will be at the end of the last round
@@ -79,16 +104,10 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         } else {
             roundProgress = allTasks.size() - numOfTasksWithMinHistLen + (historyUpdated ? 0 : 1);
         }
-        long numOfTasksToSelectFrom = stats.getNumOfTasksToSelectFrom();
-        String tasksStr = numOfTasksToSelectFrom == 1 ? "task" : "tasks";
-        return frag(
-            div(text(format("Number of tasks: %s", allTasks.size()))),
-            div(text(format("Randomness: %s (%s %s)", randomnessFactor, numOfTasksToSelectFrom, tasksStr))),
-            numOfRounds.isPresent()
-                ? div(text(format("Round: %s/%s", round, numOfRounds.get())))
-                : div(text(format("Round: %s", round))),
-            div(text(format("Round progress: %s/%s", roundProgress, allTasks.size())))
-        );
+        return ProgressInfo.builder()
+            .round(round)
+            .roundProgress(roundProgress)
+            .build();
     }
 
     private Stats getStats() {
@@ -144,5 +163,12 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         private Task task;
         private List<HistRec> hist;
         private Instant lastTime;
+    }
+
+    @Builder
+    @Getter
+    private static class ProgressInfo {
+        private int round;
+        private int roundProgress;
     }
 }
