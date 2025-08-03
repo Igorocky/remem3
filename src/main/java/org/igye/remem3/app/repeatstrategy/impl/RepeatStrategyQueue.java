@@ -83,7 +83,10 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     public HtmlElem renderLessParams(boolean historyUpdated) {
         CountAndStreak countAndStreak = calcCountAndStreak(getTaskDtos());
         return frag(
-            text(format("Counts: %s/%s", countAndStreak.getMinCount(), countAndStreak.getMaxCount())),
+            text(format(
+                "Counts: %s | %s/%s",
+                countAndStreak.getTotalCount(), countAndStreak.getMinCount(), countAndStreak.getMaxCount()
+            )),
             text(format("Streak: %s/%s", countAndStreak.getMinStreak(), countAndStreak.getMaxStreak()))
         );
     }
@@ -144,8 +147,8 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
             div(text(format(
-                "Session min/max count: %s/%s",
-                countAndStreak.getMinCount(), countAndStreak.getMaxCount()
+                "Session counts total|min/max : %s | %s/%s",
+                countAndStreak.getTotalCount(), countAndStreak.getMinCount(), countAndStreak.getMaxCount()
             ))),
             div(text(format(
                 "Session min/max streak: %s/%s",
@@ -166,6 +169,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             sessionHist, utils::getStreak, Integer::compareTo, Pair.of(0, 0)
         );
         return CountAndStreak.builder()
+            .totalCount(sessionHist.stream().map(List::size).reduce(0, Integer::sum))
             .minCount(count.getLeft())
             .maxCount(count.getRight())
             .minStreak(streak.getLeft())
@@ -297,6 +301,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     @Getter
     @Builder
     private static class CountAndStreak {
+        private Integer totalCount;
         private Integer minCount;
         private Integer maxCount;
         private Integer minStreak;
