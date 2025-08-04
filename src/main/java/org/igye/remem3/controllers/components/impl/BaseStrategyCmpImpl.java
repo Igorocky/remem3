@@ -25,7 +25,7 @@ public abstract class BaseStrategyCmpImpl extends HtmlBuilder implements RepeatS
 
     private final Cache cache;
     private final String baseParamName;
-    protected final boolean isReadonly;
+    protected boolean isReadonly;
 
 
     public BaseStrategyCmpImpl(Cache cache, String baseParamName, boolean isReadonly) {
@@ -44,6 +44,11 @@ public abstract class BaseStrategyCmpImpl extends HtmlBuilder implements RepeatS
     @Override
     public void cacheState() {
         getParamsToCache().forEach(pair -> cache.put(pair.getLeft().name(), pair.getRight()));
+    }
+
+    @Override
+    public void setIsReadonly(boolean isReadonly) {
+        this.isReadonly = isReadonly;
     }
 
     protected abstract List<Pair<PropName, String>> getPropertiesPriv();

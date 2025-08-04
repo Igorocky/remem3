@@ -19,4 +19,6 @@ public interface RepeatStrategyCmp {
     List<Pair<String, String>> getProperties();
 
     void cacheState();
+
+    void setIsReadonly(boolean isReadonly);
 }

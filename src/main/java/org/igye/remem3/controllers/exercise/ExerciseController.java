@@ -60,6 +60,7 @@ public class ExerciseController extends HtmlBuilder
     private static final String PAR_TASK_TYPE = "PAR_TASK_TYPE";
     private static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
     private static final String ACT_SHOW_PROPERTIES = "ACT_SHOW_PROPERTIES";
+    private static final String ACT_CUSTOMIZE_EXERCISE = "ACT_CUSTOMIZE_EXERCISE";
     private static final String ACT_START_EXERCISE = "ACT_START_EXERCISE";
     private static final String ACT_CANCEL_EXERCISE = "ACT_CANCEL_EXERCISE";
     private static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
@@ -133,6 +134,9 @@ public class ExerciseController extends HtmlBuilder
                 if (params.hasParam(ACT_SHOW_PROPERTIES)) {
                     yield Optional.of(() -> st.withShowProperties(true));
                 }
+                if (params.hasParam(ACT_CUSTOMIZE_EXERCISE)) {
+                    yield Optional.of(() -> actCustomizeExercise(st));
+                }
                 yield Optional.empty();
             }
             case ExerciseState.Started st -> {
@@ -200,6 +204,11 @@ public class ExerciseController extends HtmlBuilder
             return actGoToNextTask(st);
         }
         return st;
+    }
+
+    private ExerciseState actCustomizeExercise(ExerciseState.SetParams st) {
+        st.getRepeatStrategyCmp().setIsReadonly(false);
+        return st.withConfig("");
     }
 
     private ExerciseState actCopyCardPathToClipboard(ExerciseState.Started st) {
@@ -390,7 +399,10 @@ public class ExerciseController extends HtmlBuilder
         st.getSettings().getExercises().stream()
             .map(ex -> Pair.of(ex.getLeft(), text(ex.getLeft())))
             .forEach(options::add);
-        return select(PAR_EXERCISE_CONFIG, true, st.getConfig(), options);
+        return frag(
+            select(PAR_EXERCISE_CONFIG, true, st.getConfig(), options),
+            inpSubmit(ACT_CUSTOMIZE_EXERCISE, "Customize")
+        );
     }
 
     private HtmlElem rndProperties(ExerciseState.SetParams st) {
