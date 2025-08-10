@@ -43,7 +43,7 @@ public class IndexController extends HtmlBuilder implements StatefulWebControlle
     @Override
     public String renderState(Void state) {
         return simplePageWithTitle(
-            "Example Web App Index",
+            "ReMem Index",
             controllers.stream()
                 .map(controller -> frag(
                     br(),
