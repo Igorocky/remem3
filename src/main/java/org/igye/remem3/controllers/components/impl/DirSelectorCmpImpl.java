@@ -78,6 +78,7 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
                 List<String> subDirNames = subDirs == null ? List.of() : Arrays.stream(subDirs)
                     .filter(dir -> !dir.getName().startsWith("."))
                     .map(File::getName)
+                    .sorted()
                     .toList();
                 options = new ArrayList<>();
                 options.add(".");

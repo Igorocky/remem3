@@ -164,7 +164,9 @@ public class NewCardController extends HtmlBuilder
                 }
                 case CardDto.Translate dto -> {
                     st.getCache().put(PAR_CARD_TRANSLATE_LANG_1, dto.getLang1());
+                    st.getCache().put(PAR_CARD_TRANSLATE_EXACT_MATCH_1, dto.isExactMatch1());
                     st.getCache().put(PAR_CARD_TRANSLATE_LANG_2, dto.getLang2());
+                    st.getCache().put(PAR_CARD_TRANSLATE_EXACT_MATCH_2, dto.isExactMatch2());
                     yield 1;
                 }
             };
@@ -209,7 +211,7 @@ public class NewCardController extends HtmlBuilder
                 text("Text"),
                 table(List.of(
                     List.of(div("color:grey;", text("[[word|translation|transcription]] or [[answer|hint|notes]]"))),
-                    List.of(textarea(PAR_CARD_FILL_GAPS_TEXT, card.getText(), 100, 5))
+                    List.of(textarea(PAR_CARD_FILL_GAPS_TEXT, card.getText(), 100, 5).attr("autofocus", ""))
                 ))
             ),
             List.of(
@@ -226,14 +228,14 @@ public class NewCardController extends HtmlBuilder
                 table(List.of(List.of(
                     rndAvailableLanguages(st.getSettings(), card.getLang1(), PAR_CARD_TRANSLATE_LANG_1),
                     select(PAR_CARD_TRANSLATE_EXACT_MATCH_1, false, String.valueOf(card.isExactMatch1()), List.of(
-                        Pair.of("true", text("Exact match")),
-                        Pair.of("false", text("Approximate match"))
+                        Pair.of("true", text("= (exact match)")),
+                        Pair.of("false", text("~ (approximate match)"))
                     ))
                 )))
             ),
             List.of(
                 text("Text 1"),
-                textarea(PAR_CARD_TRANSLATE_TEXT_1, card.getText1(), 100, 5)
+                textarea(PAR_CARD_TRANSLATE_TEXT_1, card.getText1(), 100, 5).attr("autofocus", "")
             ),
             List.of(
                 div("height:30px"),
@@ -244,8 +246,8 @@ public class NewCardController extends HtmlBuilder
                 table(List.of(List.of(
                     rndAvailableLanguages(st.getSettings(), card.getLang2(), PAR_CARD_TRANSLATE_LANG_2),
                     select(PAR_CARD_TRANSLATE_EXACT_MATCH_2, false, String.valueOf(card.isExactMatch2()), List.of(
-                        Pair.of("true", text("Exact match")),
-                        Pair.of("false", text("Approximate match"))
+                        Pair.of("true", text("= (exact match)")),
+                        Pair.of("false", text("~ (approximate match)"))
                     ))
                 )))
             ),
@@ -333,18 +335,22 @@ public class NewCardController extends HtmlBuilder
                 cache.getStr(PAR_CARD_TRANSLATE_LANG_1, settings.getLanguages().getFirst())
             ))
             .text1(params.getParam(PAR_CARD_TRANSLATE_TEXT_1, ""))
-            .exactMatch1(isExactMatch(PAR_CARD_TRANSLATE_EXACT_MATCH_1, params))
+            .exactMatch1(isExactMatch(PAR_CARD_TRANSLATE_EXACT_MATCH_1, params, cache))
             .lang2(params.getParam(
                 PAR_CARD_TRANSLATE_LANG_2,
                 cache.getStr(PAR_CARD_TRANSLATE_LANG_2, settings.getLanguages().getFirst())
             ))
             .text2(params.getParam(PAR_CARD_TRANSLATE_TEXT_2, ""))
-            .exactMatch2(isExactMatch(PAR_CARD_TRANSLATE_EXACT_MATCH_2, params))
+            .exactMatch2(isExactMatch(PAR_CARD_TRANSLATE_EXACT_MATCH_2, params, cache))
             .notes(params.getParam(PAR_CARD_TRANSLATE_NOTES, ""))
             .build();
     }
 
-    private boolean isExactMatch(String paramName, RequestParams params) {
-        return !params.hasParam(paramName) || Boolean.parseBoolean(params.getParam(paramName));
+    private boolean isExactMatch(String paramName, RequestParams params, Cache cache) {
+        if (params.hasParam(paramName)) {
+            return Boolean.parseBoolean(params.getParam(paramName));
+        } else {
+            return cache.getBool(paramName, true);
+        }
     }
 }
