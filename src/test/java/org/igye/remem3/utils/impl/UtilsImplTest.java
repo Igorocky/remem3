@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +128,12 @@ class UtilsImplTest {
 
     private List<HistRec> makeHist(BigDecimal... marks) {
         return Arrays.stream(marks)
-            .map(mark -> (HistRec) org.igye.remem3.app.dto.HistRec.builder().mark(mark).build())
+            .map(mark ->
+                (HistRec) org.igye.remem3.app.dto.HistRec.builder()
+                    .mark(mark)
+                    .time(Instant.now())
+                    .build()
+            )
             .toList();
     }
 
