@@ -7,6 +7,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.App;
+import org.igye.remem3.app.AppProps;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.utils.Exn;
@@ -45,7 +46,21 @@ public class SettingsImpl implements Settings {
     private List<Pair<String, File>> exercises = List.of();
 
     public static Settings load(App app) {
-        List<String> languages = trimAndSkipEmpty(Collections.unmodifiableList(app.getPropList(PROP_LANGUAGES)));
+        return load(
+            AppProps.builder()
+                .languages(app.getPropList(PROP_LANGUAGES))
+                .directoriesWithCards(app.getPropList(PROP_DIRECTORIES_WITH_CARDS))
+                .cacheFile(app.getPropStr(PROP_CACHE_FILE))
+                .cardEditor(app.getPropStr(PROP_CARD_EDITOR))
+                .bucketDelays(app.getPropStr(PROP_BUCKET_DELAYS))
+                .exercises(app.getPropList(PROP_EXERCISES))
+                .build(),
+            app.getUtils()
+        );
+    }
+
+    public static Settings load(AppProps props, Utils utils) {
+        List<String> languages = props.getLanguages();
         checkNotEmpty(languages, PROP_LANGUAGES);
         if (languages.contains("_")) {
             throw new Exn("The underscore symbol '_' cannot be used as a language name.");
@@ -56,7 +71,7 @@ public class SettingsImpl implements Settings {
             }
         }
         List<String> directoriesWithCards = trimAndSkipEmpty(
-            Collections.unmodifiableList(app.getPropList(PROP_DIRECTORIES_WITH_CARDS))
+            Collections.unmodifiableList(props.getDirectoriesWithCards())
         );
         checkNotEmpty(directoriesWithCards, PROP_DIRECTORIES_WITH_CARDS);
         String nonExistentDirs = directoriesWithCards.stream()
@@ -70,16 +85,16 @@ public class SettingsImpl implements Settings {
         return SettingsImpl.builder()
             .languages(languages)
             .directoriesWithCards(directoriesWithCards)
-            .cacheFile(getNotBlankProp(app, PROP_CACHE_FILE))
-            .cardEditor(getNotBlankProp(app, PROP_CARD_EDITOR))
-            .bucketDelays(parseBucketDelays(app.getPropStr(PROP_BUCKET_DELAYS), app.getUtils()))
-            .exercises(loadExercises(app))
+            .cacheFile(checkNotBlank(props.getCacheFile(), PROP_CACHE_FILE))
+            .cardEditor(checkNotBlank(props.getCardEditor(), PROP_CARD_EDITOR))
+            .bucketDelays(parseBucketDelays(props.getBucketDelays(), utils))
+            .exercises(loadExercises(props.getExercises()))
             .build();
     }
 
     @SneakyThrows
-    private static List<Pair<String, File>> loadExercises(App app) {
-        List<Pair<String, File>> exercises = trimAndSkipEmpty(app.getPropList(PROP_EXERCISES)).stream()
+    private static List<Pair<String, File>> loadExercises(List<String> exercisesStr) {
+        List<Pair<String, File>> exercises = trimAndSkipEmpty(exercisesStr).stream()
             .map(nameAndPath -> {
                 String[] parts = nameAndPath.split(":");
                 if (parts.length != 2) {
@@ -167,8 +182,7 @@ public class SettingsImpl implements Settings {
 
     private static String getNotBlankProp(App app, String propName) {
         String value = app.getPropStr(propName);
-        checkNotBlank(value, propName);
-        return value;
+        return checkNotBlank(value, propName);
     }
 
     private static void checkNotEmpty(List<String> values, String propName) {
