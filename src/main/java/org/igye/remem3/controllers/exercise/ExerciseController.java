@@ -201,7 +201,13 @@ public class ExerciseController extends HtmlBuilder
 
     private ExerciseState actCustomizeExercise(ExerciseState.SetParams st) {
         st.getRepeatStrategyCmp().setIsReadonly(false);
-        return st.withConfig("");
+        return st
+            .withDirSelector(
+                new DirSelectorCmpImpl(
+                    settings, cache, st.getDirSelector().getSelectedDirectoryStr(), PAR_DIR_TO_READ_TASKS_FROM
+                )
+            )
+            .withConfig("");
     }
 
     private ExerciseState actCopyCardPathToClipboard(ExerciseState.Started st) {
@@ -391,7 +397,7 @@ public class ExerciseController extends HtmlBuilder
             .forEach(options::add);
         return frag(
             select(PAR_EXERCISE_CONFIG, true, st.getConfig(), options),
-            inpSubmit(ACT_CUSTOMIZE_EXERCISE, "Customize")
+            StringUtils.isNotBlank(st.getConfig()) ? inpSubmit(ACT_CUSTOMIZE_EXERCISE, "Customize") : null
         );
     }
 
