@@ -1,13 +1,10 @@
 package org.igye.remem3.controllers.validatecards;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.App;
 import org.igye.remem3.app.CardUtils;
-import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
-import org.igye.remem3.app.impl.CardUtilsImpl;
-import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.web.RequestParams;
@@ -20,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+@RequiredArgsConstructor
 public class ValidateCardsController extends HtmlBuilder
     implements StatefulWebController<ValidateCardsState, Supplier<ValidateCardsState>> {
 
@@ -27,14 +25,11 @@ public class ValidateCardsController extends HtmlBuilder
 
     private static final String ACT_VALIDATE = "ACT_VALIDATE";
 
-    private final App app;
+    private final CardUtils cardUtils;
 
-    public ValidateCardsController(App app) {
-        this.app = app;
-    }
 
     @Override
-    public String getPath() {
+    public String getId() {
         return "validate_cards";
     }
 
@@ -129,9 +124,6 @@ public class ValidateCardsController extends HtmlBuilder
         if (!dir.isDirectory()) {
             return st.withErrors(List.of(String.format("Not a directory: %s", dirStr)));
         }
-        app.reloadProperties();
-        Settings settings = SettingsImpl.load(app);
-        CardUtils cardUtils = new CardUtilsImpl(app.getUtils(), settings);
         List<Card> cards = cardUtils.loadAllCards(dir);
         if (cards.isEmpty()) {
             return st.withErrors(List.of(String.format("The specified directory doesn't contains cards: %s", dirStr)));

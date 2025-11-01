@@ -1,22 +1,22 @@
 package org.igye.remem3.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Service
+@RequiredArgsConstructor
 public class IndexController extends HtmlBuilder implements StatefulWebController<Void, Void> {
     private final List<StatefulWebController> controllers;
 
-    public IndexController(List<StatefulWebController> controllers) {
-        this.controllers = controllers;
-    }
-
     @Override
-    public String getPath() {
+    public String getId() {
         return "";
     }
 
@@ -47,7 +47,7 @@ public class IndexController extends HtmlBuilder implements StatefulWebControlle
             controllers.stream()
                 .map(controller -> frag(
                     br(),
-                    h("a", Map.of("href", controller.getPath()), text(controller.getTitle()))
+                    h("a", Map.of("href", controller.getId()), text(controller.getTitle()))
                 ))
                 .toList()
         ).toString();

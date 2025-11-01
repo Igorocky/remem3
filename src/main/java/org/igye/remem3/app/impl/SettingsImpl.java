@@ -6,7 +6,6 @@ import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.App;
 import org.igye.remem3.app.AppProps;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.BucketDelaysDto;
@@ -44,20 +43,6 @@ public class SettingsImpl implements Settings {
     private List<BucketDelaysDto> bucketDelays = List.of();
     @Builder.Default
     private List<Pair<String, File>> exercises = List.of();
-
-    public static Settings load(App app) {
-        return load(
-            AppProps.builder()
-                .languages(app.getPropList(PROP_LANGUAGES))
-                .directoriesWithCards(app.getPropList(PROP_DIRECTORIES_WITH_CARDS))
-                .cacheFile(app.getPropStr(PROP_CACHE_FILE))
-                .cardEditor(app.getPropStr(PROP_CARD_EDITOR))
-                .bucketDelays(app.getPropStr(PROP_BUCKET_DELAYS))
-                .exercises(app.getPropList(PROP_EXERCISES))
-                .build(),
-            app.getUtils()
-        );
-    }
 
     public static Settings load(AppProps props, Utils utils) {
         List<String> languages = props.getLanguages();
@@ -178,11 +163,6 @@ public class SettingsImpl implements Settings {
             throw new Exn("All bucket delays names must be unique");
         }
         return bucketDelays;
-    }
-
-    private static String getNotBlankProp(App app, String propName) {
-        String value = app.getPropStr(propName);
-        return checkNotBlank(value, propName);
     }
 
     private static void checkNotEmpty(List<String> values, String propName) {

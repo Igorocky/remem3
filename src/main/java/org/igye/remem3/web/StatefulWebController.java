@@ -3,10 +3,10 @@ package org.igye.remem3.web;
 import java.util.Optional;
 
 public interface StatefulWebController<S, A> {
-    String getPath();
+    String getId();
 
     default String getTitle() {
-        return getPath();
+        return getId();
     }
 
     S loadState(RequestParams params);

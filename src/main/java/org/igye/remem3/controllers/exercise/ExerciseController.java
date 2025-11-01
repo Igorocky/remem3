@@ -1,10 +1,10 @@
 package org.igye.remem3.controllers.exercise;
 
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
@@ -12,9 +12,7 @@ import org.igye.remem3.app.TaskTypeMatcher;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
-import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardUtilsImpl;
-import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
@@ -37,6 +35,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileReader;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -44,13 +43,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
+@RequiredArgsConstructor
 public class ExerciseController extends HtmlBuilder
     implements StatefulWebController<ExerciseState, Supplier<? extends ExerciseState>> {
 
@@ -72,16 +71,15 @@ public class ExerciseController extends HtmlBuilder
     private static final String PROP_DIRECTORY = "directory";
     private static final String PROP_TASKS = "tasks";
 
-    private final App app;
+    private final Clock clock;
+    private final Settings settings;
+    private final Cache cache;
     private final Utils utils;
 
-    public ExerciseController(App app) {
-        this.app = app;
-        this.utils = app.getUtils();
-    }
+    private volatile ExerciseState state;
 
     @Override
-    public String getPath() {
+    public String getId() {
         return "exercise";
     }
 
@@ -92,11 +90,8 @@ public class ExerciseController extends HtmlBuilder
 
     @Override
     public ExerciseState loadState(RequestParams params) {
-        ExerciseState prevState = params.hasParam(PAR_EXERCISE_STAGE) ? StateHolder.state.get() : null;
+        ExerciseState prevState = params.hasParam(PAR_EXERCISE_STAGE) ? state : null;
         try {
-            app.reloadProperties();
-            Settings settings = SettingsImpl.load(app);
-            Cache cache = CacheImpl.load(utils, settings);
             ExerciseStage stage = params.getParamOpt(PAR_EXERCISE_STAGE)
                 .map(ExerciseStage::valueOf)
                 .orElse(ExerciseStage.SET_PARAMS);
@@ -110,8 +105,6 @@ public class ExerciseController extends HtmlBuilder
             };
         } catch (Exception ex1) {
             try {
-                Settings settings = SettingsImpl.load(app);
-                Cache cache = CacheImpl.load(utils, settings);
                 return makeSetParamsState(settings, cache, params, prevState);
             } catch (Exception ex2) {
                 return ExerciseState.SetParams.builder()
@@ -175,7 +168,7 @@ public class ExerciseController extends HtmlBuilder
 
     @Override
     public void saveState(ExerciseState state) {
-        StateHolder.state.set(state);
+        this.state = state;
     }
 
     @Override
@@ -351,17 +344,14 @@ public class ExerciseController extends HtmlBuilder
     private Optional<TaskState> makeTaskState(CardUtils cardUtils, Task task) {
         return switch (task.getTaskType()) {
             case TaskType.FillGaps t ->
-                Optional.of(new TaskStateFillGaps(app.getClock(), utils, cardUtils, (Card.FillGaps) task.getCard(), t));
+                Optional.of(new TaskStateFillGaps(clock, utils, cardUtils, (Card.FillGaps) task.getCard(), t));
             case TaskType.Translate t ->
-                Optional.of(new TaskStateTranslate(app.getClock(), utils, cardUtils, (Card.Translate) task.getCard(),
+                Optional.of(new TaskStateTranslate(clock, utils, cardUtils, (Card.Translate) task.getCard(),
                     t));
         };
     }
 
     private ExerciseState actCancelExercise() {
-        app.reloadProperties();
-        Settings settings = SettingsImpl.load(app);
-        Cache cache = CacheImpl.load(utils, settings);
         return makeSetParamsState(settings, cache, RequestParamsImpl.empty(), null);
     }
 
@@ -663,9 +653,5 @@ public class ExerciseController extends HtmlBuilder
             text("Directory"),
             frag(st.getDirSelector().render())
         )));
-    }
-
-    private static final class StateHolder {
-        private static final AtomicReference<ExerciseState> state = new AtomicReference<>();
     }
 }

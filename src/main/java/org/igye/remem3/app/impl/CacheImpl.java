@@ -2,7 +2,6 @@ package org.igye.remem3.app.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.Settings;
 import org.igye.remem3.utils.Utils;
 
 import java.io.File;
@@ -15,11 +14,7 @@ public class CacheImpl implements Cache {
     private final File fileWithCacheData;
     private final Map<String, String> cacheData;
 
-    public static Cache load(Utils utils, Settings settings) {
-        return new CacheImpl(utils, new File(settings.getCacheFile()));
-    }
-
-    private CacheImpl(Utils utils, File fileWithCacheData) {
+    public CacheImpl(Utils utils, File fileWithCacheData) {
         this.utils = utils;
         this.fileWithCacheData = fileWithCacheData;
         Map<String, String> cacheData;

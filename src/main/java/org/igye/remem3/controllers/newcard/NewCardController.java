@@ -1,16 +1,14 @@
 package org.igye.remem3.controllers.newcard;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.App;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.CardType;
-import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardUtilsImpl;
-import org.igye.remem3.app.impl.SettingsImpl;
 import org.igye.remem3.controllers.components.DirSelectorCmp;
 import org.igye.remem3.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.html.HtmlBuilder;
@@ -30,6 +28,7 @@ import java.util.function.Supplier;
 import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
 import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_TRANSLATE_FILE_EXTENSION;
 
+@RequiredArgsConstructor
 public class NewCardController extends HtmlBuilder
     implements StatefulWebController<NewCardState, Supplier<NewCardState>> {
 
@@ -50,16 +49,12 @@ public class NewCardController extends HtmlBuilder
 
     private static final String ACT_CREATE_CARD = "ACT_CREATE_CARD";
 
-    private final App app;
+    private final Settings settings;
+    private final Cache cache;
     private final Utils utils;
 
-    public NewCardController(App app) {
-        this.app = app;
-        this.utils = app.getUtils();
-    }
-
     @Override
-    public String getPath() {
+    public String getId() {
         return "create_new_card";
     }
 
@@ -71,9 +66,6 @@ public class NewCardController extends HtmlBuilder
     @Override
     public NewCardState loadState(RequestParams params) {
         try {
-            app.reloadProperties();
-            Settings settings = SettingsImpl.load(app);
-            Cache cache = CacheImpl.load(utils, settings);
             DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, params, PAR_DIR_TO_SAVE_NEW_CARD_TO);
             return NewCardState.builder()
                 .settings(settings)
