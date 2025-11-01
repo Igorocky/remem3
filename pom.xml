@@ -7,7 +7,6 @@
     <groupId>org.igye</groupId>
     <artifactId>remem3</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>war</packaging>
     <name>Remem3</name>
 
     <parent>
