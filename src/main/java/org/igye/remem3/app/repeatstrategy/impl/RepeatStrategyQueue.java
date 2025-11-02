@@ -66,7 +66,8 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
 
     @Override
     public Optional<List<Task>> getNextTasks() {
-        List<TaskDto> allTasks = getTaskDtos();
+        List<TaskDto> allTasks = new ArrayList<>(getTaskDtos());
+        Collections.shuffle(allTasks);
         ArrayList<Task> nextTasks = new ArrayList<>(
             allTasks.stream()
                 .filter(TaskDto::isActive)
