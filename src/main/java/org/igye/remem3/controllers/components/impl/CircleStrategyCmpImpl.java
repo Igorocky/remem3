@@ -27,8 +27,10 @@ import static org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle.MAX_N
 public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
     private static final String PAR_NUMBER_OF_ROUNDS = "NUMBER_OF_ROUNDS";
     private static final String PAR_RANDOMNESS_FACTOR = "RANDOMNESS_FACTOR";
+    private static final String PAR_START_TIME = "START_TIME";
     private static final PropName PROP_ROUNDS = new PropName("rounds");
     private static final PropName PROP_RANDOMNESS = new PropName("randomness");
+    private static final PropName PROP_START_TIME = new PropName("start_time");
 
     private final Utils utils;
 
@@ -38,23 +40,29 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
     private final ParamName parRndFactor;
     private BigDecimal valRndFactor;
 
+    private final ParamName parStartTime;
+    private Optional<Instant> valStartTime;
+
     public CircleStrategyCmpImpl(Utils utils, Cache cache, String baseParamName, boolean isReadonly) {
         super(cache, baseParamName + "__CIRCLE", isReadonly);
         this.utils = utils;
         this.parRndFactor = makeParamName(PAR_RANDOMNESS_FACTOR);
         this.parNumOfRounds = makeParamName(PAR_NUMBER_OF_ROUNDS);
+        this.parStartTime = makeParamName(PAR_START_TIME);
     }
 
     public CircleStrategyCmpImpl(Utils utils, Cache cache, String baseParamName, RequestParams params) {
         this(utils, cache, baseParamName, false);
         valNumOfRounds = readCachableParam(parNumOfRounds, params, this::parseNumOfRounds, Optional::empty);
         valRndFactor = readCachableParam(parRndFactor, params, this::parseRndFactor, () -> DEFAULT_RND_FACTOR);
+        valStartTime = readCachableParam(parStartTime, params, this::parseStartTime, Optional::empty);
     }
 
     public CircleStrategyCmpImpl(Utils utils, Cache cache, String baseParamName, File configFile, Properties props) {
         this(utils, cache, baseParamName, true);
         valNumOfRounds = readProp(PROP_ROUNDS, configFile, props, this::parseNumOfRounds, Optional::empty);
         valRndFactor = readProp(PROP_RANDOMNESS, configFile, props, this::parseRndFactor, () -> DEFAULT_RND_FACTOR);
+        valStartTime = readProp(PROP_START_TIME, configFile, props, this::parseStartTime, Optional::empty);
     }
 
     @Override
@@ -72,16 +80,22 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
         if (isReadonly) {
             randomnessInput.disabled();
         }
+        HtmlTag startTimeInput = inpText(parStartTime.name(), valStartTime.map(String::valueOf).orElse(""), null);
+        if (isReadonly) {
+            startTimeInput.disabled();
+        }
         return table(List.of(
             List.of(text("Rounds"), roundsInput),
-            List.of(text("Randomness"), randomnessInput)
+            List.of(text("Randomness"), randomnessInput),
+            List.of(text("Start time"), startTimeInput)
         ));
     }
 
     @Override
     public RepeatStrategy makeRepeatStrategy(List<Task> tasks) {
         return new RepeatStrategyCircle(
-            utils, makeTasksForStrategy(tasks), Instant.now(), valRndFactor.doubleValue(), valNumOfRounds
+            utils, makeTasksForStrategy(tasks),
+            valStartTime.orElse(Instant.now()), valRndFactor.doubleValue(), valNumOfRounds
         );
     }
 
@@ -89,7 +103,8 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
     protected List<Pair<PropName, String>> getPropertiesPriv() {
         return List.of(
             Pair.of(PROP_ROUNDS, valNumOfRounds.map(String::valueOf).orElse("")),
-            Pair.of(PROP_RANDOMNESS, String.valueOf(valRndFactor))
+            Pair.of(PROP_RANDOMNESS, String.valueOf(valRndFactor)),
+            Pair.of(PROP_START_TIME, valStartTime.map(String::valueOf).orElse(""))
         );
     }
 
@@ -97,7 +112,8 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
     protected List<Pair<ParamName, String>> getParamsToCache() {
         return List.of(
             Pair.of(parNumOfRounds, valNumOfRounds.map(String::valueOf).orElse("")),
-            Pair.of(parRndFactor, String.valueOf(valRndFactor))
+            Pair.of(parRndFactor, String.valueOf(valRndFactor)),
+            Pair.of(parStartTime, valStartTime.map(String::valueOf).orElse(""))
         );
     }
 
@@ -106,6 +122,13 @@ public class CircleStrategyCmpImpl extends BaseStrategyCmpImpl {
             return Optional.empty();
         }
         return Optional.of(utils.getInRange(1, Integer.parseInt(intStr), MAX_NUM_OF_ROUNDS));
+    }
+
+    private Optional<Instant> parseStartTime(String timeStr) {
+        if (StringUtils.isBlank(timeStr)) {
+            return Optional.empty();
+        }
+        return Optional.of(Instant.parse(timeStr));
     }
 
     private BigDecimal parseRndFactor(String str) {

@@ -13,6 +13,7 @@ import org.igye.remem3.utils.Utils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -87,7 +88,8 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             numOfRounds.isPresent()
                 ? div(text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get())))
                 : div(text(format("Round: %s", progressInfo.getRound()))),
-            div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), allTasks.size())))
+            div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), allTasks.size()))),
+            div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS))))
         );
     }
 
