@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers.components.impl;
+package org.igye.remem3.app.controllers.components.impl;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -9,8 +9,8 @@ import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyBuckets;
-import org.igye.remem3.controllers.ParamName;
-import org.igye.remem3.controllers.PropName;
+import org.igye.remem3.app.controllers.ParamName;
+import org.igye.remem3.app.controllers.PropName;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;

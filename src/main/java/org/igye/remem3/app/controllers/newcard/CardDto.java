@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers.newcard;
+package org.igye.remem3.app.controllers.newcard;
 
 import lombok.Builder;
 import lombok.Getter;

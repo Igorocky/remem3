@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers.validatecards;
+package org.igye.remem3.app.controllers.validatecards;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;

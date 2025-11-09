@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers;
+package org.igye.remem3.app.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.igye.remem3.html.HtmlBuilder;

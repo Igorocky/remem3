@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers.components;
+package org.igye.remem3.app.controllers.components;
 
 import org.igye.remem3.html.HtmlElem;
 

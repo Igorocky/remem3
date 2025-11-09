@@ -1,13 +1,13 @@
-package org.igye.remem3.controllers.components.impl;
+package org.igye.remem3.app.controllers.components.impl;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.app.repeatstrategy.impl.TaskImpl;
-import org.igye.remem3.controllers.ParamName;
-import org.igye.remem3.controllers.PropName;
-import org.igye.remem3.controllers.components.RepeatStrategyCmp;
+import org.igye.remem3.app.controllers.ParamName;
+import org.igye.remem3.app.controllers.PropName;
+import org.igye.remem3.app.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Func;

@@ -5,13 +5,14 @@ import org.igye.remem3.app.AppProps;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.controllers.IndexController;
+import org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateController;
+import org.igye.remem3.app.controllers.exercise.ExerciseController;
+import org.igye.remem3.app.controllers.newcard.NewCardController;
+import org.igye.remem3.app.controllers.validatecards.ValidateCardsController;
 import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
-import org.igye.remem3.controllers.IndexController;
-import org.igye.remem3.controllers.exercise.ExerciseController;
-import org.igye.remem3.controllers.newcard.NewCardController;
-import org.igye.remem3.controllers.validatecards.ValidateCardsController;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.igye.remem3.web.DispatcherController;
@@ -77,24 +78,39 @@ public class AppConfig {
     }
 
     @Bean
+    public ConvertFillGapsToTranslateController convertFillGapsToTranslateController(
+        Settings settings, Cache cache, CardUtils cardUtils
+    ) {
+        return new ConvertFillGapsToTranslateController(settings, cache, cardUtils);
+    }
+
+    @Bean
     public IndexController indexController(
         NewCardController newCardController,
         ExerciseController exerciseController,
+        ConvertFillGapsToTranslateController convertFillGapsToTranslateController,
         ValidateCardsController validateCardsController
     ) {
-        return new IndexController(List.of(newCardController, exerciseController, validateCardsController));
+        return new IndexController(List.of(
+            newCardController,
+            exerciseController,
+            convertFillGapsToTranslateController,
+            validateCardsController
+        ));
     }
 
     @Bean
     public DispatcherController dispatcherController(
         NewCardController newCardController,
         ExerciseController exerciseController,
+        ConvertFillGapsToTranslateController convertFillGapsToTranslateController,
         ValidateCardsController validateCardsController,
         IndexController indexController
     ) {
         Map<String, StatefulWebController<?, ?>> controllers = Stream.of(
             newCardController,
             exerciseController,
+            convertFillGapsToTranslateController,
             validateCardsController,
             indexController
         ).collect(Collectors.toMap(StatefulWebController::getId, Function.identity()));

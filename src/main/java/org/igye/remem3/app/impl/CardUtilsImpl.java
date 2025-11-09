@@ -10,7 +10,7 @@ import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
-import org.igye.remem3.controllers.newcard.CardDto;
+import org.igye.remem3.app.controllers.newcard.CardDto;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 

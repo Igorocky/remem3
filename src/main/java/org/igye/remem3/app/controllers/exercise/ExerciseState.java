@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers.exercise;
+package org.igye.remem3.app.controllers.exercise;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -13,8 +13,8 @@ import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.task.TaskState;
-import org.igye.remem3.controllers.components.DirSelectorCmp;
-import org.igye.remem3.controllers.components.RepeatStrategyCmp;
+import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers.components.RepeatStrategyCmp;
 
 import java.util.List;
 import java.util.Optional;

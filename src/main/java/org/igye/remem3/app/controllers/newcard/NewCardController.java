@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers.newcard;
+package org.igye.remem3.app.controllers.newcard;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
@@ -9,8 +9,8 @@ import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.impl.CardUtilsImpl;
-import org.igye.remem3.controllers.components.DirSelectorCmp;
-import org.igye.remem3.controllers.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;

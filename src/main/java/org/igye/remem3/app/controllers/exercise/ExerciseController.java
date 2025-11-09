@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers.exercise;
+package org.igye.remem3.app.controllers.exercise;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -18,9 +18,9 @@ import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.app.task.impl.TaskStateFillGaps;
 import org.igye.remem3.app.task.impl.TaskStateTranslate;
-import org.igye.remem3.controllers.components.DirSelectorCmp;
-import org.igye.remem3.controllers.components.impl.DirSelectorCmpImpl;
-import org.igye.remem3.controllers.components.impl.RepeatStrategyCmpImpl;
+import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.controllers.components.impl.RepeatStrategyCmpImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;

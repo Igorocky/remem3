@@ -1,4 +1,4 @@
-package org.igye.remem3.controllers.newcard;
+package org.igye.remem3.app.controllers.newcard;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -7,7 +7,7 @@ import lombok.ToString;
 import lombok.With;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 
 import java.util.List;
 
