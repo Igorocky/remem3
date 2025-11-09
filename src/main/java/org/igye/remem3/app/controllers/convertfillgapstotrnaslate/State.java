@@ -8,4 +8,5 @@ import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 @Getter
 public class State {
     private DirSelectorCmp dirSelector;
+    private String gapAnsLang;
 }
