@@ -1,6 +1,7 @@
 package org.igye.remem3.app.controllers.convertfillgapstotrnaslate;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
@@ -20,8 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -31,8 +35,12 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     implements StatefulWebController<State, Supplier<State>> {
 
     private static final String PAR_DIR_TO_CONVERT_TASKS_IN = "PAR_DIR_TO_CONVERT_TASKS_IN";
-    private static final String PAR_GAP_ANS_LANG = "PAR_GAP_ANS_LANG";
+    private static final String PAR_GAP_SECOND_LANG = "PAR_GAP_SECOND_LANG";
     private static final String AUTO_GENERATED_FROM_ = "auto generated from ";
+    private static final Pattern EXISTING_CARD_KEY_PAT = Pattern.compile(
+        AUTO_GENERATED_FROM_ + "([^:]+):(.*)$",
+        Pattern.DOTALL
+    );
 
     private final Settings settings;
     private final Cache cache;
@@ -71,40 +79,49 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
                 StringUtils.join(nonUniqueNames, ", ")
             ));
         }
-        List<Card.Translate> translateCards = allCards.stream()
+        Set<NewCardKey> existingTranslateCards = allCards.stream()
             .filter(c -> c instanceof Card.Translate)
             .map(Card.Translate.class::cast)
-            .filter(c -> c.getNotes() != null && c.getNotes().startsWith(AUTO_GENERATED_FROM_))
-            .toList();
-        String gapSecondLang = cache.getStr(PAR_GAP_ANS_LANG, settings.getLanguages().getFirst());
+            .map(c -> makeKeyForExistingCard(c.getNotes()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toSet());
+        String gapSecondLang = cache.getStr(PAR_GAP_SECOND_LANG, settings.getLanguages().getFirst());
         List<Pair<NewCardKey, Card.Translate>> newTranslateCards = fillGapsCards.stream()
             .flatMap(card ->
                 card.getText().stream()
                     .filter(TextPart.Gap.class::isInstance)
                     .map(TextPart.Gap.class::cast)
                     .map(gap ->
-                        Pair.of(
-                            NewCardKey.builder()
-                                .origFileUniqueName(card.getFile().get().getName())
-                                .gapAns(gap.getAnswer())
-                                .build(),
-                            (Card.Translate) Card.Translate.builder()
-                                .file(card.getFile())
-                                .lang1(card.getLang())
-                                .text1(gap.getAnswer())
-                                .exactMatch1(true)
-                                .lang2(gapSecondLang)
-                                .text2(gap.getHint())
-                                .exactMatch2(false)
-                                .notes(gap.getNotes())
-                                .build()
-                        )
+                        {
+                            String origFileName = card.getFile().get().getName().trim();
+                            String gapAns = gap.getAnswer().trim();
+                            return Pair.of(
+                                NewCardKey.builder()
+                                    .origFileUniqueName(origFileName)
+                                    .gapAns(gapAns)
+                                    .build(),
+                                (Card.Translate) Card.Translate.builder()
+                                    .file(card.getFile())
+                                    .lang1(card.getLang())
+                                    .text1(gap.getAnswer())
+                                    .exactMatch1(true)
+                                    .lang2(gapSecondLang)
+                                    .text2(gap.getHint())
+                                    .exactMatch2(false)
+                                    .notes(format("%s\n\n%s:%s", gap.getNotes(), origFileName, gapAns))
+                                    .build()
+                            );
+                        }
                     )
             )
+            .filter(p -> !existingTranslateCards.contains(p.getLeft()))
             .toList();
         return State.builder()
+            .errors(errors)
             .dirSelector(dirSelector)
             .gapSecondLang(gapSecondLang)
+            .newTranslateCards(newTranslateCards)
             .build();
     }
 
@@ -126,9 +143,12 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     public String renderState(State st) {
         return simplePageWithTitle("Convert FillGaps to Translate",
             h4(text("Convert FillGaps to Translate")),
+            rndErrors(st.getErrors()),
             form(
                 rndDirSelector(st.getDirSelector()),
-                rndGapSecondLanguage(settings, st.getGapSecondLang())
+                !st.getErrors().isEmpty() ? null : frag(
+                    rndGapSecondLanguage(settings, st.getGapSecondLang())
+                )
             )
         ).toString();
     }
@@ -143,11 +163,37 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     private HtmlElem rndGapSecondLanguage(Settings settings, String selectedLang) {
         return table(List.of(List.of(
             text("Gap second language"),
-            select(ConvertFillGapsToTranslateController.PAR_GAP_ANS_LANG, selectedLang,
+            select(ConvertFillGapsToTranslateController.PAR_GAP_SECOND_LANG, selectedLang,
                 settings.getLanguages().stream()
                     .map(lang -> Pair.of(lang, text(lang)))
                     .toList()
             )
         )));
+    }
+
+    protected Optional<NewCardKey> makeKeyForExistingCard(String note) {
+        if (note == null) {
+            return Optional.empty();
+        }
+        Matcher matcher = EXISTING_CARD_KEY_PAT.matcher(note);
+        if (!matcher.find()) {
+            return Optional.empty();
+        }
+        return Optional.of(
+            NewCardKey.builder()
+                .origFileUniqueName(matcher.group(1).trim())
+                .gapAns(matcher.group(2).trim())
+                .build()
+        );
+    }
+
+    private HtmlElem rndErrors(List<String> errors) {
+        if (CollectionUtils.isEmpty(errors)) {
+            return null;
+        }
+        return div("color:red;",
+            h3(text("Error")),
+            ul(errors.stream().map(msg -> pre(text(msg))).toList())
+        );
     }
 }
