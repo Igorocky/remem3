@@ -59,6 +59,10 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     @Override
     public State loadState(RequestParams params) {
         DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, params, PAR_DIR_TO_CONVERT_TASKS_IN);
+        String gapSecondLang = params.getParam(
+            PAR_GAP_SECOND_LANG,
+            cache.getStr(PAR_GAP_SECOND_LANG, settings.getLanguages().getFirst())
+        );
         List<Card> allCards = cardUtils.loadAllCards(dirSelector.getSelectedDirectory());
         List<Card.FillGaps> fillGapsCards = allCards.stream()
             .filter(c -> c instanceof Card.FillGaps)
@@ -86,7 +90,6 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
             .filter(Optional::isPresent)
             .map(Optional::get)
             .collect(Collectors.toSet());
-        String gapSecondLang = cache.getStr(PAR_GAP_SECOND_LANG, settings.getLanguages().getFirst());
         List<Pair<NewCardKey, Card.Translate>> newTranslateCards = fillGapsCards.stream()
             .flatMap(card ->
                 card.getText().stream()
@@ -109,7 +112,10 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
                                     .lang2(gapSecondLang)
                                     .text2(gap.getHint())
                                     .exactMatch2(false)
-                                    .notes(format("%s\n\n%s:%s", gap.getNotes(), origFileName, gapAns))
+                                    .notes(format(
+                                        "%s\n\n%s%s:%s",
+                                        gap.getNotes(), AUTO_GENERATED_FROM_, origFileName, gapAns
+                                    ))
                                     .build()
                             );
                         }
@@ -126,12 +132,18 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     }
 
     @Override
-    public Optional<Supplier<State>> decodeAction(RequestParams params, State state) {
+    public Optional<Supplier<State>> decodeAction(RequestParams params, State st) {
+        if (!st.getErrors().isEmpty()) {
+            return Optional.empty();
+        }
         return Optional.empty();
     }
 
     @Override
-    public State updateState(State state, Supplier<State> action) {
+    public State updateState(State st, Supplier<State> action) {
+        if (!st.getErrors().isEmpty()) {
+            return st;
+        }
         return action.get();
     }
 
@@ -147,7 +159,8 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
             form(
                 rndDirSelector(st.getDirSelector()),
                 !st.getErrors().isEmpty() ? null : frag(
-                    rndGapSecondLanguage(settings, st.getGapSecondLang())
+                    rndGapSecondLanguage(settings, st.getGapSecondLang()),
+                    rndCards(st.getNewTranslateCards())
                 )
             )
         ).toString();
@@ -163,7 +176,7 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     private HtmlElem rndGapSecondLanguage(Settings settings, String selectedLang) {
         return table(List.of(List.of(
             text("Gap second language"),
-            select(ConvertFillGapsToTranslateController.PAR_GAP_SECOND_LANG, selectedLang,
+            select(ConvertFillGapsToTranslateController.PAR_GAP_SECOND_LANG, true, selectedLang,
                 settings.getLanguages().stream()
                     .map(lang -> Pair.of(lang, text(lang)))
                     .toList()
@@ -195,5 +208,33 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
             h3(text("Error")),
             ul(errors.stream().map(msg -> pre(text(msg))).toList())
         );
+    }
+
+    private HtmlElem rndCards(List<Pair<NewCardKey, Card.Translate>> cards) {
+        return table(
+            cards.stream()
+                .map(p -> List.of(
+                    text("[checkbox]"),
+                    rndCard(p.getRight())
+                ))
+                .toList()
+        );
+    }
+
+    private HtmlElem rndCard(Card.Translate card) {
+        return table(List.of(
+            List.of(
+                text(format("%s %s", card.getLang1(), card.isExactMatch1() ? "=" : "~")),
+                text(card.getText1())
+            ),
+            List.of(
+                text(format("%s %s", card.getLang2(), card.isExactMatch2() ? "=" : "~")),
+                text(card.getText2())
+            ),
+            List.of(
+                text(""),
+                pre(text(card.getNotes()))
+            )
+        ));
     }
 }
