@@ -257,9 +257,6 @@ public class CardUtilsImpl implements CardUtils {
         if (StringUtils.isBlank(text2)) {
             res.add("Text2 is not set.");
         }
-        if (lang1.equals(lang2)) {
-            res.add("Languages must be different.");
-        }
         return res;
     }
 

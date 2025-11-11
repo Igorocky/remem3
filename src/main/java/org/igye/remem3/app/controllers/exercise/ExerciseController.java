@@ -9,6 +9,9 @@ import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.TaskTypeMatcher;
+import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.controllers.components.impl.RepeatStrategyCmpImpl;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
@@ -18,9 +21,6 @@ import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.app.task.impl.TaskStateFillGaps;
 import org.igye.remem3.app.task.impl.TaskStateTranslate;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
-import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
-import org.igye.remem3.app.controllers.components.impl.RepeatStrategyCmpImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
@@ -184,14 +184,21 @@ public class ExerciseController extends HtmlBuilder
         ).toString();
     }
 
+    @SneakyThrows
     private ExerciseState actProcessTaskResults(ExerciseState.Started st, TaskResult taskResult) {
         if (taskResult.getHistRec().isPresent()) {
+            int initHistSize = getCurrentCardExn(st).getHistory().size();
             File file = getCurrentCardFileExn(st);
             st.getCardUtils().appendHistRecToFile(
                 file,
                 taskResult.getHistRec().get().withStrategy(st.getRepeatStrategyCmp().getStrategyType())
             );
-            getCurrentCardExn(st).copyFrom(st.getCardUtils().loadCard(file));
+            Card cardWithUpdatedHistory = st.getCardUtils().loadCard(file);
+            while (cardWithUpdatedHistory.getHistory().size() == initHistSize) {
+                Thread.sleep(100);
+                cardWithUpdatedHistory = st.getCardUtils().loadCard(file);
+            }
+            getCurrentCardExn(st).copyFrom(cardWithUpdatedHistory);
         }
         if (taskResult.isCompleted()) {
             return actGoToNextTask(st);
