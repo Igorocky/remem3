@@ -187,8 +187,8 @@ public class ExerciseController extends HtmlBuilder
     @SneakyThrows
     private ExerciseState actProcessTaskResults(ExerciseState.Started st, TaskResult taskResult) {
         if (taskResult.getHistRec().isPresent()) {
-            int initHistSize = getCurrentCardExn(st).getHistory().size();
             File file = getCurrentCardFileExn(st);
+            int initHistSize = st.getCardUtils().loadCard(file).getHistory().size();
             st.getCardUtils().appendHistRecToFile(
                 file,
                 taskResult.getHistRec().get().withStrategy(st.getRepeatStrategyCmp().getStrategyType())
@@ -359,8 +359,7 @@ public class ExerciseController extends HtmlBuilder
             case TaskType.FillGaps t ->
                 Optional.of(new TaskStateFillGaps(clock, utils, cardUtils, (Card.FillGaps) task.getCard(), t));
             case TaskType.Translate t ->
-                Optional.of(new TaskStateTranslate(clock, utils, cardUtils, (Card.Translate) task.getCard(),
-                    t));
+                Optional.of(new TaskStateTranslate(clock, utils, cardUtils, (Card.Translate) task.getCard(), t));
         };
     }
 
