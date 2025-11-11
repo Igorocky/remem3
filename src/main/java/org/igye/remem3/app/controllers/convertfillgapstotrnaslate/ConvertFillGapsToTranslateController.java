@@ -17,8 +17,11 @@ import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
+import java.io.File;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +41,8 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     private static final String PAR_DIR_TO_CONVERT_TASKS_IN = "PAR_DIR_TO_CONVERT_TASKS_IN";
     private static final String PAR_GAP_SECOND_LANG = "PAR_GAP_SECOND_LANG";
     private static final String PAR_SELECTED_CARD = "PAR_SELECTED_CARD";
+
+    private static final String ACT_SAVE_SELECTED_CARDS = "ACT_SAVE_SELECTED_CARDS";
 
     private static final String AUTO_GENERATED_FROM_ = "auto generated from ";
     private static final Pattern EXISTING_CARD_KEY_PAT = Pattern.compile(
@@ -125,6 +130,7 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
                     )
             )
             .filter(p -> !existingTranslateCards.contains(p.getLeft()))
+            .sorted(Comparator.comparing(p -> p.getRight().getText1().toLowerCase()))
             .toList();
         Set<NewCardKey> selectedCardKeys = Arrays.stream(params.getParams(PAR_SELECTED_CARD))
             .map(this::newCardKeyFromString)
@@ -132,6 +138,7 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
             .map(Optional::get)
             .collect(Collectors.toSet());
         return State.builder()
+            .params(params)
             .errors(errors)
             .dirSelector(dirSelector)
             .gapSecondLang(gapSecondLang)
@@ -144,6 +151,9 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     public Optional<Supplier<State>> decodeAction(RequestParams params, State st) {
         if (!st.getErrors().isEmpty()) {
             return Optional.empty();
+        }
+        if (params.hasParam(ACT_SAVE_SELECTED_CARDS)) {
+            return Optional.of(() -> actSaveSelectedCards(st));
         }
         return Optional.empty();
     }
@@ -170,7 +180,10 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
             form(
                 rndDirSelector(st.getDirSelector()),
                 !st.getErrors().isEmpty() ? null : frag(
-                    rndGapSecondLanguage(settings, st.getGapSecondLang()),
+                    table(List.of(List.of(
+                        rndGapSecondLanguage(settings, st.getGapSecondLang()),
+                        inpSubmit(ACT_SAVE_SELECTED_CARDS, "Save selected cards")
+                    ))),
                     rndCards(st.getNewTranslateCards(), st.getSelectedCardKeys())
                 )
             )
@@ -248,7 +261,7 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
                 text(""),
                 pre(text(card.getNotes()))
             )
-        ));
+        )).attr("class", "table-single-border");
     }
 
     protected Optional<NewCardKey> newCardKeyFromString(String str) {
@@ -265,5 +278,19 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
                 .gapAns(str.substring(sepIdx + 1).trim())
                 .build()
         );
+    }
+
+    private State actSaveSelectedCards(State st) {
+        st.getNewTranslateCards().stream()
+            .filter(p -> st.getSelectedCardKeys().contains(p.getLeft()))
+            .map(Pair::getRight)
+            .forEach(c -> {
+                c.setCreatedAt(Optional.of(Instant.now()));
+                cardUtils.saveCard(
+                    new File(c.getFile().get().getParentFile(), cardUtils.makeFileNameForCard(c)),
+                    c
+                );
+            });
+        return loadState(st.getParams());
     }
 }

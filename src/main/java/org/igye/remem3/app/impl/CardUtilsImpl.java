@@ -7,10 +7,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.controllers.newcard.CardDto;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
-import org.igye.remem3.app.controllers.newcard.CardDto;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -155,6 +156,16 @@ public class CardUtilsImpl implements CardUtils {
                 .history(List.of())
                 .build();
         };
+    }
+
+    @Override
+    public String makeFileNameForCard(Card card) {
+        String baseName = UUID.randomUUID().toString().replace("-", "_");
+        String extension = switch (card) {
+            case Card.FillGaps _ -> CARD_FILL_GAPS_FILE_EXTENSION;
+            case Card.Translate _ -> CARD_TRANSLATE_FILE_EXTENSION;
+        };
+        return baseName + extension;
     }
 
     @Override

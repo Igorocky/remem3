@@ -6,11 +6,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.impl.CardUtilsImpl;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
-import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
@@ -22,11 +22,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Supplier;
-
-import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_FILL_GAPS_FILE_EXTENSION;
-import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_TRANSLATE_FILE_EXTENSION;
 
 @RequiredArgsConstructor
 public class NewCardController extends HtmlBuilder
@@ -162,7 +158,7 @@ public class NewCardController extends HtmlBuilder
                     yield 1;
                 }
             };
-            cardUtils.saveCard(new File(dir, makeFileName(card)), card);
+            cardUtils.saveCard(new File(dir, cardUtils.makeFileNameForCard(card)), card);
             return st.withCardParams(clearParams(cardDto));
         } catch (Exception ex) {
             return st.withErrors(List.of(ex.getMessage()));
@@ -174,15 +170,6 @@ public class NewCardController extends HtmlBuilder
             case CardDto.FillGaps c -> c.withText("");
             case CardDto.Translate c -> c.withText1("").withText2("");
         };
-    }
-
-    private String makeFileName(Card card) {
-        String baseName = UUID.randomUUID().toString().replace("-", "_");
-        String extension = switch (card) {
-            case Card.FillGaps _ -> CARD_FILL_GAPS_FILE_EXTENSION;
-            case Card.Translate _ -> CARD_TRANSLATE_FILE_EXTENSION;
-        };
-        return baseName + extension;
     }
 
     private HtmlElem rndCard(NewCardState st) {

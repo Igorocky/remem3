@@ -3,6 +3,7 @@ package org.igye.remem3.app.dto;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
@@ -26,6 +27,8 @@ public sealed interface Card {
 
     void copyFrom(Card other);
 
+    void setCreatedAt(Optional<Instant> createdAt);
+
     @SuperBuilder
     @ToString(exclude = {"taskTypes", "tasks"})
     @EqualsAndHashCode(exclude = {"taskTypes", "tasks"})
@@ -35,6 +38,7 @@ public sealed interface Card {
         private Optional<File> file = Optional.empty();
         @Getter
         @Builder.Default
+        @Setter
         private Optional<Instant> createdAt = Optional.empty();
         @Getter
         @Builder.Default
