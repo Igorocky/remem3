@@ -1,5 +1,6 @@
 package org.igye.remem3.app.controllers.components.impl;
 
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
@@ -111,7 +112,9 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
         return Collections.unmodifiableList(getValidDirs(res, settings));
     }
 
+    @SneakyThrows
     private List<String> getSelectedDirectoryList(String dirStr) {
+        dirStr = new File(dirStr).getCanonicalPath();
         ArrayList<String> res = new ArrayList<>();
         for (String dirFromSettings : settings.getDirectoriesWithCards()) {
             if (dirStr.startsWith(dirFromSettings)) {

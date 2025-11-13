@@ -4,11 +4,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.dto.Task;
-import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.controllers.ParamName;
 import org.igye.remem3.app.controllers.PropName;
 import org.igye.remem3.app.controllers.components.RepeatStrategyCmp;
+import org.igye.remem3.app.dto.Task;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;
@@ -121,5 +121,11 @@ public class RepeatStrategyCmpImpl extends BaseStrategyCmpImpl {
     @Override
     protected List<Pair<ParamName, String>> getParamsToCache() {
         return List.of(Pair.of(parStrategyType, valStrategyType.toString()));
+    }
+
+    @Override
+    public void setIsReadonly(boolean isReadonly) {
+        super.setIsReadonly(isReadonly);
+        childCmp.setIsReadonly(isReadonly);
     }
 }
