@@ -297,6 +297,49 @@ class CardUtilsImplTest {
     }
 
     @Test
+    void validateCard_CardTranslate() {
+        CardUtilsImpl cards = new CardUtilsImpl(
+            new UtilsImpl(new ObjectMapper()),
+            SettingsImpl.builder().languages(List.of("EN", "PL")).build()
+        );
+
+        Card.Translate card = Card.Translate.builder().build();
+
+        Assertions.assertEquals(
+            List.of(
+                "Language1 is not set.", "Text1 is not set.", "Language2 is not set.", "Text2 is not set.",
+                "Languages must be different."
+            ),
+            cards.validateCard(card)
+        );
+
+        card = Card.Translate.builder()
+            .lang1("ABC")
+            .text1("111")
+            .lang2("DEF")
+            .text2("222")
+            .build();
+
+        Assertions.assertEquals(
+            List.of("Language1 'ABC' is not registered.", "Language2 'DEF' is not registered."),
+            cards.validateCard(card)
+        );
+
+        card = Card.Translate.builder()
+            .lang1("EN")
+            .text1("111")
+            .lang2("PL")
+            .text2("222")
+            .build();
+
+        Assertions.assertEquals(
+            List.of(),
+            cards.validateCard(card)
+        );
+
+    }
+
+    @Test
     void histRecToStr() {
         CardUtilsImpl cards = new CardUtilsImpl(
             new UtilsImpl(new ObjectMapper()),

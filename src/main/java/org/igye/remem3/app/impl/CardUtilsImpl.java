@@ -89,7 +89,7 @@ public class CardUtilsImpl implements CardUtils {
             return stream
                 .map(Path::toFile)
                 .filter(File::isFile)
-                .filter(file -> file.getName().endsWith(".card"))
+                .filter(file -> file.getName().endsWith(CARD_EXTENSION))
                 .map(this::loadCard)
                 .toList();
         }
@@ -256,6 +256,11 @@ public class CardUtilsImpl implements CardUtils {
         String text2 = card.getText2();
         if (StringUtils.isBlank(text2)) {
             res.add("Text2 is not set.");
+        }
+        if (lang1.equals(lang2)) {
+            res.add("Languages must be different.");
+            //otherwise we will have two identical tasks pointing to the same card and this will cause problems
+            //in repeat strategies
         }
         return res;
     }

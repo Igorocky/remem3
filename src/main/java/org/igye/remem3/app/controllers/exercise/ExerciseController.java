@@ -188,17 +188,11 @@ public class ExerciseController extends HtmlBuilder
     private ExerciseState actProcessTaskResults(ExerciseState.Started st, TaskResult taskResult) {
         if (taskResult.getHistRec().isPresent()) {
             File file = getCurrentCardFileExn(st);
-            int initHistSize = st.getCardUtils().loadCard(file).getHistory().size();
             st.getCardUtils().appendHistRecToFile(
                 file,
                 taskResult.getHistRec().get().withStrategy(st.getRepeatStrategyCmp().getStrategyType())
             );
-            Card cardWithUpdatedHistory = st.getCardUtils().loadCard(file);
-            while (cardWithUpdatedHistory.getHistory().size() == initHistSize) {
-                Thread.sleep(100);
-                cardWithUpdatedHistory = st.getCardUtils().loadCard(file);
-            }
-            getCurrentCardExn(st).copyFrom(cardWithUpdatedHistory);
+            getCurrentCardExn(st).copyFrom(st.getCardUtils().loadCard(file));
         }
         if (taskResult.isCompleted()) {
             return actGoToNextTask(st);
