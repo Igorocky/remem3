@@ -52,9 +52,10 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
         return selectedDirectoryList;
     }
 
+    @SneakyThrows
     @Override
     public String getSelectedDirectoryStr() {
-        return StringUtils.join(getSelectedDirectoryList().stream().filter(dir -> !dir.startsWith(".")).toList(), '/');
+        return new File(StringUtils.join(getSelectedDirectoryList(), '/')).getCanonicalPath();
     }
 
     @Override
