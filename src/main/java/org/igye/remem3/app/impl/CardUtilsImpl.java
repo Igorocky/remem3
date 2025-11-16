@@ -446,11 +446,11 @@ public class CardUtilsImpl implements CardUtils {
         return gapParts[i].trim();
     }
 
-    private Map<String, List<String>> parseProps(String str) {
+    protected Map<String, List<String>> parseProps(String str) {
         HashMap<String, List<String>> res = new HashMap<>();
-        List<String> buf = null;
+        List<String> buf = new ArrayList<>();
         String key = null;
-        for (String line : str.split("[\\n\\r]+")) {
+        for (String line : str.split("\\r?\\n")) {
             if (line.startsWith("###")) {
                 if (key != null) {
                     res.put(key, buf);

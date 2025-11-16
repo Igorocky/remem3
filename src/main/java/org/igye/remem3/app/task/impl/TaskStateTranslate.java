@@ -154,7 +154,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         return frag(
             div(text(format("%s -> %s", taskType.getLangFrom(), taskType.getLangTo()))),
             br(),
-            div(text(textToTranslate)),
+            div(pre(text(textToTranslate))),
             br(),
             div(rndUserAnswer()),
             br(),

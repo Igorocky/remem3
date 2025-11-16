@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 class CardUtilsImplTest {
@@ -357,5 +358,37 @@ class CardUtilsImplTest {
                     .build()
             )
         );
+    }
+
+    @Test
+    void parseProps() {
+        //given
+        CardUtilsImpl cards = new CardUtilsImpl(
+            new UtilsImpl(new ObjectMapper()),
+            SettingsImpl.builder().languages(List.of("EN")).build()
+        );
+
+        //then
+        Assertions.assertEquals(
+            Map.of("###a", List.of()),
+            cards.parseProps("###a")
+        );
+        Assertions.assertEquals(
+            Map.of("###a", List.of("1")),
+            cards.parseProps("###a\n1")
+        );
+        Assertions.assertEquals(
+            Map.of("###a", List.of("1", "2")),
+            cards.parseProps("###a\n1\n2")
+        );
+        Assertions.assertEquals(
+            Map.of("###a", List.of("1", "", "2")),
+            cards.parseProps("###a\n1\n\n2")
+        );
+        Assertions.assertEquals(
+            Map.of("###a", List.of("1", "", "2")),
+            cards.parseProps("###a\n1\n\r\n2")
+        );
+
     }
 }
