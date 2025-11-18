@@ -103,6 +103,7 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
                 card.getText().stream()
                     .filter(TextPart.Gap.class::isInstance)
                     .map(TextPart.Gap.class::cast)
+                    .filter(gap -> StringUtils.isNotBlank(gap.getHint()))
                     .map(gap ->
                         {
                             String origFileName = card.getFile().get().getName().trim();
