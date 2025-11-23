@@ -37,13 +37,10 @@ public class SubtitlesParserImpl implements SubtitlesParser {
             }
             long idx = Long.parseLong(line);
             Pair<Duration, Duration> period = parsePeriod(lines.get(i++));
-            StringBuilder text = new StringBuilder();
+            List<String> text = new ArrayList<>();
             line = lines.get(i++);
             while (StringUtils.isNotBlank(line)) {
-                if (!text.isEmpty()) {
-                    text.append("\n");
-                }
-                text.append(line);
+                text.add(line);
                 if (i == lines.size()) {
                     break;
                 }
@@ -54,7 +51,7 @@ public class SubtitlesParserImpl implements SubtitlesParser {
                     .idx(idx)
                     .start(period.getLeft())
                     .end(period.getRight())
-                    .text(text.toString())
+                    .text(text)
                     .build()
             );
         }

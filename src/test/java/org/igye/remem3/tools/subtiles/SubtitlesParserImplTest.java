@@ -36,19 +36,19 @@ class SubtitlesParserImplTest {
                     .idx(1)
                     .start(Duration.ofHours(0).plusMinutes(2).plusSeconds(8).plusMillis(63))
                     .end(Duration.ofHours(0).plusMinutes(2).plusSeconds(10).plusMillis(632))
-                    .text("There is a price to\nbe paid for that.")
+                    .text(List.of("There is a price to", "be paid for that."))
                     .build(),
                 Subtitle.builder()
                     .idx(2)
                     .start(Duration.ofHours(0).plusMinutes(2).plusSeconds(10).plusMillis(664))
                     .end(Duration.ofHours(0).plusMinutes(2).plusSeconds(12).plusMillis(233))
-                    .text("Of course we'll help you.")
+                    .text(List.of("Of course we'll help you."))
                     .build(),
                 Subtitle.builder()
                     .idx(3)
                     .start(Duration.ofHours(0).plusMinutes(2).plusSeconds(23).plusMillis(177))
                     .end(Duration.ofHours(0).plusMinutes(2).plusSeconds(25).plusMillis(347))
-                    .text("Everything's\nchanging.")
+                    .text(List.of("Everything's", "changing."))
                     .build()
             ),
             parsed
