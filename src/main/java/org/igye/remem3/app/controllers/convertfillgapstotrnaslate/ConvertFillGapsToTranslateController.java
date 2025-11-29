@@ -14,6 +14,7 @@ import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
@@ -44,12 +45,8 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
 
     private static final String ACT_SAVE_SELECTED_CARDS = "ACT_SAVE_SELECTED_CARDS";
 
-    private static final String AUTO_GENERATED_FROM_ = "auto generated from ";
     public static final String ATTR_AUTO_GENERATED_FROM = "auto_generated_from";
-    public static final Pattern EXISTING_CARD_KEY_PAT = Pattern.compile(
-        AUTO_GENERATED_FROM_ + "([^:]+):(.*)$",
-        Pattern.DOTALL
-    );
+    public static final Pattern EXISTING_CARD_KEY_PAT = Pattern.compile("^([^:]+):(.*)$", Pattern.DOTALL);
 
     private final Settings settings;
     private final Cache cache;
@@ -95,7 +92,7 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
         Set<NewCardKey> existingTranslateCards = allCards.stream()
             .filter(c -> c instanceof Card.Translate)
             .map(Card.Translate.class::cast)
-            .map(c -> makeKeyForExistingCard(c.getNotes()))
+            .map(this::makeKeyForExistingCard)
             .filter(Optional::isPresent)
             .map(Optional::get)
             .collect(Collectors.toSet());
@@ -122,9 +119,10 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
                                     .lang2(gapSecondLang)
                                     .text2(gap.getHint())
                                     .exactMatch2(false)
-                                    .notes(format(
-                                        "%s\n\n%s%s:%s",
-                                        gap.getNotes(), AUTO_GENERATED_FROM_, origFileName, gapAns
+                                    .notes(gap.getNotes())
+                                    .attrs(Map.of(
+                                        ATTR_AUTO_GENERATED_FROM,
+                                        format("%s:%s", origFileName, gapAns)
                                     ))
                                     .build()
                             );
@@ -210,13 +208,14 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
         )));
     }
 
-    protected Optional<NewCardKey> makeKeyForExistingCard(String note) {
-        if (note == null) {
+    protected Optional<NewCardKey> makeKeyForExistingCard(Card.Translate card) {
+        if (!card.getAttrs().containsKey(ATTR_AUTO_GENERATED_FROM)) {
             return Optional.empty();
         }
-        Matcher matcher = EXISTING_CARD_KEY_PAT.matcher(note);
-        if (!matcher.find()) {
-            return Optional.empty();
+        String src = card.getAttrs().get(ATTR_AUTO_GENERATED_FROM);
+        Matcher matcher = EXISTING_CARD_KEY_PAT.matcher(src);
+        if (!matcher.matches()) {
+            throw new Exn(format("Cannot parse %s attribute value: '%s'.", ATTR_AUTO_GENERATED_FROM, src));
         }
         return Optional.of(
             NewCardKey.builder()
