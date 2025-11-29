@@ -142,6 +142,7 @@ public sealed interface Card {
         @Builder.Default
         private boolean exactMatch2 = true;
         @Getter
+        @Setter
         @Builder.Default
         private String notes = "";
 

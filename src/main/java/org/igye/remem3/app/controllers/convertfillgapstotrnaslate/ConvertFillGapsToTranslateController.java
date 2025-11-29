@@ -45,7 +45,8 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     private static final String ACT_SAVE_SELECTED_CARDS = "ACT_SAVE_SELECTED_CARDS";
 
     private static final String AUTO_GENERATED_FROM_ = "auto generated from ";
-    private static final Pattern EXISTING_CARD_KEY_PAT = Pattern.compile(
+    public static final String ATTR_AUTO_GENERATED_FROM = "auto_generated_from";
+    public static final Pattern EXISTING_CARD_KEY_PAT = Pattern.compile(
         AUTO_GENERATED_FROM_ + "([^:]+):(.*)$",
         Pattern.DOTALL
     );
