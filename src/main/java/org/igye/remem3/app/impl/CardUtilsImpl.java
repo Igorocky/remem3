@@ -31,7 +31,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.lang.String.format;
 
 @RequiredArgsConstructor
 public class CardUtilsImpl implements CardUtils {
@@ -51,6 +54,7 @@ public class CardUtilsImpl implements CardUtils {
     private static final String ATTR_NOTES = "###notes";
     private static final String ATTR_HIST = "###hist";
     private static final String ATTR_CREATED_AT = "###created_at";
+    private static final String ATTR_PREFIX = "###attr__";
     private static final String CARD_EXTENSION = ".card";
     public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg" + CARD_EXTENSION;
     public static final String CARD_TRANSLATE_FILE_EXTENSION = ".tr" + CARD_EXTENSION;
@@ -72,7 +76,7 @@ public class CardUtilsImpl implements CardUtils {
             throw new Exn("Unsupported type of card " + file.getAbsolutePath());
         } catch (Exception ex) {
             throw new Exn(
-                String.format(
+                format(
                     "An exception occurred while reading a card from the file %s: %s",
                     file.getAbsolutePath(),
                     ex.getMessage()
@@ -108,7 +112,7 @@ public class CardUtilsImpl implements CardUtils {
             );
         } catch (Exception ex) {
             throw new Exn(
-                String.format(
+                format(
                     "An exception occurred while writing a card to the file %s: %s",
                     file.getAbsolutePath(),
                     ex.getMessage()
@@ -183,7 +187,7 @@ public class CardUtilsImpl implements CardUtils {
             String gapText = matcher.group(1);
             String[] gapParts = gapText.split("\\|");
             if (gapParts.length > 3) {
-                throw new Exn(String.format("gapParts.length > 3 for %s", gapText));
+                throw new Exn(format("gapParts.length > 3 for %s", gapText));
             }
             res.add(
                 TextPart.Gap.builder()
@@ -206,7 +210,7 @@ public class CardUtilsImpl implements CardUtils {
         if (StringUtils.isBlank(lang)) {
             res.add("Language is not set.");
         } else if (!settings.getLanguages().contains(lang)) {
-            res.add(String.format("Language '%s' is not registered.", lang));
+            res.add(format("Language '%s' is not registered.", lang));
         }
         List<TextPart> text = card.getText();
         if (CollectionUtils.isEmpty(text)) {
@@ -241,7 +245,7 @@ public class CardUtilsImpl implements CardUtils {
         if (StringUtils.isBlank(lang1)) {
             res.add("Language1 is not set.");
         } else if (!settings.getLanguages().contains(lang1)) {
-            res.add(String.format("Language1 '%s' is not registered.", lang1));
+            res.add(format("Language1 '%s' is not registered.", lang1));
         }
         String text1 = card.getText1();
         if (StringUtils.isBlank(text1)) {
@@ -251,7 +255,7 @@ public class CardUtilsImpl implements CardUtils {
         if (StringUtils.isBlank(lang2)) {
             res.add("Language2 is not set.");
         } else if (!settings.getLanguages().contains(lang2)) {
-            res.add(String.format("Language2 '%s' is not registered.", lang2));
+            res.add(format("Language2 '%s' is not registered.", lang2));
         }
         String text2 = card.getText2();
         if (StringUtils.isBlank(text2)) {
@@ -272,6 +276,7 @@ public class CardUtilsImpl implements CardUtils {
         sb.append("\n\n").append(ATTR_TEXT).append("\n");
         appendText(sb, card.getText());
         sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
+        saveAttrs(sb, card.getAttrs());
         appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
         return sb.toString();
     }
@@ -285,8 +290,15 @@ public class CardUtilsImpl implements CardUtils {
         sb.append("\n\n").append(ATTR_TEXT_2).append("\n").append(card.getText2());
         sb.append("\n\n").append(ATTR_EXACT_MATCH_2).append("\n").append(card.isExactMatch2() ? "y" : "n");
         sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
+        saveAttrs(sb, card.getAttrs());
         appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
         return sb.toString();
+    }
+
+    private void saveAttrs(StringBuilder sb, Map<String, String> attrs) {
+        attrs.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .forEach(e -> sb.append("\n\n").append(ATTR_PREFIX).append(e.getKey()).append("\n").append(e.getValue()));
     }
 
     private void appendCreatedAtAndHist(StringBuilder sb, Optional<Instant> createdAt, List<HistRec> hist) {
@@ -370,6 +382,7 @@ public class CardUtilsImpl implements CardUtils {
             .exactMatch2(getBool(props, ATTR_EXACT_MATCH_2, true))
             .notes(getStr(props, ATTR_NOTES, "").trim())
             .history(parseHistory(props.computeIfAbsent(ATTR_HIST, _ -> List.of())))
+            .attrs(extractAttrs(props))
             .build();
     }
 
@@ -383,8 +396,23 @@ public class CardUtilsImpl implements CardUtils {
             .text(parseText(getStr(props, ATTR_TEXT, "").trim()))
             .notes(getStr(props, ATTR_NOTES, "").trim())
             .history(parseHistory(props.computeIfAbsent(ATTR_HIST, _ -> List.of())))
+            .attrs(extractAttrs(props))
             .build();
     }
+
+    private Map<String, String> extractAttrs(Map<String, List<String>> props) {
+        return props.entrySet().stream()
+            .filter(e -> e.getKey().startsWith(ATTR_PREFIX))
+            .collect(Collectors.toMap(
+                e -> e.getKey().substring(ATTR_PREFIX.length()),
+                e -> StringUtils.join(e.getValue(), "\n").trim(),
+                (_, _) -> {
+                    throw new Exn("There was a duplicated attribute name.");
+                },
+                HashMap::new
+            ));
+    }
+
 
     private String getStr(Map<String, List<String>> props, String propName, String defaultValue) {
         return StringUtils.join(props.computeIfAbsent(propName, _ -> List.of(defaultValue)), "\n");
@@ -402,7 +430,7 @@ public class CardUtilsImpl implements CardUtils {
         } else if ("n".equalsIgnoreCase(boolStr) || "false".equalsIgnoreCase(boolStr)) {
             return false;
         } else {
-            throw new Exn(String.format("Cannot parse a boolean value '%s'.", boolStr));
+            throw new Exn(format("Cannot parse a boolean value '%s'.", boolStr));
         }
     }
 
@@ -427,7 +455,7 @@ public class CardUtilsImpl implements CardUtils {
     protected HistRec parseHistoryRec(String str) {
         Matcher matcher = HIST_PATTERN.matcher(str);
         if (!matcher.matches()) {
-            throw new Exn(String.format("Cannot parse a history record: %s", str));
+            throw new Exn(format("Cannot parse a history record: %s", str));
         }
         String notes = matcher.group(6);
         return HistRec.builder()
@@ -453,7 +481,7 @@ public class CardUtilsImpl implements CardUtils {
         for (String line : str.split("\\r?\\n")) {
             if (line.startsWith("###")) {
                 if (key != null) {
-                    res.put(key, buf);
+                    putKeyVal(res, key, buf);
                 }
                 key = line.trim();
                 buf = new ArrayList<>();
@@ -464,8 +492,16 @@ public class CardUtilsImpl implements CardUtils {
             }
         }
         if (key != null) {
-            res.put(key, buf);
+            putKeyVal(res, key, buf);
         }
         return res;
+    }
+
+    private void putKeyVal(HashMap<String, List<String>> props, String key, List<String> val) {
+        if (!props.containsKey(key)) {
+            props.put(key, val);
+        } else {
+            throw new Exn(format("Duplicated key '%s'.", key));
+        }
     }
 }

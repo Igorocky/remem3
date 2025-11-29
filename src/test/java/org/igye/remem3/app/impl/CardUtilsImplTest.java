@@ -191,6 +191,10 @@ class CardUtilsImplTest {
                         .build()
                 )
             )
+            .attrs(Map.of(
+                "single-line-attr", "abc123",
+                "multi-line-attr", "abc\n123\n..."
+            ))
             .build();
 
         Assertions.assertEquals(

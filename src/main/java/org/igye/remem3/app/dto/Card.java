@@ -11,7 +11,9 @@ import org.igye.remem3.app.dto.fillgaps.TextPart;
 import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public sealed interface Card {
@@ -24,6 +26,8 @@ public sealed interface Card {
     List<TaskType> getTaskTypes();
 
     List<Task> getTasks();
+
+    Map<String, String> getAttrs();
 
     void copyFrom(Card other);
 
@@ -43,6 +47,9 @@ public sealed interface Card {
         @Getter
         @Builder.Default
         private List<HistRec> history = List.of();
+        @Getter
+        @Builder.Default
+        private Map<String, String> attrs = new HashMap<>();
 
         private List<TaskType> taskTypes;
         private List<Task> tasks;
