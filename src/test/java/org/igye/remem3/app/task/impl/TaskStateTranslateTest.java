@@ -606,7 +606,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlExactMatchNoCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
             inpSubmit(ACT_SHOW_ANS, "Show answer")
                 .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
@@ -616,7 +616,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlExactMatchNoCorrectAnswerShowAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus")
         );
     }
@@ -624,7 +624,8 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlExactMatchHasCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true).attr("size", "150")
-                .attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus " +
+                    "font-family-monospace"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task")
                 .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
@@ -635,7 +636,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlApproxMatchNoAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
             inpSubmit(ACT_SHOW_ANS, "Show answer")
                 .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
@@ -645,7 +646,8 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlApproxMatchHasAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus " +
+                    "font-family-monospace"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK_WITH_MARK + ":0", "Incorrect")
                 .attr("style", format("background-color: %s;", RED)).attr("class", "border-on-focus")
@@ -658,7 +660,8 @@ class TaskStateTranslateTest extends HtmlBuilder {
     private void assertHtmlApproxMatchShowAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
-                .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus"),
+                .attr("size", "150").attr("disabled", "").attr("spellcheck", "false").attr("class", "border-on-focus " +
+                    "font-family-monospace"),
             inpHidden(PAR_USER_ANS, userAns),
             inpSubmit(ACT_COMPLETE_TASK, "Next task")
                 .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
