@@ -170,7 +170,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         List<HtmlElem> content = new ArrayList<>();
         content.add(text(exactMatch ? "= " : "~ "));
         HtmlTag inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER, true)
-            .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus");
+            .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace");
         content.add(inpText);
         if (!exactMatch && showAnswer || userAnswerIsCorrect.orElse(false)) {
             inpText.disabled();

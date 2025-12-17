@@ -11,3 +11,7 @@
     border: 4px solid #fff200;
     /*box-shadow: 0 0 4px 4px rgb(0 10 255);*/
 }
+
+.font-family-monospace {
+    font-family: 'Courier New', monospace;
+}
