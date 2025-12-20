@@ -113,7 +113,7 @@ public class NewCardController extends HtmlBuilder
                 br(),
                 div(rndCard(st)),
                 br(),
-                inpSubmit(ACT_CREATE_CARD, "Save")
+                inpSubmit(ACT_CREATE_CARD, "Save").attr("tabindex", "3")
             )
         ).toString();
     }
@@ -241,7 +241,7 @@ public class NewCardController extends HtmlBuilder
             ),
             List.of(
                 text("Notes"),
-                textarea(PAR_CARD_TRANSLATE_NOTES, card.getNotes(), 100, 5).attr("tabindex", "3")
+                textarea(PAR_CARD_TRANSLATE_NOTES, card.getNotes(), 100, 5)
             )
         ));
     }
