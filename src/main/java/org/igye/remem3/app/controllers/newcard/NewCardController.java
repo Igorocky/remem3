@@ -215,6 +215,7 @@ public class NewCardController extends HtmlBuilder
             List.of(
                 text("Text 1"),
                 textarea(PAR_CARD_TRANSLATE_TEXT_1, card.getText1(), 100, 5).attr("autofocus", "")
+                    .attr("tabindex", "1")
             ),
             List.of(
                 div("height:30px"),
@@ -232,7 +233,7 @@ public class NewCardController extends HtmlBuilder
             ),
             List.of(
                 text("Text 2"),
-                textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5)
+                textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5).attr("tabindex", "2")
             ),
             List.of(
                 div("height:30px"),
@@ -240,7 +241,7 @@ public class NewCardController extends HtmlBuilder
             ),
             List.of(
                 text("Notes"),
-                textarea(PAR_CARD_TRANSLATE_NOTES, card.getNotes(), 100, 5)
+                textarea(PAR_CARD_TRANSLATE_NOTES, card.getNotes(), 100, 5).attr("tabindex", "3")
             )
         ));
     }
