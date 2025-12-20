@@ -190,7 +190,10 @@ public class NewCardController extends HtmlBuilder
                 text("Text"),
                 table(List.of(
                     List.of(div("color:grey;", text("[[word|translation|transcription]] or [[answer|hint|notes]]"))),
-                    List.of(textarea(PAR_CARD_FILL_GAPS_TEXT, card.getText(), 100, 5).attr("autofocus", ""))
+                    List.of(
+                        textarea(PAR_CARD_FILL_GAPS_TEXT, card.getText(), 100, 5).attr("autofocus", "")
+                            .attr("tabindex", "2")
+                    )
                 ))
             ),
             List.of(
