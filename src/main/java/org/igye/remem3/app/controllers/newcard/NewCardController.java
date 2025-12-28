@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static java.lang.String.format;
+
 @RequiredArgsConstructor
 public class NewCardController extends HtmlBuilder
     implements StatefulWebController<NewCardState, Supplier<NewCardState>> {
@@ -37,9 +39,11 @@ public class NewCardController extends HtmlBuilder
 
     private static final String PAR_CARD_TRANSLATE_LANG_1 = "PAR_CARD_TRANSLATE_LANG_1";
     private static final String PAR_CARD_TRANSLATE_EXACT_MATCH_1 = "PAR_CARD_TRANSLATE_EXACT_MATCH_1";
+    private static final String ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1 = "ID_" + PAR_CARD_TRANSLATE_EXACT_MATCH_1;
     private static final String PAR_CARD_TRANSLATE_TEXT_1 = "PAR_CARD_TRANSLATE_TEXT_1";
     private static final String PAR_CARD_TRANSLATE_LANG_2 = "PAR_CARD_TRANSLATE_LANG_2";
     private static final String PAR_CARD_TRANSLATE_EXACT_MATCH_2 = "PAR_CARD_TRANSLATE_EXACT_MATCH_2";
+    private static final String ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2 = "ID_" + PAR_CARD_TRANSLATE_EXACT_MATCH_2;
     private static final String PAR_CARD_TRANSLATE_TEXT_2 = "PAR_CARD_TRANSLATE_TEXT_2";
     private static final String PAR_CARD_TRANSLATE_NOTES = "PAR_CARD_TRANSLATE_NOTES";
 
@@ -132,10 +136,10 @@ public class NewCardController extends HtmlBuilder
             if (!dir.exists()) {
                 dir.mkdirs();
                 if (!dir.exists()) {
-                    return st.withErrors(List.of(String.format("Cannot create a directory: %s", dirStr)));
+                    return st.withErrors(List.of(format("Cannot create a directory: %s", dirStr)));
                 }
             } else if (!dir.isDirectory()) {
-                return st.withErrors(List.of(String.format("Not a directory: %s", dirStr)));
+                return st.withErrors(List.of(format("Not a directory: %s", dirStr)));
             }
             CardUtils cardUtils = new CardUtilsImpl(utils, st.getSettings());
             CardDto cardDto = st.getCardParams();
@@ -212,13 +216,14 @@ public class NewCardController extends HtmlBuilder
                     select(PAR_CARD_TRANSLATE_EXACT_MATCH_1, false, String.valueOf(card.isExactMatch1()), List.of(
                         Pair.of("true", text("= (exact match)")),
                         Pair.of("false", text("~ (approximate match)"))
-                    ))
+                    )).attr("id", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1)
                 )))
             ),
             List.of(
                 text("Text 1"),
                 textarea(PAR_CARD_TRANSLATE_TEXT_1, card.getText1(), 100, 5).attr("autofocus", "")
                     .attr("tabindex", "1")
+                    .attr("onkeydown", format("toggleExactMatch(event,\"%s\")", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1))
             ),
             List.of(
                 div("height:30px"),
@@ -231,12 +236,14 @@ public class NewCardController extends HtmlBuilder
                     select(PAR_CARD_TRANSLATE_EXACT_MATCH_2, false, String.valueOf(card.isExactMatch2()), List.of(
                         Pair.of("true", text("= (exact match)")),
                         Pair.of("false", text("~ (approximate match)"))
-                    ))
+                    )).attr("id", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2)
                 )))
             ),
             List.of(
                 text("Text 2"),
-                textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5).attr("tabindex", "2")
+                textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5)
+                    .attr("tabindex", "2")
+                    .attr("onkeydown", format("toggleExactMatch(event,\"%s\")", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2))
             ),
             List.of(
                 div("height:30px"),
