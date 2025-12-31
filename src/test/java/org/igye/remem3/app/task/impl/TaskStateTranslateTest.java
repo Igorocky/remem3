@@ -28,6 +28,7 @@ import static java.lang.String.format;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_COMPLETE_TASK;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_COMPLETE_TASK_WITH_MARK;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SHOW_ANS;
+import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SHOW_EXAMPLE;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SUBMIT_ANSWER;
 import static org.igye.remem3.app.task.impl.TaskStateTranslate.PAR_USER_ANS;
 
@@ -156,6 +157,50 @@ class TaskStateTranslateTest extends HtmlBuilder {
         );
         html = state.render();
         assertHtmlExactMatchNoCorrectAnswerShowAnswer(html, "");
+
+        //submit the correct answer
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("T2", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlExactMatchHasCorrectAnswer(html, "T2");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
+    @Test
+    void exactMatch_showEx_ansV() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-14T13:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(true).example1("E1")
+            .lang2("L2").text2("T2").exactMatch2(true).example2("E2")
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlExactMatchNoCorrectAnswerHasExample(html, "");
+
+        //click "show example"
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitShowExample(html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-14T13:03:10Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP  ###ACT <<<show_example>>>")
+                .build()
+        );
+        html = state.render();
+        assertHtmlExactMatchNoCorrectAnswerShowExample(html, "");
 
         //submit the correct answer
         clock.plusSeconds(10);
@@ -613,11 +658,33 @@ class TaskStateTranslateTest extends HtmlBuilder {
         );
     }
 
+    private void assertHtmlExactMatchNoCorrectAnswerHasExample(HtmlElem html, String userAns) {
+        testUtils.assertInputs(html,
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace"),
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
+            inpSubmit(ACT_SHOW_EXAMPLE, "Show example")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus"),
+            inpSubmit(ACT_SHOW_ANS, "Show answer")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
+        );
+    }
+
     private void assertHtmlExactMatchNoCorrectAnswerShowAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
                 .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace"),
             inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus")
+        );
+    }
+
+    private void assertHtmlExactMatchNoCorrectAnswerShowExample(HtmlElem html, String userAns) {
+        testUtils.assertInputs(html,
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace"),
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
+            inpSubmit(ACT_SHOW_ANS, "Show answer")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
         );
     }
 
@@ -676,6 +743,10 @@ class TaskStateTranslateTest extends HtmlBuilder {
 
     private TaskResult submitShowAnswer(HtmlElem html, TaskState state) {
         return state.processUserInput(testUtils.submit(html, ACT_SHOW_ANS));
+    }
+
+    private TaskResult submitShowExample(HtmlElem html, TaskState state) {
+        return state.processUserInput(testUtils.submit(html, ACT_SHOW_EXAMPLE));
     }
 
     private TaskResult submitCompleteTask(HtmlElem html, TaskState state) {

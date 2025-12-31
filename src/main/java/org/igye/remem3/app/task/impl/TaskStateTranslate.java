@@ -25,6 +25,7 @@ import static java.lang.String.format;
 public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     protected static final String PAR_USER_ANS = "PAR_USER_ANS";
     protected static final String ACT_SUBMIT_ANSWER = "ACT_SUBMIT_ANSWER";
+    protected static final String ACT_SHOW_EXAMPLE = "ACT_SHOW_EXAMPLE";
     protected static final String ACT_SHOW_ANS = "ACT_SHOW_ANS";
     protected static final String ACT_COMPLETE_TASK = "ACT_COMPLETE_TASK";
     protected static final String ACT_COMPLETE_TASK_WITH_MARK = "ACT_COMPLETE_TASK_WITH_MARK";
@@ -35,6 +36,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     private final TaskType.Translate taskType;
     private final List<String> cardErrors;
     private final String textToTranslate;
+    private final String example;
     private final String expAnswer;
     private final boolean exactMatch;
 
@@ -42,7 +44,10 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     private String userAnswer;
     private Optional<Boolean> userAnswerIsCorrect = Optional.empty();
     private Optional<HistRec> histRec = Optional.empty();
+    private boolean showExample;
     private boolean showAnswer;
+
+    private boolean showAnswerRequested;
 
     public TaskStateTranslate(Clock clock, Utils utils, CardUtils cardUtils, Card.Translate card,
                               TaskType.Translate taskType) {
@@ -53,16 +58,19 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         cardErrors = new ArrayList<>(cardUtils.validateCard(card));
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             textToTranslate = null;
+            example = null;
             expAnswer = null;
             exactMatch = false;
             return;
         }
         if (card.getLang1().equals(taskType.getLangFrom()) && card.getLang2().equals(taskType.getLangTo())) {
             textToTranslate = card.getText1();
+            example = card.getExample1();
             expAnswer = card.getText2();
             exactMatch = card.isExactMatch2();
         } else if (card.getLang2().equals(taskType.getLangFrom()) && card.getLang1().equals(taskType.getLangTo())) {
             textToTranslate = card.getText2();
+            example = card.getExample2();
             expAnswer = card.getText1();
             exactMatch = card.isExactMatch1();
         } else {
@@ -71,6 +79,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                 taskType.getLangFrom(), taskType.getLangTo(), card.getLang1(), card.getLang2()
             ));
             textToTranslate = null;
+            example = null;
             expAnswer = null;
             exactMatch = false;
         }
@@ -81,10 +90,12 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             return new TaskResult();
         }
+        showAnswerRequested = false;
         TaskResult res = new TaskResult();
         hasMissingAnswer = false;
         if (
             params.hasParam(ACT_SUBMIT_ANSWER)
+                || params.hasParam(ACT_SHOW_EXAMPLE)
                 || params.hasParam(ACT_SHOW_ANS)
                 || params.hasParam(ACT_COMPLETE_TASK)
                 || params.hasKeyValueParam(ACT_COMPLETE_TASK_WITH_MARK)
@@ -94,13 +105,24 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             userAnswerIsCorrect = exactMatch
                 ? (hasMissingAnswer ? Optional.empty() : Optional.of(expAnswer.equals(userAnswer)))
                 : Optional.empty();
-            if (histRec.isEmpty() && (userAnswerIsCorrect.isPresent() || params.hasParam(ACT_SHOW_ANS))) {
-                BigDecimal mark = params.hasParam(ACT_SHOW_ANS)
+            if (
+                histRec.isEmpty()
+                    &&
+                    (
+                        userAnswerIsCorrect.isPresent()
+                            || params.hasParam(ACT_SHOW_ANS) || params.hasParam(ACT_SHOW_EXAMPLE)
+                    )
+            ) {
+                BigDecimal mark = (params.hasParam(ACT_SHOW_ANS) || params.hasParam(ACT_SHOW_EXAMPLE))
                     ? BigDecimal.ZERO
                     : BigDecimal.valueOf(userAnswerIsCorrect.get() ? 1 : 0);
                 String notes = params.hasParam(ACT_SHOW_ANS)
                     ? utils.makeExpectedActualPair("", "<<<show_answer>>>")
-                    : userAnswerIsCorrect.get() ? "" : utils.makeExpectedActualPair(expAnswer, userAnswer);
+                    : (
+                    params.hasParam(ACT_SHOW_EXAMPLE)
+                        ? utils.makeExpectedActualPair("", "<<<show_example>>>")
+                        : userAnswerIsCorrect.get() ? "" : utils.makeExpectedActualPair(expAnswer, userAnswer)
+                );
                 histRec = Optional.of(
                     HistRec.builder()
                         .time(clock.instant())
@@ -116,6 +138,10 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             }
             if (params.hasParam(ACT_SHOW_ANS)) {
                 showAnswer = true;
+                showAnswerRequested = true;
+            }
+            if (params.hasParam(ACT_SHOW_EXAMPLE)) {
+                showExample = true;
             }
             if (params.hasParam(ACT_COMPLETE_TASK)) {
                 res.setCompleted(true);
@@ -158,7 +184,9 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             br(),
             div(rndUserAnswer()),
             br(),
-            hasMissingAnswer ? div("color:red;margin-bottom:20px;", text("Please provide an answer.")) : null,
+            (hasMissingAnswer && !showAnswerRequested)
+                ? div("color:red;margin-bottom:20px;", text("Please provide an answer."))
+                : null,
             br(),
             div(rndButtons()),
             br(),
@@ -183,17 +211,29 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         if (!showAnswer) {
             return null;
         }
-        return frag(
-            h4(text("Answer")),
-            pre(text(expAnswer)),
-            h4(text("Notes")),
-            pre(text(card.getNotes()))
-        );
+        List<HtmlElem> content = new ArrayList<>();
+        content.add(h4(text("Answer")));
+        content.add(pre(text(expAnswer)));
+        if (StringUtils.isNotBlank(example)) {
+            content.add(h4(text("Example")));
+            content.add(pre(text(example)));
+        }
+        if (StringUtils.isNotBlank(card.getNotes())) {
+            content.add(h4(text("Notes")));
+            content.add(pre(text(card.getNotes())));
+        }
+        return frag(content);
     }
 
     private HtmlElem rndButtons() {
         ArrayList<HtmlElem> content = new ArrayList<>();
         if (!showAnswer) {
+            if (!showExample && StringUtils.isNotBlank(example)) {
+                content.add(
+                    inpSubmit(ACT_SHOW_EXAMPLE, "Show example")
+                        .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
+                );
+            }
             content.add(
                 inpSubmit(ACT_SHOW_ANS, "Show answer")
                     .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
