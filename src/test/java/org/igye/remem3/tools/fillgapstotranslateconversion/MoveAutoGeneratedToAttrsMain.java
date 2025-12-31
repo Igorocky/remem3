@@ -1,4 +1,4 @@
-package org.igye.remem3.tools.subtiles;
+package org.igye.remem3.tools.fillgapstotranslateconversion;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

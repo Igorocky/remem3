@@ -133,6 +133,7 @@ public sealed interface Card {
         @Builder.Default
         private boolean exactMatch1 = true;
         @Getter
+        @Setter
         @Builder.Default
         private String example1 = "";
         @Getter
