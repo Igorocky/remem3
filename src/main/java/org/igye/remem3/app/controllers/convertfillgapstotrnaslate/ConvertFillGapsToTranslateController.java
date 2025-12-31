@@ -116,6 +116,17 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
                                     .lang1(card.getLang())
                                     .text1(gap.getAnswer())
                                     .exactMatch1(true)
+                                    .example1(
+                                        card.getText().stream()
+                                            .map(tp -> {
+                                                if (tp instanceof TextPart.Text) {
+                                                    return ((TextPart.Text) tp).getText();
+                                                } else {
+                                                    return ((TextPart.Gap) tp).getAnswer();
+                                                }
+                                            })
+                                            .collect(Collectors.joining(" "))
+                                    )
                                     .lang2(gapSecondLang)
                                     .text2(gap.getHint())
                                     .exactMatch2(false)
