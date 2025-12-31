@@ -41,10 +41,12 @@ public class NewCardController extends HtmlBuilder
     private static final String PAR_CARD_TRANSLATE_EXACT_MATCH_1 = "PAR_CARD_TRANSLATE_EXACT_MATCH_1";
     private static final String ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1 = "ID_" + PAR_CARD_TRANSLATE_EXACT_MATCH_1;
     private static final String PAR_CARD_TRANSLATE_TEXT_1 = "PAR_CARD_TRANSLATE_TEXT_1";
+    private static final String PAR_CARD_TRANSLATE_EXAMPLE_1 = "PAR_CARD_TRANSLATE_EXAMPLE_1";
     private static final String PAR_CARD_TRANSLATE_LANG_2 = "PAR_CARD_TRANSLATE_LANG_2";
     private static final String PAR_CARD_TRANSLATE_EXACT_MATCH_2 = "PAR_CARD_TRANSLATE_EXACT_MATCH_2";
     private static final String ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2 = "ID_" + PAR_CARD_TRANSLATE_EXACT_MATCH_2;
     private static final String PAR_CARD_TRANSLATE_TEXT_2 = "PAR_CARD_TRANSLATE_TEXT_2";
+    private static final String PAR_CARD_TRANSLATE_EXAMPLE_2 = "PAR_CARD_TRANSLATE_EXAMPLE_2";
     private static final String PAR_CARD_TRANSLATE_NOTES = "PAR_CARD_TRANSLATE_NOTES";
 
     private static final String ACT_CREATE_CARD = "ACT_CREATE_CARD";
@@ -172,7 +174,7 @@ public class NewCardController extends HtmlBuilder
     private CardDto clearParams(CardDto dto) {
         return switch (dto) {
             case CardDto.FillGaps c -> c.withText("");
-            case CardDto.Translate c -> c.withText1("").withText2("");
+            case CardDto.Translate c -> c.withText1("").withExample1("").withText2("").withExample2("");
         };
     }
 
@@ -226,6 +228,10 @@ public class NewCardController extends HtmlBuilder
                     .attr("onkeydown", format("toggleExactMatch(event,\"%s\")", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1))
             ),
             List.of(
+                text("Example 1"),
+                textarea(PAR_CARD_TRANSLATE_EXAMPLE_1, card.getExample1(), 100, 2)
+            ),
+            List.of(
                 div("height:30px"),
                 div("height:30px")
             ),
@@ -244,6 +250,10 @@ public class NewCardController extends HtmlBuilder
                 textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5)
                     .attr("tabindex", "2")
                     .attr("onkeydown", format("toggleExactMatch(event,\"%s\")", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2))
+            ),
+            List.of(
+                text("Example 2"),
+                textarea(PAR_CARD_TRANSLATE_EXAMPLE_2, card.getExample2(), 100, 2)
             ),
             List.of(
                 div("height:30px"),
@@ -326,12 +336,14 @@ public class NewCardController extends HtmlBuilder
             ))
             .text1(params.getParam(PAR_CARD_TRANSLATE_TEXT_1, ""))
             .exactMatch1(isExactMatch(PAR_CARD_TRANSLATE_EXACT_MATCH_1, params, cache))
+            .example1(params.getParam(PAR_CARD_TRANSLATE_EXAMPLE_1, ""))
             .lang2(params.getParam(
                 PAR_CARD_TRANSLATE_LANG_2,
                 cache.getStr(PAR_CARD_TRANSLATE_LANG_2, settings.getLanguages().getFirst())
             ))
             .text2(params.getParam(PAR_CARD_TRANSLATE_TEXT_2, ""))
             .exactMatch2(isExactMatch(PAR_CARD_TRANSLATE_EXACT_MATCH_2, params, cache))
+            .example2(params.getParam(PAR_CARD_TRANSLATE_EXAMPLE_2, ""))
             .notes(params.getParam(PAR_CARD_TRANSLATE_NOTES, ""))
             .build();
     }

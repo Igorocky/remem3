@@ -134,6 +134,9 @@ public sealed interface Card {
         private boolean exactMatch1 = true;
         @Getter
         @Builder.Default
+        private String example1 = "";
+        @Getter
+        @Builder.Default
         private String lang2 = "";
         @Getter
         @Builder.Default
@@ -141,6 +144,9 @@ public sealed interface Card {
         @Getter
         @Builder.Default
         private boolean exactMatch2 = true;
+        @Getter
+        @Builder.Default
+        private String example2 = "";
         @Getter
         @Setter
         @Builder.Default
@@ -152,9 +158,11 @@ public sealed interface Card {
             lang1 = other.getLang1();
             text1 = other.getText1();
             exactMatch1 = other.isExactMatch1();
+            example1 = other.getExample1();
             lang2 = other.getLang2();
             text2 = other.getText2();
             exactMatch2 = other.isExactMatch2();
+            example2 = other.getExample2();
             notes = other.getNotes();
         }
 

@@ -32,9 +32,11 @@ public sealed interface CardDto {
         private String lang1;
         private String text1;
         private boolean exactMatch1;
+        private String example1;
         private String lang2;
         private String text2;
         private boolean exactMatch2;
+        private String example2;
         private String notes;
 
         @Override

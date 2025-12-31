@@ -215,6 +215,61 @@ class CardUtilsImplTest {
     }
 
     @Test
+    void parseTranslateCard_full() {
+        CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        Card.Translate card = Card.Translate.builder()
+            .createdAt(Optional.of(Instant.now().truncatedTo(ChronoUnit.SECONDS)))
+            .lang1("Lang1")
+            .text1("Text1")
+            .exactMatch1(false)
+            .example1("Example1")
+            .lang2("Lang2")
+            .text2("Text2")
+            .exactMatch2(true)
+            .example2("Example2")
+            .notes("Notes")
+            .history(
+                List.of(
+                    HistRec.builder()
+                        .time(Instant.parse("2025-08-03T14:14:08Z"))
+                        .strategy(RepeatStrategyType.BUCKETS)
+                        .taskType("task1")
+                        .mark(BigDecimal.ZERO)
+                        .notes("notes1")
+                        .build(),
+                    HistRec.builder()
+                        .time(Instant.parse("2025-09-04T14:14:08Z"))
+                        .strategy(RepeatStrategyType.CIRCLE)
+                        .taskType("task2")
+                        .mark(BigDecimal.ONE)
+                        .notes("notes2")
+                        .build()
+                )
+            )
+            .attrs(Map.of(
+                "single-line-attr", "abc123",
+                "multi-line-attr", "abc\n123\n..."
+            ))
+            .build();
+
+        Assertions.assertEquals(
+            card,
+            cards.parseTranslateCard(cards.translateCardToString(card), Optional.empty())
+        );
+    }
+
+    @Test
+    void parseTranslateCard_empty() {
+        CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        Card.Translate card = Card.Translate.builder().build();
+
+        Assertions.assertEquals(
+            card,
+            cards.parseTranslateCard(cards.translateCardToString(card), Optional.empty())
+        );
+    }
+
+    @Test
     void validateCard_CardFillGaps() {
         CardUtilsImpl cards = new CardUtilsImpl(
             new UtilsImpl(new ObjectMapper()),

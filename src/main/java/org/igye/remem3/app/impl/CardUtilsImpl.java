@@ -51,6 +51,8 @@ public class CardUtilsImpl implements CardUtils {
     private static final String ATTR_TEXT = "###text";
     private static final String ATTR_TEXT_1 = "###text1";
     private static final String ATTR_TEXT_2 = "###text2";
+    private static final String ATTR_EXAMPLE_1 = "###example1";
+    private static final String ATTR_EXAMPLE_2 = "###example2";
     private static final String ATTR_NOTES = "###notes";
     private static final String ATTR_HIST = "###hist";
     private static final String ATTR_CREATED_AT = "###created_at";
@@ -153,9 +155,11 @@ public class CardUtilsImpl implements CardUtils {
                 .lang1(dto.getLang1())
                 .text1(dto.getText1())
                 .exactMatch1(dto.isExactMatch1())
+                .example1(dto.getExample1())
                 .lang2(dto.getLang2())
                 .text2(dto.getText2())
                 .exactMatch2(dto.isExactMatch2())
+                .example2(dto.getExample2())
                 .notes(dto.getNotes())
                 .history(List.of())
                 .build();
@@ -286,9 +290,11 @@ public class CardUtilsImpl implements CardUtils {
         sb.append(ATTR_LANG_1).append("\n").append(card.getLang1());
         sb.append("\n\n").append(ATTR_TEXT_1).append("\n").append(card.getText1());
         sb.append("\n\n").append(ATTR_EXACT_MATCH_1).append("\n").append(card.isExactMatch1() ? "y" : "n");
+        sb.append("\n\n").append(ATTR_EXAMPLE_1).append("\n").append(card.getExample1());
         sb.append("\n\n").append(ATTR_LANG_2).append("\n").append(card.getLang2());
         sb.append("\n\n").append(ATTR_TEXT_2).append("\n").append(card.getText2());
         sb.append("\n\n").append(ATTR_EXACT_MATCH_2).append("\n").append(card.isExactMatch2() ? "y" : "n");
+        sb.append("\n\n").append(ATTR_EXAMPLE_2).append("\n").append(card.getExample2());
         sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
         saveAttrs(sb, card.getAttrs());
         appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
@@ -369,7 +375,7 @@ public class CardUtilsImpl implements CardUtils {
         return parseTranslateCard(utils.readStringFromFile(file), Optional.of(file));
     }
 
-    private Card parseTranslateCard(String str, Optional<File> file) {
+    protected Card parseTranslateCard(String str, Optional<File> file) {
         Map<String, List<String>> props = parseProps(str);
         return Card.Translate.builder()
             .file(file)
@@ -377,9 +383,11 @@ public class CardUtilsImpl implements CardUtils {
             .lang1(getStr(props, ATTR_LANG_1, "").trim())
             .text1(getStr(props, ATTR_TEXT_1, "").trim())
             .exactMatch1(getBool(props, ATTR_EXACT_MATCH_1, true))
+            .example1(getStr(props, ATTR_EXAMPLE_1, "").trim())
             .lang2(getStr(props, ATTR_LANG_2, "").trim())
             .text2(getStr(props, ATTR_TEXT_2, "").trim())
             .exactMatch2(getBool(props, ATTR_EXACT_MATCH_2, true))
+            .example2(getStr(props, ATTR_EXAMPLE_2, "").trim())
             .notes(getStr(props, ATTR_NOTES, "").trim())
             .history(parseHistory(props.computeIfAbsent(ATTR_HIST, _ -> List.of())))
             .attrs(extractAttrs(props))
