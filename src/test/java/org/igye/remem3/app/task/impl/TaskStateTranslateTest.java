@@ -648,6 +648,50 @@ class TaskStateTranslateTest extends HtmlBuilder {
         assertTaskResult(taskResult, true, null);
     }
 
+    @Test
+    void approxMatch_showExample() {
+        //given
+        TestClock clock = new TestClock(Instant.parse("2025-07-24T10:03:00Z"));
+        Card.Translate card = Card.Translate.builder()
+            .file(Optional.empty()).createdAt(Optional.empty()).history(List.of())
+            .lang1("L1").text1("T1").exactMatch1(false).example1("EXAMPLE1")
+            .lang2("L2").text2("T2").exactMatch2(false).example2("EXAMPLE2")
+            .notes("N")
+            .build();
+        TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+
+        //first render
+        HtmlElem html = state.render();
+        assertHtmlApproxMatchNoAnswerHasExample(html, "");
+
+        //click "show example" button
+        clock.plusSeconds(10);
+        TaskResult taskResult = submitShowExample(html, state);
+        assertTaskResult(taskResult, false,
+            HistRec.builder()
+                .time(Instant.parse("2025-07-24T10:03:10Z"))
+                .taskType("translate:L1->L2")
+                .mark(BigDecimal.ZERO)
+                .notes("###EXP  ###ACT <<<show_example>>>")
+                .build()
+        );
+        html = state.render();
+        assertHtmlApproxMatchShowExample(html, "");
+
+        //click "submit answer" button
+        clock.plusSeconds(10);
+        taskResult = submitAnswer("", html, state);
+        assertTaskResult(taskResult, false, null);
+        html = state.render();
+        assertHtmlApproxMatchShowAnswer(html, "");
+
+        //click "next task" button
+        clock.plusSeconds(10);
+        taskResult = submitCompleteTask(html, state);
+        assertTaskResult(taskResult, true, null);
+    }
+
     private void assertHtmlExactMatchNoCorrectAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
@@ -710,6 +754,18 @@ class TaskStateTranslateTest extends HtmlBuilder {
         );
     }
 
+    private void assertHtmlApproxMatchNoAnswerHasExample(HtmlElem html, String userAns) {
+        testUtils.assertInputs(html,
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace"),
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
+            inpSubmit(ACT_SHOW_EXAMPLE, "Show example")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus"),
+            inpSubmit(ACT_SHOW_ANS, "Show answer")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
+        );
+    }
+
     private void assertHtmlApproxMatchHasAnswer(HtmlElem html, String userAns) {
         testUtils.assertInputs(html,
             inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
@@ -733,6 +789,16 @@ class TaskStateTranslateTest extends HtmlBuilder {
             inpSubmit(ACT_COMPLETE_TASK, "Next task")
                 .attr("style", format("background-color: %s;", GREEN)).attr("class", "border-on-focus")
                 .attr("autofocus", "")
+        );
+    }
+
+    private void assertHtmlApproxMatchShowExample(HtmlElem html, String userAns) {
+        testUtils.assertInputs(html,
+            inpText(PAR_USER_ANS, userAns, ACT_SUBMIT_ANSWER, true)
+                .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace"),
+            inpSubmit(ACT_SUBMIT_ANSWER, "Submit answer").attr("class", "border-on-focus"),
+            inpSubmit(ACT_SHOW_ANS, "Show answer")
+                .attr("style", format("background-color: %s;", ORANGE)).attr("class", "border-on-focus")
         );
     }
 

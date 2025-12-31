@@ -212,13 +212,15 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             return null;
         }
         List<HtmlElem> content = new ArrayList<>();
-        content.add(h4(text("Answer")));
-        content.add(pre(text(expAnswer)));
-        if (StringUtils.isNotBlank(example)) {
+        if (showAnswer) {
+            content.add(h4(text("Answer")));
+            content.add(pre(text(expAnswer)));
+        }
+        if ((showAnswer || showExample) && StringUtils.isNotBlank(example)) {
             content.add(h4(text("Example")));
             content.add(pre(text(example)));
         }
-        if (StringUtils.isNotBlank(card.getNotes())) {
+        if (showAnswer && StringUtils.isNotBlank(card.getNotes())) {
             content.add(h4(text("Notes")));
             content.add(pre(text(card.getNotes())));
         }
