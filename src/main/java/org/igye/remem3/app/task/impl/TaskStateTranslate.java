@@ -208,9 +208,6 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     }
 
     private HtmlElem rndAnswerAndNote() {
-        if (!showAnswer) {
-            return null;
-        }
         List<HtmlElem> content = new ArrayList<>();
         if (showAnswer) {
             content.add(h4(text("Answer")));
