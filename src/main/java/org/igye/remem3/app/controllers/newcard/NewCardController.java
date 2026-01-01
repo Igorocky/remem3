@@ -229,7 +229,7 @@ public class NewCardController extends HtmlBuilder
             ),
             List.of(
                 text("Example 1"),
-                textarea(PAR_CARD_TRANSLATE_EXAMPLE_1, card.getExample1(), 100, 2)
+                textarea(PAR_CARD_TRANSLATE_EXAMPLE_1, card.getExample1(), 100, 1)
             ),
             List.of(
                 div("height:30px"),
@@ -253,7 +253,7 @@ public class NewCardController extends HtmlBuilder
             ),
             List.of(
                 text("Example 2"),
-                textarea(PAR_CARD_TRANSLATE_EXAMPLE_2, card.getExample2(), 100, 2)
+                textarea(PAR_CARD_TRANSLATE_EXAMPLE_2, card.getExample2(), 100, 1)
             ),
             List.of(
                 div("height:30px"),
