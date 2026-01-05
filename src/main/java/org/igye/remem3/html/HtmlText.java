@@ -1,6 +1,7 @@
 package org.igye.remem3.html;
 
 import lombok.Getter;
+import org.apache.commons.text.StringEscapeUtils;
 
 public final class HtmlText implements HtmlElem {
     @Getter
@@ -12,6 +13,6 @@ public final class HtmlText implements HtmlElem {
 
     @Override
     public String toString() {
-        return text;
+        return StringEscapeUtils.escapeHtml4(text);
     }
 }

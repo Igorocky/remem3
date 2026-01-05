@@ -2,6 +2,7 @@ package org.igye.remem3.html;
 
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.text.StringEscapeUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,11 @@ public final class HtmlTag implements HtmlElem {
         sb.append("<").append(name);
         if (attrs != null && !attrs.isEmpty()) {
             attrs.forEach((attrName, attrValue) ->
-                sb.append(" ").append(attrName).append("='").append(attrValue).append("'")
+                sb.append(" ")
+                    .append(attrName)
+                    .append("='")
+                    .append(StringEscapeUtils.escapeHtml4(attrValue).replace("'", "&#39;"))
+                    .append("'")
             );
         }
         if (CollectionUtils.isEmpty(children)) {

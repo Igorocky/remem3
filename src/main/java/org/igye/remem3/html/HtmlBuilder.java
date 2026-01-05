@@ -4,7 +4,6 @@ import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.text.StringEscapeUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,11 +19,11 @@ public class HtmlBuilder {
     private String contextPath;
 
     protected HtmlText text(String text) {
-        return new HtmlText(esc(text));
+        return new HtmlText(text);
     }
 
     protected HtmlText text(Object obj) {
-        return new HtmlText(esc(String.valueOf(obj)));
+        return new HtmlText(String.valueOf(obj));
     }
 
     protected HtmlTag h(String tagName, Map<String, String> attrs, HtmlElem... children) {
@@ -49,10 +48,6 @@ public class HtmlBuilder {
 
     protected HtmlTag h(String tagName) {
         return new HtmlTag(tagName, null, null);
-    }
-
-    protected String esc(String text) {
-        return StringEscapeUtils.escapeHtml4(text);
     }
 
     protected HtmlFragment frag(HtmlElem... children) {
