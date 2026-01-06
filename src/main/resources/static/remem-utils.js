@@ -1,5 +1,5 @@
-function preventDefaultOnEnterAction(event, btnIdToClick) {
-    if(event.keyCode === 13){
+function preventDefaultOnEnterAction(event, ctrl, btnIdToClick) {
+    if(event.keyCode === 13 && (ctrl && event.ctrlKey || !ctrl)){
         event.preventDefault()
         if (btnIdToClick !== null) {
             document.getElementById(btnIdToClick).click()

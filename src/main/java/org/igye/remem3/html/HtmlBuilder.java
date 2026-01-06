@@ -193,7 +193,7 @@ public class HtmlBuilder {
             "name", name,
             "value", value,
             "autocomplete", "off",
-            "onkeydown", String.format("preventDefaultOnEnterAction(event,%s)", btnId)
+            "onkeydown", String.format("preventDefaultOnEnterAction(event,false,%s)", btnId)
         ));
         if (autofocus) {
             attrs.put("autofocus", "");

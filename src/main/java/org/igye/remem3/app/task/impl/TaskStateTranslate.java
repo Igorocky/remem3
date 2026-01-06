@@ -66,12 +66,12 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         if (card.getLang1().equals(taskType.getLangFrom()) && card.getLang2().equals(taskType.getLangTo())) {
             textToTranslate = card.getText1();
             example = card.getExample1();
-            expAnswer = card.getText2();
+            expAnswer = card.getText2().replace("\r", "");
             exactMatch = card.isExactMatch2();
         } else if (card.getLang2().equals(taskType.getLangFrom()) && card.getLang1().equals(taskType.getLangTo())) {
             textToTranslate = card.getText2();
             example = card.getExample2();
-            expAnswer = card.getText1();
+            expAnswer = card.getText1().replace("\r", "");
             exactMatch = card.isExactMatch1();
         } else {
             cardErrors.add(format(
@@ -100,7 +100,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                 || params.hasParam(ACT_COMPLETE_TASK)
                 || params.hasKeyValueParam(ACT_COMPLETE_TASK_WITH_MARK)
         ) {
-            userAnswer = params.getParam(PAR_USER_ANS).trim();
+            userAnswer = params.getParam(PAR_USER_ANS).trim().replace("\r", "");
             hasMissingAnswer = exactMatch && StringUtils.isBlank(userAnswer);
             userAnswerIsCorrect = exactMatch
                 ? (hasMissingAnswer ? Optional.empty() : Optional.of(expAnswer.equals(userAnswer)))
@@ -196,9 +196,17 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
 
     private HtmlElem rndUserAnswer() {
         List<HtmlElem> content = new ArrayList<>();
-        content.add(text(exactMatch ? "= " : "~ "));
-        HtmlTag inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER, true)
-            .attr("size", "150").attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace");
+        content.add(div(text(exactMatch ? "= " : "~ ")).attr("style", "display:inline; vertical-align: top;"));
+        HtmlTag inpText;
+        if (StringUtils.contains(expAnswer, "\n")) {
+            inpText = textarea(PAR_USER_ANS, userAnswer, 150, 10)
+                .attr("onkeydown", String.format("preventDefaultOnEnterAction(event,true,\"%s\")", ACT_SUBMIT_ANSWER))
+                .attr("autofocus", "");
+        } else {
+            inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER, true)
+                .attr("size", "150");
+        }
+        inpText = inpText.attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace");
         content.add(inpText);
         if (!exactMatch && showAnswer || userAnswerIsCorrect.orElse(false)) {
             inpText.disabled();
