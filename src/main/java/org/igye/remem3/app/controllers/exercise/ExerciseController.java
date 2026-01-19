@@ -338,14 +338,22 @@ public class ExerciseController extends HtmlBuilder
             .dir(selectedDir.getAbsolutePath())
             .taskTypes(selectedTaskTypes)
             .repeatStrategy(repeatStrategy)
-            .showMoreParams(utils.try_(
-                () -> Boolean.parseBoolean(cache.getStr(PAR_SHOW_EXERCISE_PARAMS, "false"))
-            ))
+            .showMoreParams(parseShowMoreParams(cache.getStr(PAR_SHOW_EXERCISE_PARAMS, "false")))
             .nextTasks(nextTasks)
             .taskState(nextTasks.flatMap(nt ->
                 nt.isEmpty() ? Optional.empty() : makeTaskState(st.getCardUtils(), nt.getFirst())
             ))
             .build();
+    }
+
+    private Optional<Boolean> parseShowMoreParams(String str) {
+        if (StringUtils.isBlank(str)) {
+            return Optional.empty();
+        } else {
+            return utils.try_(
+                () -> Boolean.parseBoolean(str)
+            );
+        }
     }
 
     private Optional<TaskState> makeTaskState(CardUtils cardUtils, Task task) {
