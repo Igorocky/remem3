@@ -9,12 +9,12 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.task.TaskState;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
-import org.igye.remem3.app.controllers.components.RepeatStrategyCmp;
 
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +56,7 @@ public sealed interface ExerciseState {
         private Set<String> taskTypes;
         private RepeatStrategy repeatStrategy;
         private Optional<Boolean> showMoreParams;
+        private boolean showDailyUniqueCount;
         private Optional<List<Task>> nextTasks;
         private Optional<TaskState> taskState;
         private boolean cardPathCopied;

@@ -159,6 +159,11 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         );
     }
 
+    @Override
+    public Optional<Pair<Long, Long>> getDailyUniqueCount() {
+        return Optional.empty();
+    }
+
     private CountAndStreak calcCountAndStreak(List<TaskDto> allTasks) {
         List<List<HistRec>> sessionHist = allTasks.stream()
             .map(TaskDto::getTask)

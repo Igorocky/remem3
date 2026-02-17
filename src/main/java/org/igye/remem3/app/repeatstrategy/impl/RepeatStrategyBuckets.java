@@ -43,6 +43,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     private final List<Duration> bucketDelays;
     private final List<BigDecimal> bucketDelaysBigDec;
     private final int maxBucketNum;
+    private final Long recommDailyUniqueCount;
 
     public RepeatStrategyBuckets(
         Utils utils,
@@ -64,6 +65,8 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         this.bucketDelays = Collections.unmodifiableList(bucketDelays);
         this.bucketDelaysBigDec = bucketDelays.stream().map(this::durToBigDec).toList();
         this.maxBucketNum = bucketDelays.size() - 1;
+        long maxDelayDays = Math.max(1, Math.toIntExact(bucketDelays.getLast().toDays()));
+        this.recommDailyUniqueCount = Math.ceilDiv(allTasks.size(), maxDelayDays);
     }
 
     @Override
@@ -138,6 +141,16 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             div(text(format("Batch size: %s", batchSize))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
+    }
+
+    @Override
+    public Optional<Pair<Long, Long>> getDailyUniqueCount() {
+        Instant startOfDay = Instant.now().atZone(java.time.ZoneId.systemDefault())
+            .truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant();
+        long actualDailyUniqueCount = allTasks.stream()
+            .filter(t -> t.getHist().stream().anyMatch(h -> !h.getTime().isBefore(startOfDay)))
+            .count();
+        return Optional.of(Pair.of(actualDailyUniqueCount, recommDailyUniqueCount));
     }
 
     private Duration getTimeToWait(Duration bucketDelay, List<TaskDto> waitingTasks) {

@@ -17,6 +17,7 @@ import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyBuckets;
 import org.igye.remem3.app.task.TaskResult;
 import org.igye.remem3.app.task.TaskState;
 import org.igye.remem3.app.task.impl.TaskStateFillGaps;
@@ -58,6 +59,7 @@ public class ExerciseController extends HtmlBuilder
     private static final String PAR_DIR_TO_READ_TASKS_FROM = "PAR_DIR_TO_READ_TASKS_FROM";
     private static final String PAR_TASK_TYPE = "PAR_TASK_TYPE";
     private static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
+    private static final String PAR_SHOW_DAILY_UNIQUE_COUNT = "PAR_SHOW_DAILY_UNIQUE_COUNT";
     private static final String ACT_SHOW_PROPERTIES = "ACT_SHOW_PROPERTIES";
     private static final String ACT_CUSTOMIZE_EXERCISE = "ACT_CUSTOMIZE_EXERCISE";
     private static final String ACT_START_EXERCISE = "ACT_START_EXERCISE";
@@ -65,6 +67,7 @@ public class ExerciseController extends HtmlBuilder
     private static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
     private static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
     private static final String ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS";
+    private static final String ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT = "ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT";
     private static final String ACT_SKIP_TASK = "ACT_SKIP_TASK";
     private static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "ACT_COPY_CARD_PATH_TO_CLIPBOARD";
     private static final String ACT_OPEN_CARD = "ACT_OPEN_CARD";
@@ -141,6 +144,9 @@ public class ExerciseController extends HtmlBuilder
                 }
                 if (params.hasParam(ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS)) {
                     yield Optional.of(() -> actToggleShowLessMoreParams(st));
+                }
+                if (params.hasParam(ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT)) {
+                    yield Optional.of(() -> actToggleShowDailyUniqueCount(st));
                 }
                 if (params.hasParam(ACT_SKIP_TASK) || params.hasParam(ACT_REFRESH_EXERCISE)) {
                     yield Optional.of(() -> actGoToNextTask(st));
@@ -301,6 +307,12 @@ public class ExerciseController extends HtmlBuilder
         return newState;
     }
 
+    private ExerciseState actToggleShowDailyUniqueCount(ExerciseState.Started st) {
+        ExerciseState.Started newState = st.withShowDailyUniqueCount(!st.isShowDailyUniqueCount());
+        newState.getCache().put(PAR_SHOW_DAILY_UNIQUE_COUNT, newState.isShowDailyUniqueCount());
+        return newState;
+    }
+
     private void cacheShowMoreParams(ExerciseState.Started st) {
         st.getCache().put(PAR_SHOW_EXERCISE_PARAMS, st.getShowMoreParams().map(Object::toString).orElse(""));
     }
@@ -339,6 +351,7 @@ public class ExerciseController extends HtmlBuilder
             .taskTypes(selectedTaskTypes)
             .repeatStrategy(repeatStrategy)
             .showMoreParams(parseShowMoreParams(cache.getStr(PAR_SHOW_EXERCISE_PARAMS, "false")))
+            .showDailyUniqueCount(cache.getBool(PAR_SHOW_DAILY_UNIQUE_COUNT, false))
             .nextTasks(nextTasks)
             .taskState(nextTasks.flatMap(nt ->
                 nt.isEmpty() ? Optional.empty() : makeTaskState(st.getCardUtils(), nt.getFirst())
@@ -498,12 +511,29 @@ public class ExerciseController extends HtmlBuilder
             ).orElse(null),
             cardPath.isPresent() ? inpSubmit(ACT_OPEN_CARD, "Edit this card") : null,
             st.getTaskState().isPresent() ? inpSubmit(ACT_SKIP_TASK, "Skip this task") : null,
+            st.getRepeatStrategy() instanceof RepeatStrategyBuckets
+                ? inpSubmit(ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT, st.isShowDailyUniqueCount() ? "Hide DUC" : "Show DUC")
+                : null,
+            text(rndDailyUniqueCount(st)),
             params,
             hr(),
             taskContent,
             hr(),
             exerciseCompleted ? null : inpSubmit(ACT_CANCEL_EXERCISE, "Cancel")
         );
+    }
+
+    private String rndDailyUniqueCount(ExerciseState.Started st) {
+        if (st.getRepeatStrategy() instanceof RepeatStrategyBuckets && st.isShowDailyUniqueCount()) {
+            Optional<Pair<Long, Long>> dailyUniqueCount = st.getRepeatStrategy().getDailyUniqueCount();
+            if (dailyUniqueCount.isPresent()) {
+                return String.format(" DCU: %s/%s", dailyUniqueCount.get().getLeft(), dailyUniqueCount.get().getRight());
+            } else {
+                return "";
+            }
+        } else {
+            return "";
+        }
     }
 
     private HtmlElem rndErrors(List<String> errors) {

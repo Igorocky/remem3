@@ -3,6 +3,7 @@ package org.igye.remem3.app.repeatstrategy.impl;
 import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
@@ -91,6 +92,11 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), allTasks.size()))),
             div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS))))
         );
+    }
+
+    @Override
+    public Optional<Pair<Long, Long>> getDailyUniqueCount() {
+        return Optional.empty();
     }
 
     private ProgressInfo calcRoundProgress(boolean historyUpdated, Stats stats) {

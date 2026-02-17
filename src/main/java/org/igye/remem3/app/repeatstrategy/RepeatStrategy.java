@@ -1,5 +1,6 @@
 package org.igye.remem3.app.repeatstrategy;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.html.HtmlElem;
 
 import java.util.List;
@@ -11,4 +12,6 @@ public interface RepeatStrategy {
     HtmlElem renderLessParams(boolean historyUpdated);
 
     HtmlElem renderMoreParams(boolean historyUpdated);
+
+    Optional<Pair<Long, Long>> getDailyUniqueCount();
 }
