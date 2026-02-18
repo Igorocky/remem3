@@ -527,7 +527,7 @@ public class ExerciseController extends HtmlBuilder
         if (st.getRepeatStrategy() instanceof RepeatStrategyBuckets && st.isShowDailyUniqueCount()) {
             Optional<Pair<Long, Long>> dailyUniqueCount = st.getRepeatStrategy().getDailyUniqueCount();
             if (dailyUniqueCount.isPresent()) {
-                return String.format(" DCU: %s/%s", dailyUniqueCount.get().getLeft(), dailyUniqueCount.get().getRight());
+                return String.format(" DUC: %s/%s", dailyUniqueCount.get().getLeft(), dailyUniqueCount.get().getRight());
             } else {
                 return "";
             }
