@@ -64,7 +64,7 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
 
     @Override
     public State loadState(RequestParams params) {
-        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, params, PAR_DIR_TO_CONVERT_TASKS_IN);
+        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_CONVERT_TASKS_IN, params);
         String gapSecondLang = params.getParam(
             PAR_GAP_SECOND_LANG,
             cache.getStr(PAR_GAP_SECOND_LANG, settings.getLanguages().getFirst())

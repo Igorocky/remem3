@@ -211,7 +211,7 @@ public class ExerciseController extends HtmlBuilder
         return st
             .withDirSelector(
                 new DirSelectorCmpImpl(
-                    settings, cache, st.getDirSelector().getSelectedDirectoryStr(), PAR_DIR_TO_READ_TASKS_FROM
+                    settings, cache, PAR_DIR_TO_READ_TASKS_FROM, st.getDirSelector().getSelectedDirectoryStr()
                 )
             )
             .withConfig("");
@@ -585,7 +585,7 @@ public class ExerciseController extends HtmlBuilder
         }
         dirStr = dirStr.trim();
         File dir = dirStr.startsWith("/") ? new File(dirStr) : new File(configFile.getParentFile(), dirStr);
-        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, dir, PAR_DIR_TO_READ_TASKS_FROM);
+        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_READ_TASKS_FROM, dir);
         CardUtils cardUtils = new CardUtilsImpl(utils, settings);
         String tasksStr = props.getProperty(PROP_TASKS);
         tasksStr = StringUtils.isBlank(dirStr) ? "" : tasksStr;
@@ -612,7 +612,7 @@ public class ExerciseController extends HtmlBuilder
     private ExerciseState.SetParams makeSetParamsStateWithCustomConfig(
         Settings settings, Cache cache, RequestParams params, ExerciseState prevState
     ) {
-        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, params, PAR_DIR_TO_READ_TASKS_FROM);
+        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_READ_TASKS_FROM, params);
         CardUtils cardUtils = new CardUtilsImpl(utils, settings);
         return ExerciseState.SetParams.builder()
             .settings(settings)

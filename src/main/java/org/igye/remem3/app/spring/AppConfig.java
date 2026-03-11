@@ -8,6 +8,7 @@ import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.IndexController;
 import org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateController;
 import org.igye.remem3.app.controllers.exercise.ExerciseController;
+import org.igye.remem3.app.controllers.movecardstodir.MoveCardsToDirController;
 import org.igye.remem3.app.controllers.newcard.NewCardController;
 import org.igye.remem3.app.controllers.validatecards.ValidateCardsController;
 import org.igye.remem3.app.impl.CacheImpl;
@@ -85,16 +86,25 @@ public class AppConfig {
     }
 
     @Bean
+    public MoveCardsToDirController moveCardsToDirController(
+        Settings settings, Cache cache, CardUtils cardUtils
+    ) {
+        return new MoveCardsToDirController(settings, cache, cardUtils);
+    }
+
+    @Bean
     public IndexController indexController(
         NewCardController newCardController,
         ExerciseController exerciseController,
         ConvertFillGapsToTranslateController convertFillGapsToTranslateController,
+        MoveCardsToDirController moveCardsToDirController,
         ValidateCardsController validateCardsController
     ) {
         return new IndexController(List.of(
             newCardController,
             exerciseController,
             convertFillGapsToTranslateController,
+            moveCardsToDirController,
             validateCardsController
         ));
     }
@@ -104,6 +114,7 @@ public class AppConfig {
         NewCardController newCardController,
         ExerciseController exerciseController,
         ConvertFillGapsToTranslateController convertFillGapsToTranslateController,
+        MoveCardsToDirController moveCardsToDirController,
         ValidateCardsController validateCardsController,
         IndexController indexController
     ) {
@@ -111,6 +122,7 @@ public class AppConfig {
             newCardController,
             exerciseController,
             convertFillGapsToTranslateController,
+            moveCardsToDirController,
             validateCardsController,
             indexController
         ).collect(Collectors.toMap(StatefulWebController::getId, Function.identity()));
