@@ -142,6 +142,7 @@ public class MoveCardsToDirController extends HtmlBuilder
                 rndLanguageSelector(settings, st.getLang()),
                 rndRepeatStrategyTypeSelector(st),
                 rndDirSelector("To directory", st.getDirMoveTo()),
+                br(),
                 !st.getErrors().isEmpty() ? null : frag(
                     inpSubmit(ACT_MOVE_SELECTED_CARDS, "Move selected cards"),
                     rndCards(st.getSortedCardsToList(), st.getSelectedCardIds())
