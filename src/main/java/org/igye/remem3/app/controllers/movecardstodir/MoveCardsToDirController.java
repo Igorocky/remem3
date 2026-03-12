@@ -234,11 +234,17 @@ public class MoveCardsToDirController extends HtmlBuilder
     }
 
     private HtmlElem rndBundleCards(List<Card> cards) {
-        return table(
-            cards.stream()
-                .map(card -> List.of(text(getCardText(card))))
-                .toList()
-        ).attr("class", "table-single-border");
+        if (cards.isEmpty()) {
+            return text("");
+        } else if (cards.size() == 1) {
+            return text(getCardText(cards.getFirst()));
+        } else {
+            return table(
+                cards.stream()
+                    .map(card -> List.of(text(getCardText(card))))
+                    .toList()
+            ).attr("class", "table-single-border");
+        }
     }
 
     private String getCardText(Card card) {
