@@ -2,6 +2,7 @@ package org.igye.remem3.app.controllers.movecardstodir;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
@@ -21,13 +22,18 @@ import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateController.ATTR_AUTO_GENERATED_FROM;
 
 @RequiredArgsConstructor
 public class MoveCardsToDirController extends HtmlBuilder
@@ -38,9 +44,9 @@ public class MoveCardsToDirController extends HtmlBuilder
     private static final String PAR_LANG = "MoveCardsToDir__PAR_LANG";
     private static final String PAR_REPEAT_STRATEGY_TYPE = "MoveCardsToDir__PAR_REPEAT_STRATEGY_TYPE";
     private static final String PAR_DIR_TO_MOVE_TO = "MoveCardsToDir__PAR_DIR_TO_MOVE_TO";
-    private static final String PAR_SELECTED_CARD_ID = "MoveCardsToDir__PAR_SELECTED_CARD_ID";
+    private static final String PAR_SELECTED_BUNDLE_ID = "MoveCardsToDir__PAR_SELECTED_BUNDLE_ID";
 
-    private static final String ACT_MOVE_SELECTED_CARDS = "ACT_MOVE_SELECTED_CARDS";
+    private static final String ACT_MOVE_SELECTED_BUNDLES = "ACT_MOVE_SELECTED_BUNDLES";
 
     private final Settings settings;
     private final Cache cache;
@@ -77,19 +83,6 @@ public class MoveCardsToDirController extends HtmlBuilder
         );
         DirSelectorCmp dirSelectorTo = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_TO, params);
         List<Card> allCards = cardUtils.loadAllCards(dirSelectorFrom.getSelectedDirectory());
-        Comparator<Pair<Card, Long>> comparator = Comparator.comparing(Pair::getRight);
-        List<Pair<Card, Long>> cardsToList = allCards.stream()
-            .filter(c ->
-                switch (cardType) {
-                    case FILL_GAPS -> c instanceof Card.FillGaps fg && lang.equals(fg.getLang());
-                    case TRANSLATE -> c instanceof Card.Translate tr && lang.equals(tr.getLang1());
-                }
-            )
-            .map(c -> Pair.of(c, calcRating(c, lang, repeatStrategyType)))
-            .sorted(comparator.reversed())
-            .toList();
-        Set<String> selectedCardIds = Arrays.stream(params.getParams(PAR_SELECTED_CARD_ID))
-            .collect(Collectors.toSet());
         return State.builder()
             .params(params)
             .errors(List.of())
@@ -98,8 +91,11 @@ public class MoveCardsToDirController extends HtmlBuilder
             .lang(lang)
             .repeatStrategyType(repeatStrategyType)
             .dirMoveTo(dirSelectorTo)
-            .sortedCardsToList(cardsToList)
-            .selectedCardIds(selectedCardIds)
+            .sortedBundlesToList(collectBundles(allCards, cardType, lang, repeatStrategyType))
+            .selectedBundleIds(
+                Arrays.stream(params.getParams(PAR_SELECTED_BUNDLE_ID))
+                    .collect(Collectors.toSet())
+            )
             .build();
     }
 
@@ -108,7 +104,7 @@ public class MoveCardsToDirController extends HtmlBuilder
         if (!st.getErrors().isEmpty()) {
             return Optional.empty();
         }
-        if (params.hasParam(ACT_MOVE_SELECTED_CARDS)) {
+        if (params.hasParam(ACT_MOVE_SELECTED_BUNDLES)) {
             return Optional.of(() -> actMoveSelectedCards(st));
         }
         return Optional.empty();
@@ -144,8 +140,8 @@ public class MoveCardsToDirController extends HtmlBuilder
                 rndDirSelector("To directory", st.getDirMoveTo()),
                 br(),
                 !st.getErrors().isEmpty() ? null : frag(
-                    inpSubmit(ACT_MOVE_SELECTED_CARDS, "Move selected cards"),
-                    rndCards(st.getSortedCardsToList(), st.getSelectedCardIds())
+                    inpSubmit(ACT_MOVE_SELECTED_BUNDLES, "Move selected cards"),
+                    rndBundles(st.getSortedBundlesToList(), st.getSelectedBundleIds())
                 )
             )
         ).toString();
@@ -173,12 +169,26 @@ public class MoveCardsToDirController extends HtmlBuilder
         )));
     }
 
-    private long calcRating(Card card, String lang, RepeatStrategyType repeatStrategyType) {
+    private long calcRating(Card card, RepeatStrategyType repeatStrategyType) {
         return card.getHistory().stream()
             .filter(h -> h.getStrategy() == repeatStrategyType)
             .sorted(Comparator.comparing(HistRec::getTime).reversed())
             .takeWhile(h -> BigDecimal.ONE.equals(h.getMark()))
             .count();
+    }
+
+    private long calcRating(
+        List<Card> cards,
+        CardType cardType,
+        String lang,
+        RepeatStrategyType repeatStrategyType
+    ) {
+        Predicate<Card> cardFilter = makeCardFilter(cardType, lang);
+        return cards.stream()
+            .filter(cardFilter)
+            .map(card -> calcRating(card, repeatStrategyType))
+            .min(Long::compareTo)
+            .orElse(0L);
     }
 
     private HtmlTag rndDirSelector(String title, DirSelectorCmp dirSelector) {
@@ -209,18 +219,24 @@ public class MoveCardsToDirController extends HtmlBuilder
         );
     }
 
-    private HtmlElem rndCards(List<Pair<Card, Long>> cards, Set<String> selectedCardIds) {
+    private HtmlElem rndBundles(List<Bundle> bundles, Set<String> selectedBundleIds) {
         return table(
-            cards.stream()
-                .map(pair -> List.of(
-                    inpCheckbox(
-                        PAR_SELECTED_CARD_ID, "", selectedCardIds.contains("")
-                    ),
-                    text(getCardText(pair.getLeft())),
-                    text(pair.getRight())
+            bundles.stream()
+                .map(bundle -> List.of(
+                    inpCheckbox(PAR_SELECTED_BUNDLE_ID, "", selectedBundleIds.contains("")),
+                    rndBundle(bundle),
+                    text(bundle.getRating())
                 ))
                 .toList()
-        );
+        ).attr("class", "table-single-border");
+    }
+
+    private HtmlElem rndBundle(Bundle bundle) {
+        return table(
+            bundle.getCards().stream()
+                .map(card -> List.of(text(getCardText(card))))
+                .toList()
+        ).attr("class", "table-single-border");
     }
 
     private String getCardText(Card card) {
@@ -246,5 +262,74 @@ public class MoveCardsToDirController extends HtmlBuilder
 
     private State actMoveSelectedCards(State st) {
         return loadState(st.getParams());
+    }
+
+    private List<Bundle> collectBundles(
+        List<Card> cards,
+        CardType cardType,
+        String lang,
+        RepeatStrategyType repeatStrategyType
+    ) {
+        Map<String, List<Card>> parentIdToCards = cards.stream()
+            .collect(Collectors.groupingBy(card -> getParentId(card), Collectors.toCollection(ArrayList::new)));
+        while (merge(parentIdToCards)) {
+        }
+        Predicate<Card> cardFilter = makeCardFilter(cardType, lang);
+        return parentIdToCards.entrySet().stream()
+            .filter(e -> e.getValue().stream().anyMatch(cardFilter))
+            .map(e ->
+                {
+                    List<Card> childCards = e.getValue();
+                    return Bundle.builder()
+                        .id(e.getKey())
+                        .cards(childCards.stream().sorted(Comparator.comparing(this::getTextLength)).toList())
+                        .rating(calcRating(childCards, cardType, lang, repeatStrategyType))
+                        .build();
+                }
+            )
+            .sorted(Comparator.comparing(Bundle::getRating).reversed())
+            .toList();
+    }
+
+    private int getTextLength(Card card) {
+        return getCardText(card).length();
+    }
+
+    private boolean merge(Map<String, List<Card>> parentIdToCards) {
+        for (Map.Entry<String, List<Card>> entry : parentIdToCards.entrySet()) {
+            List<Card> childCards = entry.getValue();
+            for (Card child : childCards) {
+                String firstLevelParentId = entry.getKey();
+                String secondLevelParentId = child.getFile().get().getName();
+                if (!firstLevelParentId.equals(secondLevelParentId) && parentIdToCards.containsKey(secondLevelParentId)) {
+                    childCards.addAll(parentIdToCards.get(secondLevelParentId));
+                    parentIdToCards.remove(secondLevelParentId);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private String getParentId(Card card) {
+        if (!card.getAttrs().containsKey(ATTR_AUTO_GENERATED_FROM)) {
+            return card.getFile().get().getName();
+        }
+        String src = card.getAttrs().get(ATTR_AUTO_GENERATED_FROM);
+        String[] parts = src.split(":");
+        if (parts.length != 2) {
+            throw new Exn("getBundleId: parts.length != 2");
+        }
+        if (StringUtils.isBlank(parts[0])) {
+            throw new Exn("getBundleId: StringUtils.isBlank(parts[0])");
+        }
+        return parts[0];
+    }
+
+    private Predicate<Card> makeCardFilter(CardType cardType, String lang) {
+        return c -> switch (cardType) {
+            case FILL_GAPS -> c instanceof Card.FillGaps fg && lang.equals(fg.getLang());
+            case TRANSLATE -> c instanceof Card.Translate tr && lang.equals(tr.getLang1());
+        };
     }
 }

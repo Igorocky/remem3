@@ -2,10 +2,8 @@ package org.igye.remem3.app.controllers.movecardstodir;
 
 import lombok.Builder;
 import lombok.Getter;
-import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
-import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.web.RequestParams;
 
@@ -22,6 +20,6 @@ public class State {
     private String lang;
     private RepeatStrategyType repeatStrategyType;
     private DirSelectorCmp dirMoveTo;
-    private List<Pair<Card, Long>> sortedCardsToList;
-    private Set<String> selectedCardIds;
+    private List<Bundle> sortedBundlesToList;
+    private Set<String> selectedBundleIds;
 }
