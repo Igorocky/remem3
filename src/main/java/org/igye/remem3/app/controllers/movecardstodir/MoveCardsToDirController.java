@@ -1,6 +1,7 @@
 package org.igye.remem3.app.controllers.movecardstodir;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,7 +22,9 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -33,6 +36,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateController.ATTR_AUTO_GENERATED_FROM;
 
 @RequiredArgsConstructor
@@ -225,7 +229,7 @@ public class MoveCardsToDirController extends HtmlBuilder
         return table(
             st.getSortedBundlesToList().stream()
                 .map(bundle -> List.of(
-                    inpCheckbox(PAR_SELECTED_BUNDLE_ID, "", selectedBundleIds.contains("")),
+                    inpCheckbox(PAR_SELECTED_BUNDLE_ID, bundle.getId(), selectedBundleIds.contains(bundle.getId())),
                     rndBundleCards(bundle.getCards().stream().filter(cardFilter).toList()),
                     text(bundle.getRating())
                 ))
@@ -267,8 +271,20 @@ public class MoveCardsToDirController extends HtmlBuilder
         }
     }
 
-
+    @SneakyThrows
     private State actMoveSelectedCards(State st) {
+        for (Bundle bundle : st.getSortedBundlesToList()) {
+            if (st.getSelectedBundleIds().contains(bundle.getId())) {
+                for (Card card : bundle.getCards()) {
+                    File cardFile = card.getFile().get();
+                    Files.move(
+                        cardFile.toPath(),
+                        new File(st.getDirMoveTo().getSelectedDirectory(), cardFile.getName()).toPath(),
+                        ATOMIC_MOVE
+                    );
+                }
+            }
+        }
         return loadState(st.getParams());
     }
 
