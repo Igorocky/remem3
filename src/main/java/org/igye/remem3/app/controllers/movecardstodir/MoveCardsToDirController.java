@@ -141,7 +141,7 @@ public class MoveCardsToDirController extends HtmlBuilder
                 br(),
                 !st.getErrors().isEmpty() ? null : frag(
                     inpSubmit(ACT_MOVE_SELECTED_BUNDLES, "Move selected cards"),
-                    rndBundles(st.getSortedBundlesToList(), st.getSelectedBundleIds())
+                    rndBundles(st)
                 )
             )
         ).toString();
@@ -219,21 +219,23 @@ public class MoveCardsToDirController extends HtmlBuilder
         );
     }
 
-    private HtmlElem rndBundles(List<Bundle> bundles, Set<String> selectedBundleIds) {
+    private HtmlElem rndBundles(State st) {
+        Predicate<Card> cardFilter = makeCardFilter(st.getCardType(), st.getLang());
+        Set<String> selectedBundleIds = st.getSelectedBundleIds();
         return table(
-            bundles.stream()
+            st.getSortedBundlesToList().stream()
                 .map(bundle -> List.of(
                     inpCheckbox(PAR_SELECTED_BUNDLE_ID, "", selectedBundleIds.contains("")),
-                    rndBundle(bundle),
+                    rndBundleCards(bundle.getCards().stream().filter(cardFilter).toList()),
                     text(bundle.getRating())
                 ))
                 .toList()
         ).attr("class", "table-single-border");
     }
 
-    private HtmlElem rndBundle(Bundle bundle) {
+    private HtmlElem rndBundleCards(List<Card> cards) {
         return table(
-            bundle.getCards().stream()
+            cards.stream()
                 .map(card -> List.of(text(getCardText(card))))
                 .toList()
         ).attr("class", "table-single-border");
@@ -282,7 +284,7 @@ public class MoveCardsToDirController extends HtmlBuilder
                     List<Card> childCards = e.getValue();
                     return Bundle.builder()
                         .id(e.getKey())
-                        .cards(childCards.stream().sorted(Comparator.comparing(this::getTextLength)).toList())
+                        .cards(childCards.stream().sorted(Comparator.comparing(this::getCardText)).toList())
                         .rating(calcRating(childCards, cardType, lang, repeatStrategyType))
                         .build();
                 }
