@@ -87,9 +87,9 @@ public class AppConfig {
 
     @Bean
     public MoveCardsToDirController moveCardsToDirController(
-        Settings settings, Cache cache, CardUtils cardUtils
+        Settings settings, Cache cache, Utils utils, CardUtils cardUtils
     ) {
-        return new MoveCardsToDirController(settings, cache, cardUtils);
+        return new MoveCardsToDirController(settings, cache, utils, cardUtils);
     }
 
     @Bean

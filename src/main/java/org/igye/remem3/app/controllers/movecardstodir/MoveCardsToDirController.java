@@ -19,12 +19,14 @@ import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.StatefulWebController;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -54,6 +56,7 @@ public class MoveCardsToDirController extends HtmlBuilder
 
     private final Settings settings;
     private final Cache cache;
+    private final Utils utils;
     private final CardUtils cardUtils;
 
     @Override
@@ -140,8 +143,9 @@ public class MoveCardsToDirController extends HtmlBuilder
                 rndDirSelector("From directory", st.getDirMoveFrom()),
                 rndCardTypeSelector(st),
                 rndLanguageSelector(settings, st.getLang()),
-                rndRepeatStrategyTypeSelector(st),
                 rndDirSelector("To directory", st.getDirMoveTo()),
+                br(),
+                rndRepeatStrategyTypeSelector(st),
                 br(),
                 !st.getErrors().isEmpty() ? null : frag(
                     inpSubmit(ACT_MOVE_SELECTED_BUNDLES, "Move selected cards"),
@@ -173,15 +177,20 @@ public class MoveCardsToDirController extends HtmlBuilder
         )));
     }
 
-    private long calcRating(Card card, RepeatStrategyType repeatStrategyType) {
-        return card.getHistory().stream()
+    private Pair<Long, String> calcRating(Card card, RepeatStrategyType repeatStrategyType) {
+        List<HistRec> hist = card.getHistory().stream()
             .filter(h -> h.getStrategy() == repeatStrategyType)
             .sorted(Comparator.comparing(HistRec::getTime).reversed())
             .takeWhile(h -> BigDecimal.ONE.equals(h.getMark()))
-            .count();
+            .toList();
+        List<String> dur = new ArrayList<>();
+        for (int i = 0; i < hist.size() - 1; i++) {
+            dur.add(utils.durationToStr(Duration.between(hist.get(i + 1).getTime(), hist.get(i).getTime())));
+        }
+        return Pair.of((long) hist.size(), StringUtils.join(dur, ", "));
     }
 
-    private long calcRating(
+    private Pair<Long, String> calcRating(
         List<Card> cards,
         CardType cardType,
         String lang,
@@ -190,9 +199,12 @@ public class MoveCardsToDirController extends HtmlBuilder
         Predicate<Card> cardFilter = makeCardFilter(cardType, lang);
         return cards.stream()
             .filter(cardFilter)
-            .map(card -> calcRating(card, repeatStrategyType))
-            .min(Long::compareTo)
-            .orElse(0L);
+            .map(card -> Pair.of(card, calcRating(card, repeatStrategyType)))
+            .min(Comparator.comparing(
+                (Pair<Card, Pair<Long, String>> cardPairPair) -> cardPairPair.getRight().getLeft()
+            ))
+            .map(Pair::getRight)
+            .orElse(Pair.of(0L, ""));
     }
 
     private HtmlTag rndDirSelector(String title, DirSelectorCmp dirSelector) {
@@ -231,7 +243,8 @@ public class MoveCardsToDirController extends HtmlBuilder
                 .map(bundle -> List.of(
                     inpCheckbox(PAR_SELECTED_BUNDLE_ID, bundle.getId(), selectedBundleIds.contains(bundle.getId())),
                     rndBundleCards(bundle.getCards().stream().filter(cardFilter).toList()),
-                    text(bundle.getRating())
+                    text(bundle.getRating()),
+                    text(bundle.getHistory())
                 ))
                 .toList()
         ).attr("class", "table-single-border");
@@ -304,10 +317,12 @@ public class MoveCardsToDirController extends HtmlBuilder
             .map(e ->
                 {
                     List<Card> childCards = e.getValue();
+                    Pair<Long, String> rating = calcRating(childCards, cardType, lang, repeatStrategyType);
                     return Bundle.builder()
                         .id(e.getKey())
                         .cards(childCards.stream().sorted(Comparator.comparing(this::getCardText)).toList())
-                        .rating(calcRating(childCards, cardType, lang, repeatStrategyType))
+                        .rating(rating.getLeft())
+                        .history(rating.getRight())
                         .build();
                 }
             )
