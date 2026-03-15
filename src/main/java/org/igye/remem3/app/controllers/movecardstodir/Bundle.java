@@ -12,5 +12,5 @@ public class Bundle {
     private String id;
     private List<Card> cards;
     private long rating;
-    private String history;
+    private List<String> history;
 }

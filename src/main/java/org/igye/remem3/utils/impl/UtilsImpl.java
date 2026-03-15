@@ -32,7 +32,7 @@ import static java.lang.String.format;
 
 @RequiredArgsConstructor
 public class UtilsImpl implements Utils {
-    private static final Pattern DURATION_PATTERN = Pattern.compile("(\\d+)([smhdM])");
+    private static final Pattern DURATION_PATTERN = Pattern.compile("(\\d+)([smhd])");
     private static final Map<String, Long> UNIT_TO_SECONDS = Map.of(
         "s", 1L,
         "m", 60L,

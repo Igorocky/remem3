@@ -178,7 +178,7 @@ public class MoveCardsToDirController extends HtmlBuilder
         )));
     }
 
-    private Pair<Long, String> calcRating(Card card, RepeatStrategyType repeatStrategyType) {
+    private Pair<Long, List<String>> calcRating(Card card, RepeatStrategyType repeatStrategyType) {
         List<HistRec> hist = card.getHistory().stream()
             .filter(h -> h.getStrategy() == repeatStrategyType)
             .sorted(Comparator.comparing(HistRec::getTime).reversed())
@@ -192,10 +192,10 @@ public class MoveCardsToDirController extends HtmlBuilder
         for (int i = 0; i < hist.size() - 1; i++) {
             dur.add(utils.durationToStr(Duration.between(hist.get(i + 1).getTime(), hist.get(i).getTime()), durPrecision));
         }
-        return Pair.of((long) hist.size(), StringUtils.join(dur, " "));
+        return Pair.of((long) hist.size(), dur);
     }
 
-    private Pair<Long, String> calcRating(
+    private Pair<Long, List<String>> calcRating(
         List<Card> cards,
         CardType cardType,
         String lang,
@@ -206,10 +206,10 @@ public class MoveCardsToDirController extends HtmlBuilder
             .filter(cardFilter)
             .map(card -> Pair.of(card, calcRating(card, repeatStrategyType)))
             .min(Comparator.comparing(
-                (Pair<Card, Pair<Long, String>> cardPairPair) -> cardPairPair.getRight().getLeft()
+                (Pair<Card, Pair<Long, List<String>>> cardPairPair) -> cardPairPair.getRight().getLeft()
             ))
             .map(Pair::getRight)
-            .orElse(Pair.of(0L, ""));
+            .orElse(Pair.of(0L, List.of()));
     }
 
     private HtmlTag rndDirSelector(String title, DirSelectorCmp dirSelector) {
@@ -249,10 +249,19 @@ public class MoveCardsToDirController extends HtmlBuilder
                     inpCheckbox(PAR_SELECTED_BUNDLE_ID, bundle.getId(), selectedBundleIds.contains(bundle.getId())),
                     rndBundleCards(bundle.getCards().stream().filter(cardFilter).toList()),
                     text(bundle.getRating()),
-                    text(bundle.getHistory())
+                    rndHistory(bundle.getHistory())
                 ))
                 .toList()
         ).attr("class", "table-single-border");
+    }
+
+    private HtmlElem rndHistory(List<String> hist) {
+        List<HtmlElem> elems = new ArrayList<>();
+        if (!hist.isEmpty()) {
+            elems.add(h("u", text(hist.getFirst())));
+        }
+        hist.forEach(dur -> elems.add(dur.endsWith("d") ? h("b", text(dur)) : text(dur)));
+        return frag(elems);
     }
 
     private HtmlElem rndBundleCards(List<Card> cards) {
@@ -322,7 +331,7 @@ public class MoveCardsToDirController extends HtmlBuilder
             .map(e ->
                 {
                     List<Card> childCards = e.getValue();
-                    Pair<Long, String> rating = calcRating(childCards, cardType, lang, repeatStrategyType);
+                    Pair<Long, List<String>> rating = calcRating(childCards, cardType, lang, repeatStrategyType);
                     return Bundle.builder()
                         .id(e.getKey())
                         .cards(childCards.stream().sorted(Comparator.comparing(this::getCardText)).toList())
@@ -333,10 +342,6 @@ public class MoveCardsToDirController extends HtmlBuilder
             )
             .sorted(Comparator.comparing(Bundle::getRating).reversed())
             .toList();
-    }
-
-    private int getTextLength(Card card) {
-        return getCardText(card).length();
     }
 
     private boolean merge(Map<String, List<Card>> parentIdToCards) {
