@@ -260,7 +260,10 @@ public class MoveCardsToDirController extends HtmlBuilder
         if (!hist.isEmpty()) {
             elems.add(h("u", text(hist.getFirst())));
         }
-        hist.forEach(dur -> elems.add(dur.endsWith("d") ? h("b", text(dur)) : text(dur)));
+        for (int i = 1; i < hist.size(); i++) {
+            String dur = hist.get(i);
+            elems.add(dur.endsWith("d") ? h("b", text(dur)) : text(dur));
+        }
         return frag(elems);
     }
 
