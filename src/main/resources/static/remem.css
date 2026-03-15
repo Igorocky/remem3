@@ -3,6 +3,11 @@
     border: 1px solid black
 }
 
+.table-no-border, .table-no-border td {
+    border-collapse: collapse;
+    border: 0
+}
+
 .bucket-params td {
     padding: 5px;
 }

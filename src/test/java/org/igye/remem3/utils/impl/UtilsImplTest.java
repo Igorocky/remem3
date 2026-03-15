@@ -51,6 +51,55 @@ class UtilsImplTest {
                     .plus(Duration.ofSeconds(3))
             )
         );
+        Assertions.assertEquals(
+            "5d 3h 18m 3s",
+            utils.durationToStr(
+                Duration.ofSeconds(5 * 60 * 60 * 24)
+                    .plus(Duration.ofSeconds(60 * 60 * 3))
+                    .plus(Duration.ofSeconds(60 * 18))
+                    .plus(Duration.ofSeconds(3)),
+                4
+            )
+        );
+        Assertions.assertEquals(
+            "5d 3h 18m",
+            utils.durationToStr(
+                Duration.ofSeconds(5 * 60 * 60 * 24)
+                    .plus(Duration.ofSeconds(60 * 60 * 3))
+                    .plus(Duration.ofSeconds(60 * 18))
+                    .plus(Duration.ofSeconds(3)),
+                3
+            )
+        );
+        Assertions.assertEquals(
+            "5d 3h",
+            utils.durationToStr(
+                Duration.ofSeconds(5 * 60 * 60 * 24)
+                    .plus(Duration.ofSeconds(60 * 60 * 3))
+                    .plus(Duration.ofSeconds(60 * 18))
+                    .plus(Duration.ofSeconds(3)),
+                2
+            )
+        );
+        Assertions.assertEquals(
+            "5d",
+            utils.durationToStr(
+                Duration.ofSeconds(5 * 60 * 60 * 24)
+                    .plus(Duration.ofSeconds(60 * 60 * 3))
+                    .plus(Duration.ofSeconds(60 * 18))
+                    .plus(Duration.ofSeconds(3)),
+                1
+            )
+        );
+        Assertions.assertEquals(
+            "3h",
+            utils.durationToStr(
+                Duration.ofSeconds(60 * 60 * 3)
+                    .plus(Duration.ofSeconds(60 * 18))
+                    .plus(Duration.ofSeconds(3)),
+                1
+            )
+        );
     }
 
     @Test

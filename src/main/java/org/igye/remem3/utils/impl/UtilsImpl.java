@@ -96,14 +96,18 @@ public class UtilsImpl implements Utils {
     }
 
     @Override
-    public String durationToStr(Duration dur) {
+    public String durationToStr(Duration dur, int precision) {
+        if (precision <= 0) {
+            throw new Exn("durationToStr: precision must be a positive integer, but got %s.".formatted(precision));
+        }
         StringBuilder sb = new StringBuilder();
         long seconds = dur.getSeconds();
         Iterator<Pair<Long, String>> iter = SECONDS_TO_UNIT.iterator();
-        while (seconds > 0) {
+        while (seconds > 0 && precision > 0) {
             Pair<Long, String> unit = iter.next();
             long units = seconds / unit.getLeft();
             if (units > 0) {
+                precision--;
                 sb.append(" ").append(units).append(unit.getRight());
                 seconds = seconds % unit.getLeft();
             }
@@ -112,6 +116,11 @@ public class UtilsImpl implements Utils {
             return "0s";
         }
         return sb.toString().trim();
+    }
+
+    @Override
+    public String durationToStr(Duration duration) {
+        return durationToStr(duration, 10);
     }
 
     @Override

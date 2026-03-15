@@ -27,6 +27,8 @@ public interface Utils {
 
     List<Duration> parseDurations(String durStr);
 
+    String durationToStr(Duration duration, int precision);
+
     String durationToStr(Duration duration);
 
     String replacePlaceholders(String text, Function<String, String> valueSupplier);

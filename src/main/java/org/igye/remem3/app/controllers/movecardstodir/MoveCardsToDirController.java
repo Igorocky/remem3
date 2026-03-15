@@ -27,6 +27,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -184,10 +185,14 @@ public class MoveCardsToDirController extends HtmlBuilder
             .takeWhile(h -> BigDecimal.ONE.equals(h.getMark()))
             .toList();
         List<String> dur = new ArrayList<>();
-        for (int i = 0; i < hist.size() - 1; i++) {
-            dur.add(utils.durationToStr(Duration.between(hist.get(i + 1).getTime(), hist.get(i).getTime())));
+        int durPrecision = 1;
+        if (!hist.isEmpty()) {
+            dur.add(utils.durationToStr(Duration.between(hist.getFirst().getTime(), Instant.now()), durPrecision));
         }
-        return Pair.of((long) hist.size(), StringUtils.join(dur, ", "));
+        for (int i = 0; i < hist.size() - 1; i++) {
+            dur.add(utils.durationToStr(Duration.between(hist.get(i + 1).getTime(), hist.get(i).getTime()), durPrecision));
+        }
+        return Pair.of((long) hist.size(), StringUtils.join(dur, " "));
     }
 
     private Pair<Long, String> calcRating(
@@ -260,7 +265,7 @@ public class MoveCardsToDirController extends HtmlBuilder
                 cards.stream()
                     .map(card -> List.of(text(getCardText(card))))
                     .toList()
-            ).attr("class", "table-single-border");
+            ).attr("class", "table-no-border");
         }
     }
 
