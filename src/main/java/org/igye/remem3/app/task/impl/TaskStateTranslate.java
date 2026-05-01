@@ -2,6 +2,7 @@ package org.igye.remem3.app.task.impl;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
@@ -120,8 +121,8 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                     ? utils.makeExpectedActualPair("", "<<<show_answer>>>")
                     : (
                     params.hasParam(ACT_SHOW_EXAMPLE)
-                        ? utils.makeExpectedActualPair("", "<<<show_example>>>")
-                        : userAnswerIsCorrect.get() ? "" : utils.makeExpectedActualPair(expAnswer, userAnswer)
+                    ? utils.makeExpectedActualPair("", "<<<show_example>>>")
+                    : userAnswerIsCorrect.get() ? "" : utils.makeExpectedActualPair(expAnswer, userAnswer)
                 );
                 histRec = Optional.of(
                     HistRec.builder()
@@ -198,12 +199,12 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         List<HtmlElem> content = new ArrayList<>();
         content.add(div(text(exactMatch ? "= " : "~ ")).attr("style", "display:inline; vertical-align: top;"));
         HtmlTag inpText;
-        if (StringUtils.contains(expAnswer, "\n")) {
+        if (Strings.CS.contains(expAnswer, "\n")) {
             inpText = textarea(PAR_USER_ANS, userAnswer, 150, 10)
                 .attr("onkeydown", String.format("preventDefaultOnEnterAction(event,true,\"%s\")", ACT_SUBMIT_ANSWER))
                 .attr("autofocus", "");
         } else {
-            inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER, true)
+            inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER).autofocus()
                 .attr("size", "150");
         }
         inpText = inpText.attr("spellcheck", "false").attr("class", "border-on-focus font-family-monospace");

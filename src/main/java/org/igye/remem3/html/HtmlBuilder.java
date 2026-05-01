@@ -139,7 +139,11 @@ public class HtmlBuilder {
     }
 
     protected HtmlTag div(String style, List<? extends HtmlElem> children) {
-        return h("div", Map.of("style", style), CollectionUtils.isEmpty(children) ? List.of(text("")) : children);
+        return h(
+            "div",
+            style == null ? null : Map.of("style", style),
+            CollectionUtils.isEmpty(children) ? List.of(text("")) : children
+        );
     }
 
     protected HtmlTag div(String style, HtmlElem... content) {
@@ -147,11 +151,11 @@ public class HtmlBuilder {
     }
 
     protected HtmlTag div(List<? extends HtmlElem> children) {
-        return div("", children);
+        return div(null, children);
     }
 
     protected HtmlTag div(HtmlElem... content) {
-        return div("", content);
+        return div(null, content);
     }
 
     protected HtmlTag table(List<? extends List<? extends HtmlElem>> tableData) {
@@ -186,23 +190,16 @@ public class HtmlBuilder {
         return h("input", Map.of("type", "hidden", "name", name, "value", value));
     }
 
-    protected HtmlTag inpText(String name, String value, String onEnterBtnId, boolean autofocus) {
-        String btnId = StringUtils.isBlank(onEnterBtnId) ? "null" : String.format("\"%s\"", onEnterBtnId);
+    protected HtmlTag inpText(String name, String value, String onEnterBtnId) {
+        String btnId = StringUtils.isBlank(onEnterBtnId) ? "null" : "\"%s\"".formatted(onEnterBtnId);
         Map<String, String> attrs = new HashMap<>(Map.of(
             "type", "text",
             "name", name,
             "value", value,
             "autocomplete", "off",
-            "onkeydown", String.format("preventDefaultOnEnterAction(event,false,%s)", btnId)
+            "onkeydown", "preventDefaultOnEnterAction(event,false,%s)".formatted(btnId)
         ));
-        if (autofocus) {
-            attrs.put("autofocus", "");
-        }
         return h("input", attrs);
-    }
-
-    protected HtmlTag inpText(String name, String value, String onEnterBtnId) {
-        return inpText(name, value, onEnterBtnId, false);
     }
 
     protected HtmlTag inpSubmit(String name, String value) {
@@ -226,17 +223,18 @@ public class HtmlBuilder {
         String selected,
         List<? extends Pair<String, ? extends HtmlElem>> options
     ) {
-        Map<String, String> selectAttrs = new HashMap<>();
-        selectAttrs.put("name", name);
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put("name", name);
         if (submitOnChange) {
-            selectAttrs.put("onchange", "this.form.submit()");
+            attrs.put("onchange", "this.form.submit()");
         }
-        return h("select", selectAttrs,
+        return h("select", attrs,
             options.stream()
                 .map(option -> {
                     Map<String, String> optionAttrs = new HashMap<>();
-                    optionAttrs.put("value", option.getLeft());
-                    if (option.getLeft().equals(selected)) {
+                    String value = option.getLeft();
+                    optionAttrs.put("value", value);
+                    if (value.equals(selected)) {
                         optionAttrs.put("selected", "");
                     }
                     return h("option", optionAttrs, option.getRight());
@@ -245,11 +243,13 @@ public class HtmlBuilder {
         );
     }
 
-    protected HtmlTag select(
+    @SafeVarargs
+    protected final HtmlTag select(
         String name,
         boolean submitOnChange,
         String selected,
-        Pair<String, ? extends HtmlElem>... options) {
+        Pair<String, ? extends HtmlElem>... options
+    ) {
         return select(name, submitOnChange, selected, childrenArrayToList(options));
     }
 
@@ -257,7 +257,8 @@ public class HtmlBuilder {
         return select(name, false, selected, options);
     }
 
-    protected HtmlTag select(String name, String selected, Pair<String, ? extends HtmlElem>... options) {
+    @SafeVarargs
+    protected final HtmlTag select(String name, String selected, Pair<String, ? extends HtmlElem>... options) {
         return select(name, selected, childrenArrayToList(options));
     }
 
@@ -279,7 +280,7 @@ public class HtmlBuilder {
         if (arr == null || arr.length == 0) {
             return null;
         }
-        ArrayList<T> res = new ArrayList<>();
+        ArrayList<T> res = new ArrayList<>(arr.length);
         for (T child : arr) {
             if (child != null) {
                 res.add(child);

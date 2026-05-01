@@ -40,13 +40,13 @@ public final class HtmlTag implements HtmlElem {
         if (CollectionUtils.isEmpty(children)) {
             sb.append("/>");
         } else {
-            sb.append(">").append(
+            sb.append(">\n").append(
                 children.stream()
                     .filter(Objects::nonNull)
                     .map(HtmlElem::toString)
                     .collect(Collectors.joining("\n"))
             );
-            sb.append("</").append(name).append(">");
+            sb.append("\n</").append(name).append(">");
         }
         return sb.toString();
     }
@@ -61,5 +61,9 @@ public final class HtmlTag implements HtmlElem {
 
     public HtmlTag disabled() {
         return attr("disabled", "");
+    }
+
+    public HtmlTag autofocus() {
+        return attr("autofocus", "");
     }
 }

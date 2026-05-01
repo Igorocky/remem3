@@ -254,7 +254,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
                 case TextPart.Gap gap -> {
                     String userAns = userAnswers.get(gapIdx);
                     String gapParamName = keyValueParam(PAR_USER_ANS, gapIdx);
-                    HtmlTag gapElem = inpText(gapParamName, userAns, ACT_SUBMIT_ANSWERS, true)
+                    HtmlTag gapElem = inpText(gapParamName, userAns, ACT_SUBMIT_ANSWERS).autofocus()
                         .attr("size", "20").attr("spellcheck", "false").attr("class", "border-on-focus");
                     content.add(gapElem);
                     if (gap.getAnswer().equals(userAns)) {

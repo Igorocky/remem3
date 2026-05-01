@@ -565,14 +565,14 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             String eAns = expAns.get(i);
             if (eAns.equals(uAns)) {
                 elems.add(
-                    inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS, true)
+                    inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS).autofocus()
                         .attr("size", "20").attr("disabled", "")
                         .attr("spellcheck", "false").attr("class", "border-on-focus")
                 );
                 elems.add(inpHidden(PAR_USER_ANS + ":" + i, uAns));
             } else {
                 elems.add(
-                    inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS, true)
+                    inpText(PAR_USER_ANS + ":" + i, uAns, ACT_SUBMIT_ANSWERS).autofocus()
                         .attr("size", "20").attr("spellcheck", "false").attr("class", "border-on-focus")
                 );
             }

@@ -1,7 +1,7 @@
 function preventDefaultOnEnterAction(event, ctrl, btnIdToClick) {
-    if(event.keyCode === 13 && (ctrl && event.ctrlKey || !ctrl)){
+    if (event.keyCode === 13) {
         event.preventDefault()
-        if (btnIdToClick !== null) {
+        if (btnIdToClick !== null && (ctrl && event.ctrlKey || !ctrl)) {
             document.getElementById(btnIdToClick).click()
         }
     }

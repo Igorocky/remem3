@@ -76,7 +76,7 @@ public class ValidateCardsController extends HtmlBuilder
             form(
                 div(
                     text("Directory: "),
-                    inpText(PAR_DIR, st.getDir(), ACT_VALIDATE, true).attr("size", "100")
+                    inpText(PAR_DIR, st.getDir(), ACT_VALIDATE).autofocus().attr("size", "100")
                 ),
                 div(inpSubmit(ACT_VALIDATE, "Validate"))
             ),
