@@ -1,6 +1,5 @@
 package org.igye.remem3.utils.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
@@ -11,6 +10,7 @@ import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Producer;
 import org.igye.remem3.utils.Utils;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.math.BigDecimal;

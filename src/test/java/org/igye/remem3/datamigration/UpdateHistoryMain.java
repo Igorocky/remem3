@@ -1,10 +1,10 @@
 package org.igye.remem3.datamigration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.impl.UtilsImpl;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.nio.file.Files;

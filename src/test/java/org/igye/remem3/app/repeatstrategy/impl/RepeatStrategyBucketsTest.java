@@ -1,6 +1,5 @@
 package org.igye.remem3.app.repeatstrategy.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.Task;
@@ -8,6 +7,7 @@ import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.Duration;

@@ -1,6 +1,5 @@
 package org.igye.remem3.app.spring;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.igye.remem3.app.AppProps;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
@@ -22,6 +21,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.time.Clock;

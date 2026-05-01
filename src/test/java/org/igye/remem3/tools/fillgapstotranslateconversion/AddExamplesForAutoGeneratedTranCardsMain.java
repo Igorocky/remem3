@@ -1,6 +1,5 @@
 package org.igye.remem3.tools.fillgapstotranslateconversion;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.CardUtils;
@@ -9,6 +8,7 @@ import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.impl.UtilsImpl;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.util.Map;

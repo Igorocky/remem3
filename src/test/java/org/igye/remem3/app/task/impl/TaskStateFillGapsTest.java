@@ -1,6 +1,5 @@
 package org.igye.remem3.app.task.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.Instant;
