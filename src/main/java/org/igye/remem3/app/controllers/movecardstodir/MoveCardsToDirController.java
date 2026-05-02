@@ -72,7 +72,7 @@ public class MoveCardsToDirController extends HtmlBuilder
 
     @Override
     public State loadState(RequestParams params) {
-        DirSelectorCmp dirSelectorFrom = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_FROM, params);
+        DirSelectorCmp dirSelectorFrom = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_FROM, false, params);
         CardType cardType = CardType.fromCode(
             params.getParam(
                 PAR_CARD_TYPE_CODE,
@@ -89,7 +89,7 @@ public class MoveCardsToDirController extends HtmlBuilder
                 cache.getStr(PAR_REPEAT_STRATEGY_TYPE, RepeatStrategyType.QUEUE.toString())
             )
         );
-        DirSelectorCmp dirSelectorTo = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_TO, params);
+        DirSelectorCmp dirSelectorTo = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_TO, false, params);
         List<Card> allCards = cardUtils.loadAllCards(dirSelectorFrom.getSelectedDirectory());
         return State.builder()
             .params(params)

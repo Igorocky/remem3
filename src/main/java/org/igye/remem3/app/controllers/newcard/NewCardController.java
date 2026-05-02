@@ -68,7 +68,7 @@ public class NewCardController extends HtmlBuilder
     @Override
     public NewCardState loadState(RequestParams params) {
         try {
-            DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_SAVE_NEW_CARD_TO, params);
+            DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_SAVE_NEW_CARD_TO, false, params);
             return NewCardState.builder()
                 .settings(settings)
                 .cache(cache)

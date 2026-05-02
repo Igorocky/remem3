@@ -55,14 +55,12 @@ public class SettingsImpl implements Settings {
                 throw new Exn("Language names cannot contains whitespaces.");
             }
         }
-        List<String> directoriesWithCards = trimAndSkipEmpty(
-            Collections.unmodifiableList(props.getDirectoriesWithCards())
-        );
+        List<String> directoriesWithCards = trimAndSkipEmpty(props.getDirectoriesWithCards());
         checkNotEmpty(directoriesWithCards, PROP_DIRECTORIES_WITH_CARDS);
         String nonExistentDirs = directoriesWithCards.stream()
             .map(File::new)
             .filter(dir -> !dir.exists() || !dir.isDirectory())
-            .map(File::getName)
+            .map(File::getPath)
             .collect(Collectors.joining(", "));
         if (StringUtils.isNotEmpty(nonExistentDirs)) {
             throw new Exn(String.format("Invalid directories in %s: %s", PROP_DIRECTORIES_WITH_CARDS, nonExistentDirs));
@@ -127,7 +125,7 @@ public class SettingsImpl implements Settings {
 
     private static List<BucketDelaysDto> parseBucketDelays(String str, Utils utils) {
         if (StringUtils.isBlank(str)) {
-            throw new Exn(String.format("%s property cannot be empty.", PROP_BUCKET_DELAYS));
+            throw new Exn("%s property cannot be empty.".formatted(PROP_BUCKET_DELAYS));
         }
         List<BucketDelaysDto> bucketDelays = Arrays.stream(str.split(";"))
             .map(String::trim)
@@ -167,13 +165,13 @@ public class SettingsImpl implements Settings {
 
     private static void checkNotEmpty(List<String> values, String propName) {
         if (CollectionUtils.isEmpty(values)) {
-            throw new Exn(String.format("Property '%s' is empty", propName));
+            throw new Exn("Property '%s' is empty".formatted(propName));
         }
     }
 
     private static String checkNotBlank(String value, String propName) {
         if (StringUtils.isBlank(value)) {
-            throw new Exn(String.format("The '%s' property must not be blank.", propName));
+            throw new Exn("The '%s' property must not be blank.".formatted(propName));
         }
         return value;
     }

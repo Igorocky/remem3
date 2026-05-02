@@ -211,7 +211,7 @@ public class ExerciseController extends HtmlBuilder
         return st
             .withDirSelector(
                 new DirSelectorCmpImpl(
-                    settings, cache, PAR_DIR_TO_READ_TASKS_FROM, st.getDirSelector().getSelectedDirectoryStr()
+                    settings, cache, PAR_DIR_TO_READ_TASKS_FROM, false, st.getDirSelector().getSelectedDirectory()
                 )
             )
             .withConfig("");
@@ -585,7 +585,7 @@ public class ExerciseController extends HtmlBuilder
         }
         dirStr = dirStr.trim();
         File dir = dirStr.startsWith("/") ? new File(dirStr) : new File(configFile.getParentFile(), dirStr);
-        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_READ_TASKS_FROM, dir);
+        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_READ_TASKS_FROM, true, dir);
         CardUtils cardUtils = new CardUtilsImpl(utils, settings);
         String tasksStr = props.getProperty(PROP_TASKS);
         tasksStr = StringUtils.isBlank(dirStr) ? "" : tasksStr;
@@ -612,7 +612,7 @@ public class ExerciseController extends HtmlBuilder
     private ExerciseState.SetParams makeSetParamsStateWithCustomConfig(
         Settings settings, Cache cache, RequestParams params, ExerciseState prevState
     ) {
-        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_READ_TASKS_FROM, params);
+        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_READ_TASKS_FROM, false, params);
         CardUtils cardUtils = new CardUtilsImpl(utils, settings);
         return ExerciseState.SetParams.builder()
             .settings(settings)
@@ -652,9 +652,9 @@ public class ExerciseController extends HtmlBuilder
         Set<String> checked = params.hasParam(keyValueParam(PAR_DIR_TO_READ_TASKS_FROM, 0))
             ? Arrays.stream(params.getParams(PAR_TASK_TYPE)).collect(Collectors.toSet())
             : Arrays.stream(cache.getStr(PAR_TASK_TYPE, "").split(","))
-            .filter(StringUtils::isNotBlank)
-            .map(String::trim)
-            .collect(Collectors.toSet());
+              .filter(StringUtils::isNotBlank)
+              .map(String::trim)
+              .collect(Collectors.toSet());
         return getTaskTypes(availableTaskTypes, checked);
     }
 
