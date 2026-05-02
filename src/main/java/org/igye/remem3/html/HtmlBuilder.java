@@ -1,6 +1,5 @@
 package org.igye.remem3.html;
 
-import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -14,9 +13,6 @@ public class HtmlBuilder {
     protected static final String GREEN = "#0077008a";
     protected static final String RED = "#ff00008f";
     protected static final String ORANGE = "#ffa500a3";
-
-    @Setter
-    private String contextPath;
 
     protected HtmlText text(String text) {
         return new HtmlText(text);
@@ -63,8 +59,8 @@ public class HtmlBuilder {
             h("head",
                 h("meta", Map.of("charset", "UTF-8")),
                 h("title", text(title)),
-                h("script", Map.of("type", "text/javascript", "src", contextPath + "/remem-utils.js"), text("")),
-                h("link", Map.of("rel", "stylesheet", "href", contextPath + "/remem.css"))
+                h("script", Map.of("type", "text/javascript", "src", "/remem-utils.js"), text("")),
+                h("link", Map.of("rel", "stylesheet", "href", "/remem.css"))
             ),
             h("body", children)
         );

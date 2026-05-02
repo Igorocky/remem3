@@ -22,7 +22,6 @@ public class DispatcherController {
         if (controller == null) {
             throw new Exn(String.format("Cannot find a controller for the id '%s'.", controllerId));
         }
-        controller.setContextPath(req.getContextPath());
         RequestParams params = new RequestParamsImpl(req);
         Object state = controller.loadState(params);
         Optional<Object> action = controller.decodeAction(params, state);

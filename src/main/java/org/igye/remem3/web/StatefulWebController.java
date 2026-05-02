@@ -9,8 +9,6 @@ public interface StatefulWebController<S, A> {
         return getId();
     }
 
-    void setContextPath(String contextPath);
-
     S loadState(RequestParams params);
 
     Optional<A> decodeAction(RequestParams params, S state);
