@@ -59,8 +59,8 @@ public class HtmlBuilder {
             h("head",
                 h("meta", Map.of("charset", "UTF-8")),
                 h("title", text(title)),
-                h("script", Map.of("type", "text/javascript", "src", "/static/remem-utils.js"), text("")),
-                h("link", Map.of("rel", "stylesheet", "href", "/static/remem.css"))
+                h("script", Map.of("type", "text/javascript", "src", "/remem-utils.js"), text("")),
+                h("link", Map.of("rel", "stylesheet", "href", "/remem.css"))
             ),
             h("body", children)
         );

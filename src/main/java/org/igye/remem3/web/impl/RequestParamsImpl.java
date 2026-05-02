@@ -134,4 +134,9 @@ public class RequestParamsImpl implements RequestParams {
     public Long getKeyValueParamLong(String key) {
         return Long.parseLong(getKeyValueParam(key));
     }
+
+    @Override
+    public boolean isEmpty() {
+        return params.isEmpty();
+    }
 }

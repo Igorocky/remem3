@@ -13,10 +13,11 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/api")
 public class DispatcherController {
     private final Map<String, StatefulWebController<?, ?>> controllers;
 
-    @RequestMapping("/api/{controllerId}")
+    @RequestMapping("/{controllerId}")
     public String process(HttpServletRequest req, @PathVariable String controllerId) {
         StatefulWebController controller = controllers.get(controllerId);
         if (controller == null) {
@@ -30,7 +31,7 @@ public class DispatcherController {
         return "<!DOCTYPE html>\n" + controller.renderState(newState);
     }
 
-    @RequestMapping("/api/")
+    @RequestMapping("/")
     public String processIndex(HttpServletRequest req) {
         return process(req, "");
     }

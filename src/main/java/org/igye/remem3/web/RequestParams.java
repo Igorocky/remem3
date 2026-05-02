@@ -27,4 +27,6 @@ public interface RequestParams {
     Long getKeyValueParamLong(String key, Long defaultValue);
 
     Long getKeyValueParamLong(String key);
+
+    boolean isEmpty();
 }
