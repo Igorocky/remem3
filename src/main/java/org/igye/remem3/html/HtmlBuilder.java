@@ -191,7 +191,7 @@ public class HtmlBuilder {
     }
 
     protected HtmlTag inpText(String name, String value, String onEnterBtnId) {
-        String btnId = StringUtils.isBlank(onEnterBtnId) ? "null" : "\"%s\"".formatted(onEnterBtnId);
+        String btnId = StringUtils.isBlank(onEnterBtnId) ? "null" : "'%s'".formatted(onEnterBtnId);
         Map<String, String> attrs = new HashMap<>(Map.of(
             "type", "text",
             "name", name,

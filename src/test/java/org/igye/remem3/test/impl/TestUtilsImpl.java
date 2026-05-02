@@ -98,23 +98,25 @@ public class TestUtilsImpl implements TestUtils {
             throw new Exn("forms.size() > 1");
         }
         Map<String, List<String>> reqParams = new HashMap<>();
-        getAllInputs(forms.isEmpty() ? html : forms.getFirst()).forEach(inp -> {
-            if (isInpSubmit(inp)) {
-                if (submitButtonName.equals(getName(inp))) {
-                    reqParams.computeIfAbsent(submitButtonName, _ -> new ArrayList<>()).add(getValue(inp));
+        getAllInputs(forms.isEmpty() ? html : forms.getFirst())
+            .filter(inp -> !isDisabled(inp))
+            .forEach(inp -> {
+                if (isInpSubmit(inp)) {
+                    if (submitButtonName.equals(getName(inp))) {
+                        reqParams.computeIfAbsent(submitButtonName, _ -> new ArrayList<>()).add(getValue(inp));
+                    }
+                } else if (isInpCheckbox(inp) && isChecked(inp)) {
+                    reqParams.computeIfAbsent(getName(inp), _ -> new ArrayList<>()).add(getValue(inp));
+                } else if (isSelect(inp)) {
+                    CollectionUtils.emptyIfNull(inp.getChildren()).stream()
+                        .filter(ch -> ch instanceof HtmlTag)
+                        .map(ch -> (HtmlTag) ch)
+                        .filter(opt -> "option".equals(opt.getName()) && isSelected(opt))
+                        .forEach(opt -> reqParams.computeIfAbsent(getName(inp), _ -> new ArrayList<>()).add(getValue(opt)));
+                } else {
+                    reqParams.computeIfAbsent(getName(inp), _ -> new ArrayList<>()).add(getValue(inp));
                 }
-            } else if (isInpCheckbox(inp) && isChecked(inp)) {
-                reqParams.computeIfAbsent(getName(inp), _ -> new ArrayList<>()).add(getValue(inp));
-            } else if (isSelect(inp)) {
-                CollectionUtils.emptyIfNull(inp.getChildren()).stream()
-                    .filter(ch -> ch instanceof HtmlTag)
-                    .map(ch -> (HtmlTag) ch)
-                    .filter(opt -> "option".equals(opt.getName()) && isSelected(opt))
-                    .forEach(opt -> reqParams.computeIfAbsent(getName(inp), _ -> new ArrayList<>()).add(getValue(opt)));
-            } else {
-                reqParams.computeIfAbsent(getName(inp), _ -> new ArrayList<>()).add(getValue(inp));
-            }
-        });
+            });
         String[] emptyStringArr = {};
         Map<String, String[]> parameterMap = reqParams.entrySet().stream()
             .collect(Collectors.toMap(

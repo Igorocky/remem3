@@ -25,9 +25,8 @@ public class DispatcherController {
         controller.setContextPath(req.getContextPath());
         RequestParams params = new RequestParamsImpl(req);
         Object state = controller.loadState(params);
-        Object newState = ((Optional<Object>) controller.decodeAction(params, state))
-            .map(act -> controller.updateState(state, act))
-            .orElse(state);
+        Optional<Object> action = controller.decodeAction(params, state);
+        Object newState = action.map(act -> controller.updateState(state, act)).orElse(state);
         controller.saveState(newState);
         return "<!DOCTYPE html>\n" + controller.renderState(newState);
     }

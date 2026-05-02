@@ -58,6 +58,8 @@ public class RequestParamsImpl implements RequestParams {
         String[] params = getParams(paramName);
         if (params.length == 0) {
             return defaultValue;
+        } else if (params.length != 1) {
+            throw new Exn(String.format("params.length != 1 ( == %s ) for param '%s'.", params.length, paramName));
         }
         return params[0];
     }
@@ -99,6 +101,8 @@ public class RequestParamsImpl implements RequestParams {
         List<String> values = getKeyValueParams(key);
         if (CollectionUtils.isEmpty(values)) {
             return defaultValue;
+        } else if (values.size() != 1) {
+            throw new Exn(String.format("values.size() != 1 ( == %s ) for key-value param '%s'.", values.size(), key));
         }
         return values.getFirst();
     }

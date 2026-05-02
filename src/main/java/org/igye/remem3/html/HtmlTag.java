@@ -32,9 +32,9 @@ public final class HtmlTag implements HtmlElem {
             attrs.forEach((attrName, attrValue) ->
                 sb.append(" ")
                     .append(attrName)
-                    .append("='")
-                    .append(StringEscapeUtils.escapeHtml4(attrValue).replace("'", "&#39;"))
-                    .append("'")
+                    .append("=\"")
+                    .append(StringEscapeUtils.escapeHtml4(attrValue))
+                    .append("\"")
             );
         }
         if (CollectionUtils.isEmpty(children)) {

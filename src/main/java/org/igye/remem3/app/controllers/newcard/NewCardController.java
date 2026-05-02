@@ -225,7 +225,7 @@ public class NewCardController extends HtmlBuilder
                 text("Text 1"),
                 textarea(PAR_CARD_TRANSLATE_TEXT_1, card.getText1(), 100, 5).attr("autofocus", "")
                     .attr("tabindex", "1")
-                    .attr("onkeydown", format("toggleExactMatch(event,\"%s\")", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1))
+                    .attr("onkeydown", format("toggleExactMatch(event,'%s')", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1))
             ),
             List.of(
                 text("Example 1"),
@@ -249,7 +249,7 @@ public class NewCardController extends HtmlBuilder
                 text("Text 2"),
                 textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5)
                     .attr("tabindex", "2")
-                    .attr("onkeydown", format("toggleExactMatch(event,\"%s\")", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2))
+                    .attr("onkeydown", format("toggleExactMatch(event,'%s')", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2))
             ),
             List.of(
                 text("Example 2"),
