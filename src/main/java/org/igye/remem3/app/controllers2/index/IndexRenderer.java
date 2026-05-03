@@ -8,9 +8,8 @@ public class IndexRenderer extends HtmlBuilder implements StateRenderer<IndexSta
     public String render(IndexState state) {
         return simplePageWithTitle("Index",
             state.getAllConstructorNames().stream()
-                .map(name -> div(text(name)))
+                .map(name -> div(a("/state/" + name, text(name))))
                 .toList()
         ).toString();
     }
-
 }

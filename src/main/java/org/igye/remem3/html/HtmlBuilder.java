@@ -46,6 +46,10 @@ public class HtmlBuilder {
         return new HtmlTag(tagName, null, null);
     }
 
+    protected HtmlTag a(String url, HtmlElem content) {
+        return h("a", Map.of("href", url), content);
+    }
+
     protected HtmlFragment frag(HtmlElem... children) {
         return new HtmlFragment(childrenArrayToList(children));
     }
