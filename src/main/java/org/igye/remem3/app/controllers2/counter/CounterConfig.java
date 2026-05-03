@@ -14,5 +14,5 @@ import org.springframework.context.annotation.FilterType;
         CounterRenderer.class,
     })
 )
-public class CounterStateConfig {
+public class CounterConfig {
 }
