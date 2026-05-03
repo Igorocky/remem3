@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @Getter
 @With
-public class MakeNewCardState {
+public class NewCardState {
     private final List<String> errors;
     private final DirSelectorCmp dir;
     private final CardDto card;

@@ -6,7 +6,7 @@ import org.igye.remem3.app.state.StateConstructor;
 import org.igye.remem3.utils.NotImplemented;
 
 @RequiredArgsConstructor
-public class MakeNewCardConstructor implements StateConstructor<MakeNewCardState> {
+public class NewCardConstructor implements StateConstructor<NewCardState> {
     private final Cache cache;
 
     @Override
@@ -15,7 +15,7 @@ public class MakeNewCardConstructor implements StateConstructor<MakeNewCardState
     }
 
     @Override
-    public MakeNewCardState construct() {
+    public NewCardState construct() {
         throw new NotImplemented();
     }
 
@@ -26,6 +26,6 @@ public class MakeNewCardConstructor implements StateConstructor<MakeNewCardState
 
     @Override
     public Class<?> getSupportedType() {
-        return MakeNewCardState.class;
+        return NewCardState.class;
     }
 }

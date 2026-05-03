@@ -19,7 +19,7 @@ import java.util.List;
 import static java.lang.String.format;
 
 @RequiredArgsConstructor
-public class MakeNewCardRenderer extends HtmlBuilder implements StateRenderer<MakeNewCardState> {
+public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCardState> {
     public static final String PAR_DIR_TO_SAVE_NEW_CARD_TO = "MakeNewCard__PAR_DIR_TO_SAVE_NEW_CARD_TO";
     public static final String PAR_CARD_TYPE = "MakeNewCard__PAR_CARD_TYPE";
 
@@ -44,11 +44,11 @@ public class MakeNewCardRenderer extends HtmlBuilder implements StateRenderer<Ma
 
     @Override
     public Class<?> getSupportedType() {
-        return MakeNewCardState.class;
+        return NewCardState.class;
     }
 
     @Override
-    public String render(MakeNewCardState st) {
+    public String render(NewCardState st) {
         return simplePageWithTitle("Add new card",
             rndErrors(st.getErrors()),
             h3(text("Add new card")),
