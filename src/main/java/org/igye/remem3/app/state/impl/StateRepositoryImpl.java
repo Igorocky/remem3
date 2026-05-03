@@ -23,14 +23,14 @@ public class StateRepositoryImpl implements StateRepository {
 
     private final StateCache stateCache;
     private final Map<String, StateConstructor> stateConstructors;
-    private final List<StateUpdater<?, ?>> stateUpdaters;
+    private final List<StateUpdater<?>> stateUpdaters;
     private final List<StateRenderer<?>> stateRenderers;
 
     public StateRepositoryImpl(
         Clock clock,
         Duration evictionTimeout,
         List<StateConstructor> stateConstructors,
-        List<StateUpdater<?, ?>> stateUpdaters,
+        List<StateUpdater<?>> stateUpdaters,
         List<StateRenderer<?>> stateRenderers
     ) {
         this.stateCache = new StateCacheImpl(clock, evictionTimeout);
@@ -50,7 +50,7 @@ public class StateRepositoryImpl implements StateRepository {
     public void updateState(String stateId, RequestParams params) {
         Pair<String, Object> idAndState = loadState(stateId);
         Object state = idAndState.getRight();
-        StateUpdater<Object, Object> stateUpdater = (StateUpdater<Object, Object>) findTypeSupporter(
+        StateUpdater<Object> stateUpdater = (StateUpdater<Object>) findTypeSupporter(
             stateUpdaters, state.getClass(), "state updater"
         );
         String actualStateId = idAndState.getLeft();

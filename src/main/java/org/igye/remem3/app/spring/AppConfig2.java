@@ -24,7 +24,7 @@ public class AppConfig2 {
     public StateRepository stateRepository(
         Clock clock,
         List<StateConstructor> stateConstructors,
-        List<StateUpdater<?, ?>> stateUpdaters,
+        List<StateUpdater<?>> stateUpdaters,
         List<StateRenderer<?>> stateRenderers
     ) {
         return new StateRepositoryImpl(clock, Duration.ofHours(1), stateConstructors, stateUpdaters, stateRenderers);
