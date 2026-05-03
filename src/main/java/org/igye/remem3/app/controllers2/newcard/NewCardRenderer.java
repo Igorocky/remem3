@@ -20,24 +20,24 @@ import static java.lang.String.format;
 
 @RequiredArgsConstructor
 public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCardState> {
-    public static final String PAR_DIR_TO_SAVE_NEW_CARD_TO = "MakeNewCard__PAR_DIR_TO_SAVE_NEW_CARD_TO";
-    public static final String PAR_CARD_TYPE = "MakeNewCard__PAR_CARD_TYPE";
+    public static final String PAR_DIR_TO_SAVE_NEW_CARD_TO = "NewCard__PAR_DIR_TO_SAVE_NEW_CARD_TO";
+    public static final String PAR_CARD_TYPE = "NewCard__PAR_CARD_TYPE";
 
-    public static final String PAR_CARD_FILL_GAPS_LANG = "MakeNewCard__PAR_CARD_FILL_GAPS_LANG";
-    public static final String PAR_CARD_FILL_GAPS_TEXT = "MakeNewCard__PAR_CARD_FILL_GAPS_TEXT";
-    public static final String PAR_CARD_FILL_GAPS_NOTES = "MakeNewCard__PAR_CARD_FILL_GAPS_NOTES";
+    public static final String PAR_CARD_FILL_GAPS_LANG = "NewCard__PAR_CARD_FILL_GAPS_LANG";
+    public static final String PAR_CARD_FILL_GAPS_TEXT = "NewCard__PAR_CARD_FILL_GAPS_TEXT";
+    public static final String PAR_CARD_FILL_GAPS_NOTES = "NewCard__PAR_CARD_FILL_GAPS_NOTES";
 
-    public static final String PAR_CARD_TRANSLATE_LANG_1 = "MakeNewCard__PAR_CARD_TRANSLATE_LANG_1";
-    public static final String PAR_CARD_TRANSLATE_EXACT_MATCH_1 = "MakeNewCard__PAR_CARD_TRANSLATE_EXACT_MATCH_1";
-    public static final String PAR_CARD_TRANSLATE_TEXT_1 = "MakeNewCard__PAR_CARD_TRANSLATE_TEXT_1";
-    public static final String PAR_CARD_TRANSLATE_EXAMPLE_1 = "MakeNewCard__PAR_CARD_TRANSLATE_EXAMPLE_1";
-    public static final String PAR_CARD_TRANSLATE_LANG_2 = "MakeNewCard__PAR_CARD_TRANSLATE_LANG_2";
-    public static final String PAR_CARD_TRANSLATE_EXACT_MATCH_2 = "MakeNewCard__PAR_CARD_TRANSLATE_EXACT_MATCH_2";
-    public static final String PAR_CARD_TRANSLATE_TEXT_2 = "MakeNewCard__PAR_CARD_TRANSLATE_TEXT_2";
-    public static final String PAR_CARD_TRANSLATE_EXAMPLE_2 = "MakeNewCard__PAR_CARD_TRANSLATE_EXAMPLE_2";
-    public static final String PAR_CARD_TRANSLATE_NOTES = "MakeNewCard__PAR_CARD_TRANSLATE_NOTES";
+    public static final String PAR_CARD_TRANSLATE_LANG_1 = "NewCard__PAR_CARD_TRANSLATE_LANG_1";
+    public static final String PAR_CARD_TRANSLATE_EXACT_MATCH_1 = "NewCard__PAR_CARD_TRANSLATE_EXACT_MATCH_1";
+    public static final String PAR_CARD_TRANSLATE_TEXT_1 = "NewCard__PAR_CARD_TRANSLATE_TEXT_1";
+    public static final String PAR_CARD_TRANSLATE_EXAMPLE_1 = "NewCard__PAR_CARD_TRANSLATE_EXAMPLE_1";
+    public static final String PAR_CARD_TRANSLATE_LANG_2 = "NewCard__PAR_CARD_TRANSLATE_LANG_2";
+    public static final String PAR_CARD_TRANSLATE_EXACT_MATCH_2 = "NewCard__PAR_CARD_TRANSLATE_EXACT_MATCH_2";
+    public static final String PAR_CARD_TRANSLATE_TEXT_2 = "NewCard__PAR_CARD_TRANSLATE_TEXT_2";
+    public static final String PAR_CARD_TRANSLATE_EXAMPLE_2 = "NewCard__PAR_CARD_TRANSLATE_EXAMPLE_2";
+    public static final String PAR_CARD_TRANSLATE_NOTES = "NewCard__PAR_CARD_TRANSLATE_NOTES";
 
-    public static final String ACT_CREATE_CARD = "MakeNewCard__ACT_CREATE_CARD";
+    public static final String ACT_CREATE_CARD = "NewCard__ACT_CREATE_CARD";
 
     private final Settings settings;
     private final Cache cache;

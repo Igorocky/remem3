@@ -15,17 +15,20 @@ public sealed interface CardDto permits CardDto.FillGaps, CardDto.Translate {
     @Getter
     @With
     final class FillGaps implements CardDto {
-        private final CardType type = FILL_GAPS;
         private final String lang;
         private final String text;
         private final String notes;
+
+        @Override
+        public CardType getType() {
+            return FILL_GAPS;
+        }
     }
 
     @Builder
     @Getter
     @With
     final class Translate implements CardDto {
-        private final CardType type = TRANSLATE;
         private final String lang1;
         private final String text1;
         private final boolean exactMatch1;
@@ -35,5 +38,10 @@ public sealed interface CardDto permits CardDto.FillGaps, CardDto.Translate {
         private final boolean exactMatch2;
         private final String example2;
         private final String notes;
+
+        @Override
+        public CardType getType() {
+            return TRANSLATE;
+        }
     }
 }
