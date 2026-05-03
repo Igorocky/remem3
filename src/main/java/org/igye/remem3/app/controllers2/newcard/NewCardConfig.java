@@ -10,7 +10,7 @@ import org.springframework.context.annotation.FilterType;
     useDefaultFilters = false,
     includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
         NewCardConstructor.class,
-//        NewCardUpdater.class,
+        NewCardUpdater.class,
         NewCardRenderer.class,
     })
 )

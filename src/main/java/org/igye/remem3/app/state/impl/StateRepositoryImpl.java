@@ -56,7 +56,11 @@ public class StateRepositoryImpl implements StateRepository {
             stateUpdaters, state.getClass(), "state updater"
         );
         String actualStateId = idAndState.getLeft();
-        stateCache.putState(actualStateId, stateUpdater.update(state, params));
+        Object newState = stateUpdater.update(state, params);
+        if (newState == null) {
+            throw new Exn("%s returned null new state.".formatted(stateUpdater));
+        }
+        stateCache.putState(actualStateId, newState);
     }
 
     @Override
