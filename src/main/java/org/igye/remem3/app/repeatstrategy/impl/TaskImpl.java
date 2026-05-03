@@ -2,9 +2,9 @@ package org.igye.remem3.app.repeatstrategy.impl;
 
 import lombok.Getter;
 import org.igye.remem3.app.RepeatStrategyType;
+import org.igye.remem3.app.controllers.exercise.HasBaseTask;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.Task;
-import org.igye.remem3.app.controllers.exercise.HasBaseTask;
 import org.igye.remem3.utils.Exn;
 
 import java.io.File;
@@ -20,7 +20,6 @@ public class TaskImpl implements Task, HasBaseTask {
     private int allHistSize;
     private List<HistRec> hist;
     private File file;
-    private String id;
     private String dir;
 
     public TaskImpl(

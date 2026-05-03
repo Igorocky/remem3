@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public sealed interface Card {
+public sealed interface Card permits Card.BaseCard {
     Optional<File> getFile();
 
     Optional<Instant> getCreatedAt();
@@ -35,8 +35,9 @@ public sealed interface Card {
 
     @SuperBuilder
     @ToString(exclude = {"taskTypes", "tasks"})
+    //todo: check why @EqualsAndHashCode is needed. It looks like comparing by tasks is wrong.
     @EqualsAndHashCode(exclude = {"taskTypes", "tasks"})
-    sealed abstract class BaseCard implements Card {
+    sealed abstract class BaseCard implements Card permits FillGaps, Translate {
         @Getter
         @Builder.Default
         private Optional<File> file = Optional.empty();

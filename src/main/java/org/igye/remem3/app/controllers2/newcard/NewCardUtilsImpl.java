@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
-import org.igye.remem3.app.controllers.newcard.CardDto;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.web.RequestParams;
 

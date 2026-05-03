@@ -8,6 +8,7 @@ import lombok.With;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers2.newcard.CardDto;
 
 import java.util.List;
 

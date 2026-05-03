@@ -5,7 +5,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
-import org.igye.remem3.app.controllers.newcard.CardDto;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.html.HtmlBuilder;

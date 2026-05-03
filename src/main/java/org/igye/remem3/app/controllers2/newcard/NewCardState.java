@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.With;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
-import org.igye.remem3.app.controllers.newcard.CardDto;
 
 import java.util.List;
 

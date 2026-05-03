@@ -8,6 +8,7 @@ import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.controllers2.newcard.CardDto;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.impl.CardUtilsImpl;
