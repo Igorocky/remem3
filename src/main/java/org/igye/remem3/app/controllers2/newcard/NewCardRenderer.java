@@ -42,10 +42,6 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
     private final Settings settings;
     private final Cache cache;
 
-    @Override
-    public Class<?> getSupportedType() {
-        return NewCardState.class;
-    }
 
     @Override
     public String render(NewCardState st) {

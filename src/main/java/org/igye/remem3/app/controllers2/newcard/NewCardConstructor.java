@@ -45,10 +45,6 @@ public class NewCardConstructor implements StateConstructor<NewCardState> {
         return false;
     }
 
-    @Override
-    public Class<?> getSupportedType() {
-        return NewCardState.class;
-    }
 
     private CardDto makeDefaultCard() {
         CardType defaultCardType = CardType.FILL_GAPS;

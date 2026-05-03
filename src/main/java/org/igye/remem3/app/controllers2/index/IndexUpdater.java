@@ -9,8 +9,4 @@ public class IndexUpdater implements StateUpdater<IndexState> {
         return state;
     }
 
-    @Override
-    public Class<?> getSupportedType() {
-        return IndexState.class;
-    }
 }

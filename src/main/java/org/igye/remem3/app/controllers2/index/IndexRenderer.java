@@ -13,8 +13,4 @@ public class IndexRenderer extends HtmlBuilder implements StateRenderer<IndexSta
         ).toString();
     }
 
-    @Override
-    public Class<?> getSupportedType() {
-        return IndexState.class;
-    }
 }

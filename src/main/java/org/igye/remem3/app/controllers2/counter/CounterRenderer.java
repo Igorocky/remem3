@@ -13,8 +13,4 @@ public class CounterRenderer extends HtmlBuilder implements StateRenderer<Counte
         ).toString();
     }
 
-    @Override
-    public Class<?> getSupportedType() {
-        return CounterState.class;
-    }
 }

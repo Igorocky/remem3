@@ -23,7 +23,7 @@ public class AppConfig2 {
     @Bean
     public StateRepository stateRepository(
         Clock clock,
-        List<StateConstructor> stateConstructors,
+        List<StateConstructor<?>> stateConstructors,
         List<StateUpdater<?>> stateUpdaters,
         List<StateRenderer<?>> stateRenderers
     ) {

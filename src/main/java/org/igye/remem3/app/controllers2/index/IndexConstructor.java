@@ -31,8 +31,4 @@ public class IndexConstructor implements StateConstructor<IndexState> {
         return true;
     }
 
-    @Override
-    public Class<?> getSupportedType() {
-        return IndexState.class;
-    }
 }

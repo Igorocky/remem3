@@ -14,8 +14,4 @@ public class CounterUpdater implements StateUpdater<CounterState> {
         return state;
     }
 
-    @Override
-    public Class<?> getSupportedType() {
-        return CounterState.class;
-    }
 }

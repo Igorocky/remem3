@@ -18,8 +18,4 @@ public class CounterConstructor implements StateConstructor<CounterState> {
         return true;
     }
 
-    @Override
-    public Class<?> getSupportedType() {
-        return CounterState.class;
-    }
 }
