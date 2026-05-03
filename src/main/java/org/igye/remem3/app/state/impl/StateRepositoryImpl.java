@@ -92,8 +92,11 @@ public class StateRepositoryImpl implements StateRepository {
     }
 
     private Pair<String, Object> makeNewState(StateConstructor<?> constructor) {
+        String newStateId = constructor.isSingleton()
+            ? constructor.getName()
+            : UUID.randomUUID().toString().replace("-", "");
         return Pair.of(
-            UUID.randomUUID().toString().replace("-", ""),
+            newStateId,
             constructor.construct()
         );
     }
