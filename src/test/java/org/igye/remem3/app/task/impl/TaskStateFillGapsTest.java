@@ -624,7 +624,10 @@ class TaskStateFillGapsTest extends HtmlBuilder {
 
     private TaskResult submitAnswer(List<String> userAns, HtmlElem html, TaskState state) {
         for (int i = 0; i < userAns.size(); i++) {
-            testUtils.setValue(html, PAR_USER_ANS + ":" + i, userAns.get(i));
+            String paramName = PAR_USER_ANS + ":" + i;
+            if (testUtils.isWritable(html, paramName)) {
+                testUtils.setValue(html, paramName, userAns.get(i));
+            }
         }
         return state.processUserInput(testUtils.submit(html, ACT_SUBMIT_ANSWERS));
     }

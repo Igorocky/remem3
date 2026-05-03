@@ -13,7 +13,7 @@ public interface TestUtils {
 
     void setValue(HtmlElem html, String paramName, String value);
 
-    void setValueExn(HtmlElem html, String paramName, String value);
-
     RequestParams submit(HtmlElem html, String submitButtonName);
+
+    boolean isWritable(HtmlElem html, String name);
 }

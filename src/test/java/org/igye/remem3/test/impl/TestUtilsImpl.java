@@ -77,16 +77,8 @@ public class TestUtilsImpl implements TestUtils {
     @Override
     public void setValue(HtmlElem html, String paramName, String value) {
         List<HtmlTag> inputs = getAllWritableInputsByParamName(html, paramName);
-        if (inputs.size() == 1) {
-            inputs.getFirst().attr("value", value);
-        }
-    }
-
-    @Override
-    public void setValueExn(HtmlElem html, String paramName, String value) {
-        List<HtmlTag> inputs = getAllWritableInputsByParamName(html, paramName);
         if (inputs.size() != 1) {
-            throw new Exn("inputs.size() != 1");
+            throw new Exn("No active input found for name '%s'".formatted(paramName));
         }
         inputs.getFirst().attr("value", value);
     }
@@ -126,6 +118,11 @@ public class TestUtilsImpl implements TestUtils {
         HttpServletRequest httpServletRequest = Mockito.mock(HttpServletRequest.class);
         Mockito.when(httpServletRequest.getParameterMap()).thenReturn(parameterMap);
         return new RequestParamsImpl(httpServletRequest);
+    }
+
+    @Override
+    public boolean isWritable(HtmlElem html, String name) {
+        return getAllWritableInputsByParamName(html, name).stream().anyMatch(tag -> name.equals(getName(tag)));
     }
 
     private List<HtmlTag> getAllWritableInputsByParamName(HtmlElem html, String paramName) {
