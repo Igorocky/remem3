@@ -3,7 +3,6 @@ package org.igye.remem3.app.controllers2.newcard;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 import org.igye.remem3.app.controllers.newcard.CardDto;
@@ -40,8 +39,6 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
     public static final String ACT_CREATE_CARD = "NewCard__ACT_CREATE_CARD";
 
     private final Settings settings;
-    private final Cache cache;
-
 
     @Override
     public String render(NewCardState st) {

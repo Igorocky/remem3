@@ -40,13 +40,13 @@ public final class HtmlTag implements HtmlElem {
         if (CollectionUtils.isEmpty(children)) {
             sb.append("/>");
         } else {
-            sb.append(">\n").append(
+            sb.append(">").append(
                 children.stream()
                     .filter(Objects::nonNull)
                     .map(HtmlElem::toString)
                     .collect(Collectors.joining("\n"))
             );
-            sb.append("\n</").append(name).append(">");
+            sb.append("</").append(name).append(">");
         }
         return sb.toString();
     }

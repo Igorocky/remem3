@@ -9,6 +9,7 @@ import org.springframework.context.annotation.FilterType;
     basePackages = "org.igye.remem3",
     useDefaultFilters = false,
     includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
+        NewCardUtilsImpl.class,
         NewCardConstructor.class,
         NewCardUpdater.class,
         NewCardRenderer.class,
