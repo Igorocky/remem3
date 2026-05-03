@@ -160,6 +160,7 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
     }
 
     private HtmlElem rndDirSelector(String paramName, List<String> options, String selected) {
-        return select(paramName, true, selected, options.stream().map(opt -> Pair.of(opt, text(opt))).toList());
+        return select(paramName, selected, options.stream().map(opt -> Pair.of(opt, text(opt))).toList())
+            .submitOnChange();
     }
 }

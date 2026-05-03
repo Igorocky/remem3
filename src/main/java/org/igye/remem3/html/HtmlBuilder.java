@@ -215,15 +215,11 @@ public class HtmlBuilder {
 
     protected HtmlTag select(
         String name,
-        boolean submitOnChange,
         String selected,
         List<? extends Pair<String, ? extends HtmlElem>> options
     ) {
         Map<String, String> attrs = new HashMap<>();
         attrs.put("name", name);
-        if (submitOnChange) {
-            attrs.put("onchange", "this.form.submit()");
-        }
         return h("select", attrs,
             options.stream()
                 .map(option -> {
@@ -242,19 +238,9 @@ public class HtmlBuilder {
     @SafeVarargs
     protected final HtmlTag select(
         String name,
-        boolean submitOnChange,
         String selected,
         Pair<String, ? extends HtmlElem>... options
     ) {
-        return select(name, submitOnChange, selected, childrenArrayToList(options));
-    }
-
-    protected HtmlTag select(String name, String selected, List<? extends Pair<String, ? extends HtmlElem>> options) {
-        return select(name, false, selected, options);
-    }
-
-    @SafeVarargs
-    protected final HtmlTag select(String name, String selected, Pair<String, ? extends HtmlElem>... options) {
         return select(name, selected, childrenArrayToList(options));
     }
 

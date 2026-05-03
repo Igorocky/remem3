@@ -75,13 +75,12 @@ public class RepeatStrategyCmpImpl extends BaseStrategyCmpImpl {
     public HtmlElem render() {
         HtmlTag strategySelector = select(
             parStrategyType.name(),
-            true,
             valStrategyType.toString(),
             Arrays.stream(RepeatStrategyType.values())
                 .map(RepeatStrategyType::toString)
                 .map(typ -> Pair.of(typ, text(typ)))
                 .toList()
-        );
+        ).submitOnChange();
         if (isReadonly) {
             strategySelector.disabled();
         }

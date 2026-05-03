@@ -159,22 +159,22 @@ public class MoveCardsToDirController extends HtmlBuilder
     private HtmlElem rndRepeatStrategyTypeSelector(State st) {
         return table(List.of(List.of(
             text("Repeat strategy"),
-            select(PAR_REPEAT_STRATEGY_TYPE, true, st.getRepeatStrategyType().toString(),
+            select(PAR_REPEAT_STRATEGY_TYPE, st.getRepeatStrategyType().toString(),
                 Arrays.stream(RepeatStrategyType.values())
                     .map(t -> Pair.of(t.toString(), text(t.toString())))
                     .toList()
-            )
+            ).submitOnChange()
         )));
     }
 
     private HtmlElem rndCardTypeSelector(State st) {
         return table(List.of(List.of(
             text("Card type"),
-            select(PAR_CARD_TYPE_CODE, true, st.getCardType().getCode(),
+            select(PAR_CARD_TYPE_CODE, st.getCardType().getCode(),
                 Arrays.stream(CardType.values())
                     .map(t -> Pair.of(t.getCode(), text(t.getDisplayName())))
                     .toList()
-            )
+            ).submitOnChange()
         )));
     }
 
@@ -222,11 +222,11 @@ public class MoveCardsToDirController extends HtmlBuilder
     private HtmlElem rndLanguageSelector(Settings settings, String selectedLang) {
         return table(List.of(List.of(
             text("Language"),
-            select(PAR_LANG, true, selectedLang,
+            select(PAR_LANG, selectedLang,
                 settings.getLanguages().stream()
                     .map(lang -> Pair.of(lang, text(lang)))
                     .toList()
-            )
+            ).submitOnChange()
         )));
     }
 

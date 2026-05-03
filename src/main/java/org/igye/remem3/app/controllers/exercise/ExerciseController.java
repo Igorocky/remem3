@@ -417,7 +417,7 @@ public class ExerciseController extends HtmlBuilder
             .map(ex -> Pair.of(ex.getLeft(), text(ex.getLeft())))
             .forEach(options::add);
         return frag(
-            select(PAR_EXERCISE_CONFIG, true, st.getConfig(), options),
+            select(PAR_EXERCISE_CONFIG, st.getConfig(), options).submitOnChange(),
             StringUtils.isNotBlank(st.getConfig()) ? inpSubmit(ACT_CUSTOMIZE_EXERCISE, "Customize") : null
         );
     }

@@ -215,17 +215,17 @@ public class NewCardController extends HtmlBuilder
                 text("Language 1"),
                 table(List.of(List.of(
                     rndAvailableLanguages(st.getSettings(), card.getLang1(), PAR_CARD_TRANSLATE_LANG_1),
-                    select(PAR_CARD_TRANSLATE_EXACT_MATCH_1, false, String.valueOf(card.isExactMatch1()), List.of(
+                    select(PAR_CARD_TRANSLATE_EXACT_MATCH_1, String.valueOf(card.isExactMatch1()), List.of(
                         Pair.of("true", text("= (exact match)")),
                         Pair.of("false", text("~ (approximate match)"))
-                    )).attr("id", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1)
+                    )).id(ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1)
                 )))
             ),
             List.of(
                 text("Text 1"),
                 textarea(PAR_CARD_TRANSLATE_TEXT_1, card.getText1(), 100, 5).attr("autofocus", "")
                     .attr("tabindex", "1")
-                    .attr("onkeydown", format("toggleExactMatch(event,'%s')", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1))
+                    .onkeydown(format("toggleExactMatch(event,'%s')", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_1))
             ),
             List.of(
                 text("Example 1"),
@@ -239,17 +239,17 @@ public class NewCardController extends HtmlBuilder
                 text("Language 2"),
                 table(List.of(List.of(
                     rndAvailableLanguages(st.getSettings(), card.getLang2(), PAR_CARD_TRANSLATE_LANG_2),
-                    select(PAR_CARD_TRANSLATE_EXACT_MATCH_2, false, String.valueOf(card.isExactMatch2()), List.of(
+                    select(PAR_CARD_TRANSLATE_EXACT_MATCH_2, String.valueOf(card.isExactMatch2()), List.of(
                         Pair.of("true", text("= (exact match)")),
                         Pair.of("false", text("~ (approximate match)"))
-                    )).attr("id", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2)
+                    )).id(ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2)
                 )))
             ),
             List.of(
                 text("Text 2"),
                 textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5)
                     .attr("tabindex", "2")
-                    .attr("onkeydown", format("toggleExactMatch(event,'%s')", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2))
+                    .onkeydown(format("toggleExactMatch(event,'%s')", ID_PAR_CARD_TRANSLATE_EXACT_MATCH_2))
             ),
             List.of(
                 text("Example 2"),
@@ -279,12 +279,11 @@ public class NewCardController extends HtmlBuilder
             text("Card type"),
             select(
                 PAR_CARD_TYPE,
-                true,
                 state.getCardParams().getType().getCode(),
                 Arrays.stream(CardType.values())
                     .map(cardType -> Pair.of(cardType.getCode(), text(cardType.getDisplayName())))
                     .toList()
-            )
+            ).submitOnChange()
         )));
     }
 

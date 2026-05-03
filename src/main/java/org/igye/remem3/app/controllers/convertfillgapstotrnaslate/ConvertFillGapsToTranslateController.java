@@ -211,11 +211,11 @@ public class ConvertFillGapsToTranslateController extends HtmlBuilder
     private HtmlElem rndGapSecondLanguage(Settings settings, String selectedLang) {
         return table(List.of(List.of(
             text("Gap second language"),
-            select(ConvertFillGapsToTranslateController.PAR_GAP_SECOND_LANG, true, selectedLang,
+            select(ConvertFillGapsToTranslateController.PAR_GAP_SECOND_LANG, selectedLang,
                 settings.getLanguages().stream()
                     .map(lang -> Pair.of(lang, text(lang)))
                     .toList()
-            )
+            ).submitOnChange()
         )));
     }
 

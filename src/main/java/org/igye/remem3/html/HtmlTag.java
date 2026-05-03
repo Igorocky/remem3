@@ -66,4 +66,16 @@ public final class HtmlTag implements HtmlElem {
     public HtmlTag autofocus() {
         return attr("autofocus", "");
     }
+
+    public HtmlTag submitOnChange() {
+        return attr("onchange", "this.form.submit()");
+    }
+
+    public HtmlTag id(String id) {
+        return attr("id", id);
+    }
+
+    public HtmlTag onkeydown(String callback) {
+        return attr("onkeydown", callback);
+    }
 }
