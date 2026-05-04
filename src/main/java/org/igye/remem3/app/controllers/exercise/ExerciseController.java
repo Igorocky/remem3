@@ -472,10 +472,7 @@ public class ExerciseController extends HtmlBuilder
                     div(st.getRepeatStrategy().renderMoreParams(historyUpdated))
                 );
             } else {
-                params = frag(
-                    text(String.format("%s: ", st.getRepeatStrategyCmp().getStrategyType())),
-                    st.getRepeatStrategy().renderLessParams(historyUpdated)
-                );
+                params = st.getRepeatStrategy().renderLessParams(historyUpdated);
             }
         } else {
             params = null;

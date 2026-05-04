@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
@@ -96,9 +97,12 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
                 activeRow.add(text(activeCnt));
             }
         }
-        return table(List.of(activeRow))
-            .attr("class", "table-single-border")
-            .attr("style", "display:inline-table;padding-top:1px;padding-bottom:1px;");
+        return frag(
+            text(String.format("%s: ", RepeatStrategyType.BUCKETS)),
+            table(List.of(activeRow))
+                .attr("class", "table-single-border")
+                .attr("style", "display:inline-table;padding-top:1px;padding-bottom:1px;")
+        );
     }
 
     @Override
@@ -141,6 +145,11 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             div(text(format("Batch size: %s", batchSize))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
+    }
+
+    @Override
+    public boolean hasDailyUniqueCount() {
+        return true;
     }
 
     @Override

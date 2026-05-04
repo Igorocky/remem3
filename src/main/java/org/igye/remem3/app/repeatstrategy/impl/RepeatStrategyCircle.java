@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
@@ -70,6 +71,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     public HtmlElem renderLessParams(boolean historyUpdated) {
         ProgressInfo progressInfo = calcRoundProgress(historyUpdated, getStats());
         return frag(
+            text(String.format("%s: ", RepeatStrategyType.CIRCLE)),
             numOfRounds.isPresent()
                 ? text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get()))
                 : text(format("Round: %s", progressInfo.getRound())),
@@ -92,6 +94,11 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), allTasks.size()))),
             div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS))))
         );
+    }
+
+    @Override
+    public boolean hasDailyUniqueCount() {
+        return false;
     }
 
     @Override
@@ -120,10 +127,12 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
 
     private Stats getStats() {
         List<TaskDto> tasks = getTaskDtos();
-        int minHistLen = tasks.isEmpty() ? 0 : tasks.stream()
-            .map(TaskDto::getHist)
-            .map(List::size)
-            .reduce(Integer.MAX_VALUE, Math::min);
+        int minHistLen = tasks.isEmpty()
+            ? 0
+            : tasks.stream()
+              .map(TaskDto::getHist)
+              .map(List::size)
+              .reduce(Integer.MAX_VALUE, Math::min);
         return Stats.builder()
             .tasks(tasks)
             .minHistLen(minHistLen)

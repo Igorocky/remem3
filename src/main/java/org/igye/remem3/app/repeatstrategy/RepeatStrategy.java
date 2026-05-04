@@ -13,5 +13,7 @@ public interface RepeatStrategy {
 
     HtmlElem renderMoreParams(boolean historyUpdated);
 
+    boolean hasDailyUniqueCount();
+
     Optional<Pair<Long, Long>> getDailyUniqueCount();
 }

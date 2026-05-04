@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
@@ -84,6 +85,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     public HtmlElem renderLessParams(boolean historyUpdated) {
         CountAndStreak countAndStreak = calcCountAndStreak(getTaskDtos());
         return frag(
+            text(String.format("%s: ", RepeatStrategyType.QUEUE)),
             text(format(
                 "Counts: %s | %s/%s",
                 countAndStreak.getTotalCount(), countAndStreak.getMinCount(), countAndStreak.getMaxCount()
@@ -157,6 +159,11 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
             ))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
+    }
+
+    @Override
+    public boolean hasDailyUniqueCount() {
+        return false;
     }
 
     @Override

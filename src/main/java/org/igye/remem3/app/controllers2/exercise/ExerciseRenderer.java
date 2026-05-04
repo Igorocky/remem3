@@ -1,11 +1,135 @@
 package org.igye.remem3.app.controllers2.exercise;
 
+import lombok.RequiredArgsConstructor;
+import org.igye.remem3.app.Cache;
+import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.state.StateRenderer;
+import org.igye.remem3.app.taskstate.TaskState;
+import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
+import org.igye.remem3.utils.NotImplemented;
+import org.igye.remem3.utils.Utils;
 
-public class ExerciseRenderer implements StateRenderer<ExerciseState> {
+import java.io.File;
+import java.time.Clock;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
+
+@RequiredArgsConstructor
+public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<ExerciseState> {
+    public static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
+    public static final String PAR_SHOW_DAILY_UNIQUE_COUNT = "PAR_SHOW_DAILY_UNIQUE_COUNT";
+    public static final String ACT_START_EXERCISE = "ACT_START_EXERCISE";
+    public static final String ACT_CANCEL_EXERCISE = "ACT_CANCEL_EXERCISE";
+    public static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
+    public static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
+    public static final String ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS";
+    public static final String ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT = "ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT";
+    public static final String ACT_SKIP_TASK = "ACT_SKIP_TASK";
+    public static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "ACT_COPY_CARD_PATH_TO_CLIPBOARD";
+    public static final String ACT_OPEN_CARD = "ACT_OPEN_CARD";
+
+    private final Clock clock;
+    private final Settings settings;
+    private final Cache cache;
+    private final Utils utils;
+
     @Override
-    public HtmlElem render(ExerciseState state) {
-        return null;
+    public HtmlElem render(ExerciseState st) {
+        return switch (st) {
+            case SelectExerciseState sel -> rndSelectExerciseState(sel);
+            case RunningExerciseState run -> rndRunningExerciseState(run);
+        };
+    }
+
+    private HtmlElem rndSelectExerciseState(SelectExerciseState st) {
+        throw new NotImplemented();
+    }
+
+    private HtmlElem rndRunningExerciseState(RunningExerciseState st) {
+        HtmlElem params;
+        Optional<String> cardPath = st.getCurrentCardFile().map(File::getAbsolutePath);
+        if (st.getShowMoreParams().isPresent()) {
+            boolean historyUpdated = st.getTaskState().map(TaskState::isHistoryUpdated).orElse(false);
+            if (st.getShowMoreParams().get()) {
+                String directoriesStr = st.getDirectories().stream().sorted().collect(Collectors.joining(", "));
+                String taskTypesStr = st.getTaskTypes().stream().sorted().collect(Collectors.joining(", "));
+                String repeatStrategyTypesStr = st.getRepeatStrategyTypes().stream()
+                    .sorted().collect(Collectors.joining(", "));
+                params = frag(
+                    div(text(format("Directories: %s", directoriesStr))),
+                    div(text(format("Task types: %s", taskTypesStr))),
+                    div(
+                        text(format("Current card: %s ", cardPath.orElse("not available"))),
+                        cardPath.isEmpty() ? null : frag(
+                            inpSubmit(ACT_COPY_CARD_PATH_TO_CLIPBOARD, st.isCardPathCopied() ? "copied" : "copy path"),
+                            inpSubmit(ACT_OPEN_CARD, "open")
+                        )
+                    ),
+                    cardPath
+                        .map(_ -> div(text(format("History updated: %s", historyUpdated ? "Yes" : "No"))))
+                        .orElse(null),
+                    br(),
+                    div(text(format("Repeat strategies: %s", repeatStrategyTypesStr))),
+                    div(st.getRepeatStrategy().renderMoreParams(historyUpdated))
+                );
+            } else {
+                params = st.getRepeatStrategy().renderLessParams(historyUpdated);
+            }
+        } else {
+            params = null;
+        }
+        HtmlElem taskContent;
+        if (st.isExerciseCompleted()) {
+            taskContent = frag(
+                text("You have completed this exercise. "),
+                inpSubmit(ACT_CANCEL_EXERCISE, "Done")
+                    .attr("class", "border-on-focus").autofocus()
+                    .attr("style", format("background-color: %s;", GREEN))
+            );
+        } else if (st.getTaskState().isPresent()) {
+            taskContent = st.getTaskState().get().render();
+        } else {
+            taskContent = frag(
+                text("There are no active tasks. "),
+                inpSubmit(ACT_REFRESH_EXERCISE, "Refresh")
+                    .attr("class", "border-on-focus").autofocus()
+                    .attr("style", format("background-color: %s;", GREEN))
+            );
+        }
+        return frag(
+            h4(text("Exercise")),
+            inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS,
+                st.getShowMoreParams().isPresent() ? "Hide parameters" : "Show parameters"
+            ),
+            st.getShowMoreParams().map(showMoreParams ->
+                inpSubmit(ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS,
+                    showMoreParams ? "Show less parameters" : "Show more parameters"
+                )
+            ).orElse(null),
+            cardPath.isPresent() ? inpSubmit(ACT_OPEN_CARD, "Edit this card") : null,
+            st.getTaskState().isPresent() ? inpSubmit(ACT_SKIP_TASK, "Skip this task") : null,
+            st.getRepeatStrategy().hasDailyUniqueCount()
+                ? inpSubmit(ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT, st.isShowDailyUniqueCount() ? "Hide DUC" : "Show DUC")
+                : null,
+            text(rndDailyUniqueCount(st)),
+            params,
+            hr(),
+            taskContent,
+            hr(),
+            st.isExerciseCompleted() ? null : inpSubmit(ACT_CANCEL_EXERCISE, "Cancel")
+        );
+    }
+
+    private String rndDailyUniqueCount(RunningExerciseState st) {
+        if (st.getRepeatStrategy().hasDailyUniqueCount() && st.isShowDailyUniqueCount()) {
+            return st.getRepeatStrategy().getDailyUniqueCount()
+                .map(duc -> String.format(" DUC: %s/%s", duc.getLeft(), duc.getRight()))
+                .orElse("");
+        } else {
+            return "";
+        }
     }
 }
