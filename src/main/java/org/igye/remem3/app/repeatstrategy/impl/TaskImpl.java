@@ -1,8 +1,8 @@
 package org.igye.remem3.app.repeatstrategy.impl;
 
 import lombok.Getter;
-import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.controllers.exercise.HasBaseTask;
+import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.utils.Exn;

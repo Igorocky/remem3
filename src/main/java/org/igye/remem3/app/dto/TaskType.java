@@ -4,7 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-public sealed interface TaskType {
+public sealed interface TaskType permits TaskType.FillGaps, TaskType.Translate {
     String getCode();
 
     @EqualsAndHashCode

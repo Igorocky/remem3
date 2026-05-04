@@ -1,4 +1,4 @@
-package org.igye.remem3.app.task.impl;
+package org.igye.remem3.app.taskstate.impl;
 
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
@@ -6,8 +6,8 @@ import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.app.impl.CardUtilsImpl;
-import org.igye.remem3.app.task.TaskResult;
-import org.igye.remem3.app.task.TaskState;
+import org.igye.remem3.app.taskstate.TaskResult;
+import org.igye.remem3.app.taskstate.TaskState;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;
@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static org.igye.remem3.app.task.impl.TaskStateFillGaps.ACT_COMPLETE_TASK;
-import static org.igye.remem3.app.task.impl.TaskStateFillGaps.ACT_SHOW_ANS;
-import static org.igye.remem3.app.task.impl.TaskStateFillGaps.ACT_SHOW_HINT;
-import static org.igye.remem3.app.task.impl.TaskStateFillGaps.ACT_SUBMIT_ANSWERS;
-import static org.igye.remem3.app.task.impl.TaskStateTranslate.PAR_USER_ANS;
+import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.ACT_COMPLETE_TASK;
+import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.ACT_SHOW_ANS;
+import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.ACT_SHOW_HINT;
+import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.ACT_SUBMIT_ANSWERS;
+import static org.igye.remem3.app.taskstate.impl.TaskStateTranslate.PAR_USER_ANS;
 
 
 class TaskStateFillGapsTest extends HtmlBuilder {

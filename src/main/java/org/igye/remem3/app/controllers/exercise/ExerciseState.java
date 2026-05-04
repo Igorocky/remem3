@@ -14,7 +14,7 @@ import org.igye.remem3.app.controllers.components.RepeatStrategyCmp;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
-import org.igye.remem3.app.task.TaskState;
+import org.igye.remem3.app.taskstate.TaskState;
 
 import java.util.List;
 import java.util.Optional;

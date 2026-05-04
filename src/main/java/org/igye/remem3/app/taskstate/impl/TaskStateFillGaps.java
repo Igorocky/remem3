@@ -1,4 +1,4 @@
-package org.igye.remem3.app.task.impl;
+package org.igye.remem3.app.taskstate.impl;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -7,8 +7,8 @@ import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
-import org.igye.remem3.app.task.TaskResult;
-import org.igye.remem3.app.task.TaskState;
+import org.igye.remem3.app.taskstate.TaskResult;
+import org.igye.remem3.app.taskstate.TaskState;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlTag;

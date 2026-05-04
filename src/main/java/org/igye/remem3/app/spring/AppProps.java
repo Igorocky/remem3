@@ -1,4 +1,4 @@
-package org.igye.remem3.app;
+package org.igye.remem3.app.spring;
 
 import lombok.Builder;
 import lombok.Getter;

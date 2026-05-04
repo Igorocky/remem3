@@ -1,8 +1,8 @@
 package org.igye.remem3.app.impl;
 
-import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
+import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;

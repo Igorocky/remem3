@@ -6,9 +6,9 @@ import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.AppProps;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.BucketDelaysDto;
+import org.igye.remem3.app.spring.AppProps;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 

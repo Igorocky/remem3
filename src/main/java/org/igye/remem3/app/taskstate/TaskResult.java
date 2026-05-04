@@ -1,4 +1,4 @@
-package org.igye.remem3.app.task;
+package org.igye.remem3.app.taskstate;
 
 import lombok.Data;
 import org.igye.remem3.app.dto.HistRec;

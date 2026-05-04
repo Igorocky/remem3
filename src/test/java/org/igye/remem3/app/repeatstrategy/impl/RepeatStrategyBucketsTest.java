@@ -1,7 +1,7 @@
 package org.igye.remem3.app.repeatstrategy.impl;
 
-import org.igye.remem3.app.RepeatStrategyType;
 import org.igye.remem3.app.dto.Card;
+import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.utils.Exn;

@@ -5,7 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.With;
-import org.igye.remem3.app.RepeatStrategyType;
 
 import java.math.BigDecimal;
 import java.time.Instant;

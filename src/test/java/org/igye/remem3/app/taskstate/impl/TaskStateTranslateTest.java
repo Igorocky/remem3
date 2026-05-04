@@ -1,12 +1,12 @@
-package org.igye.remem3.app.task.impl;
+package org.igye.remem3.app.taskstate.impl;
 
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.impl.CardUtilsImpl;
-import org.igye.remem3.app.task.TaskResult;
-import org.igye.remem3.app.task.TaskState;
+import org.igye.remem3.app.taskstate.TaskResult;
+import org.igye.remem3.app.taskstate.TaskState;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.test.TestClock;
@@ -25,12 +25,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_COMPLETE_TASK;
-import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_COMPLETE_TASK_WITH_MARK;
-import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SHOW_ANS;
-import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SHOW_EXAMPLE;
-import static org.igye.remem3.app.task.impl.TaskStateTranslate.ACT_SUBMIT_ANSWER;
-import static org.igye.remem3.app.task.impl.TaskStateTranslate.PAR_USER_ANS;
+import static org.igye.remem3.app.taskstate.impl.TaskStateTranslate.ACT_COMPLETE_TASK;
+import static org.igye.remem3.app.taskstate.impl.TaskStateTranslate.ACT_COMPLETE_TASK_WITH_MARK;
+import static org.igye.remem3.app.taskstate.impl.TaskStateTranslate.ACT_SHOW_ANS;
+import static org.igye.remem3.app.taskstate.impl.TaskStateTranslate.ACT_SHOW_EXAMPLE;
+import static org.igye.remem3.app.taskstate.impl.TaskStateTranslate.ACT_SUBMIT_ANSWER;
+import static org.igye.remem3.app.taskstate.impl.TaskStateTranslate.PAR_USER_ANS;
 
 class TaskStateTranslateTest extends HtmlBuilder {
     private final TestUtils testUtils = new TestUtilsImpl();
