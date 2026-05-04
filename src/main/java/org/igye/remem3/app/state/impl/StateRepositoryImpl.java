@@ -6,6 +6,7 @@ import org.igye.remem3.app.state.StateConstructor;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.app.state.StateRepository;
 import org.igye.remem3.app.state.StateUpdater;
+import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.web.RequestParams;
 
@@ -64,7 +65,7 @@ public class StateRepositoryImpl implements StateRepository {
     }
 
     @Override
-    public String rednerState(String stateId) {
+    public HtmlElem rednerState(String stateId) {
         Object state = loadState(stateId).getRight();
         StateRenderer<Object> stateRenderer = (StateRenderer<Object>) findTypeSupporter(
             stateRenderers, state.getClass(), "state renderer"
@@ -101,10 +102,11 @@ public class StateRepositoryImpl implements StateRepository {
         String newStateId = constructor.isSingleton()
             ? constructor.getName()
             : UUID.randomUUID().toString().replace("-", "");
-        return Pair.of(
-            newStateId,
-            constructor.construct()
-        );
+        Object newState = constructor.construct();
+        if (newState == null) {
+            throw new Exn("State constructor %s returned null.".formatted(constructor));
+        }
+        return Pair.of(newStateId, newState);
     }
 
     private StateConstructor<?> findConstructor(String stateId) {

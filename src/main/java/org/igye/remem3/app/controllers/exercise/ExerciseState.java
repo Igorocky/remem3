@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public sealed interface ExerciseState {
+public sealed interface ExerciseState permits ExerciseState.SetParams, ExerciseState.Started {
     List<String> getErrors();
 
     @Builder

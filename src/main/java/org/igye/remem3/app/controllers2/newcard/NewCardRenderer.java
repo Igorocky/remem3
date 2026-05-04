@@ -40,7 +40,7 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
     private final Settings settings;
 
     @Override
-    public String render(NewCardState st) {
+    public HtmlElem render(NewCardState st) {
         return simplePageWithTitle("Add new card",
             rndErrors(st.getErrors()),
             h3(text("Add new card")),
@@ -54,7 +54,7 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
                 br(),
                 inpSubmit(ACT_CREATE_CARD, "Save").attr("tabindex", "3")
             )
-        ).toString();
+        );
     }
 
     private HtmlElem rndCard(CardDto cardDto) {

@@ -30,7 +30,7 @@ public class StateController extends HtmlBuilder {
             return ResponseEntity
                 .ok()
                 .contentType(MediaType.TEXT_HTML)
-                .body(stateRepository.rednerState(actualStateId));
+                .body(stateRepository.rednerState(actualStateId).toString());
         } else {
             if (!params.isEmpty()) {
                 stateRepository.updateState(actualStateId, params);
