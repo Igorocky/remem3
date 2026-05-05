@@ -15,6 +15,7 @@ public class AppProps {
     private final List<String> languages;
     private final List<String> directoriesWithCards;
     private final String cacheFile;
+    private final String beansFile;
     private final String cardEditor;
     private final String bucketDelays;
     private final List<String> exercises;

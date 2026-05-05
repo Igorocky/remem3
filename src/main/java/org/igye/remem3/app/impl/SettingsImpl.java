@@ -26,6 +26,7 @@ public class SettingsImpl implements Settings {
     private static final String PROP_DIRECTORIES_WITH_CARDS = "directories_with_cards";
     private static final String PROP_LANGUAGES = "languages";
     private static final String PROP_CACHE_FILE = "cache_file";
+    private static final String PROP_BEANS_FILE = "beans_file";
     private static final String PROP_CARD_EDITOR = "card_editor";
     private static final String PROP_BUCKET_DELAYS = "bucket_delays";
     private static final String PROP_EXERCISES = "exercises";
@@ -37,6 +38,8 @@ public class SettingsImpl implements Settings {
     private List<String> directoriesWithCards = Collections.emptyList();
     @Builder.Default
     private String cacheFile = "";
+    @Builder.Default
+    private String beansFile = "";
     @Builder.Default
     private String cardEditor = "";
     @Builder.Default
@@ -69,6 +72,7 @@ public class SettingsImpl implements Settings {
             .languages(languages)
             .directoriesWithCards(directoriesWithCards)
             .cacheFile(checkNotBlank(props.getCacheFile(), PROP_CACHE_FILE))
+            .beansFile(checkNotBlank(props.getBeansFile(), PROP_BEANS_FILE))
             .cardEditor(checkNotBlank(props.getCardEditor(), PROP_CARD_EDITOR))
             .bucketDelays(parseBucketDelays(props.getBucketDelays(), utils))
             .exercises(loadExercises(props.getExercises()))

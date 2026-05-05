@@ -19,17 +19,17 @@ import static java.lang.String.format;
 
 @RequiredArgsConstructor
 public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<ExerciseState> {
-    public static final String PAR_SHOW_EXERCISE_PARAMS = "PAR_SHOW_EXERCISE_PARAMS";
-    public static final String PAR_SHOW_DAILY_UNIQUE_COUNT = "PAR_SHOW_DAILY_UNIQUE_COUNT";
-    public static final String ACT_START_EXERCISE = "ACT_START_EXERCISE";
-    public static final String ACT_CANCEL_EXERCISE = "ACT_CANCEL_EXERCISE";
-    public static final String ACT_REFRESH_EXERCISE = "ACT_REFRESH_EXERCISE";
-    public static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
-    public static final String ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS = "ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS";
-    public static final String ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT = "ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT";
-    public static final String ACT_SKIP_TASK = "ACT_SKIP_TASK";
-    public static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "ACT_COPY_CARD_PATH_TO_CLIPBOARD";
-    public static final String ACT_OPEN_CARD = "ACT_OPEN_CARD";
+    public static final String PAR_SHOW_EXERCISE_PARAMS = "Exercise_PAR_SHOW_EXERCISE_PARAMS";
+    public static final String PAR_SHOW_DAILY_UNIQUE_COUNT = "Exercise_PAR_SHOW_DAILY_UNIQUE_COUNT";
+    public static final String ACT_START_EXERCISE = "Exercise_ACT_START_EXERCISE";
+    public static final String ACT_CANCEL_EXERCISE = "Exercise_ACT_CANCEL_EXERCISE";
+    public static final String ACT_REFRESH_EXERCISE = "Exercise_ACT_REFRESH_EXERCISE";
+    public static final String ACT_TOGGLE_SHOW_EXERCISE_PARAMS = "Exercise_ACT_TOGGLE_SHOW_EXERCISE_PARAMS";
+    public static final String ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS = "Exercise_ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS";
+    public static final String ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT = "Exercise_ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT";
+    public static final String ACT_SKIP_TASK = "Exercise_ACT_SKIP_TASK";
+    public static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "Exercise_ACT_COPY_CARD_PATH_TO_CLIPBOARD";
+    public static final String ACT_OPEN_CARD = "Exercise_ACT_OPEN_CARD";
 
     private final Clock clock;
     private final Settings settings;
