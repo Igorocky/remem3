@@ -31,6 +31,7 @@ public class NewCardUpdater extends HtmlBuilder implements StateUpdater<NewCardS
 
     @Override
     public NewCardState update(NewCardState state, RequestParams params) {
+        //todo: merge the previous and the new states instead of discarding the previous state
         NewCardState updatedState = newCardUtils.readStateFromParams(params);
         if (params.hasParam(ACT_CREATE_CARD)) {
             updatedState = saveCard(updatedState);

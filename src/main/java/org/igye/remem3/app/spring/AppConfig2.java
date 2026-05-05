@@ -1,6 +1,7 @@
 package org.igye.remem3.app.spring;
 
 import org.igye.remem3.app.controllers2.beans.BeansConfig;
+import org.igye.remem3.app.controllers2.exercise.ExerciseConfig;
 import org.igye.remem3.app.controllers2.index.IndexConfig;
 import org.igye.remem3.app.controllers2.newcard.NewCardConfig;
 import org.igye.remem3.app.state.StateConstructor;
@@ -17,7 +18,7 @@ import java.time.Duration;
 import java.util.List;
 
 @Configuration
-@Import({IndexConfig.class, NewCardConfig.class, BeansConfig.class})
+@Import({IndexConfig.class, NewCardConfig.class, BeansConfig.class, ExerciseConfig.class})
 public class AppConfig2 {
 
     @Bean

@@ -3,6 +3,7 @@ package org.igye.remem3.app.state.impl;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.state.StateCache;
 import org.igye.remem3.app.state.StateConstructor;
+import org.igye.remem3.app.state.StateLookup;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.app.state.StateRepository;
 import org.igye.remem3.app.state.StateUpdater;
@@ -22,7 +23,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class StateRepositoryImpl implements StateRepository {
+public class StateRepositoryImpl implements StateRepository, StateLookup {
 
     private final StateCache stateCache;
     private final Map<String, StateConstructor<?>> nameToConstructor;
@@ -73,6 +74,11 @@ public class StateRepositoryImpl implements StateRepository {
         return stateRenderer.render(state);
     }
 
+    @Override
+    public <T> T getState(String stateId) {
+        return (T) loadState(stateId).getRight();
+    }
+
     private Pair<String, Object> loadState(String stateId) {
         Optional<?> stateOpt = stateCache.getState(stateId);
         Pair<String, Object> idAndState;
@@ -118,6 +124,7 @@ public class StateRepositoryImpl implements StateRepository {
     }
 
     private <T> T findTypeSupporter(List<Pair<Class<?>, T>> typeSupporters, Class<?> type, String elemType) {
+        //todo: implement caching
         for (Pair<Class<?>, T> typeSupporter : typeSupporters) {
             if (type.isAssignableFrom(typeSupporter.getLeft())) {
                 return typeSupporter.getRight();
