@@ -6,4 +6,8 @@ public class Functions {
     public static String reverse(String str) {
         return StringUtils.reverse(str);
     }
+
+    public static String repeat(String str, int cnt) {
+        return StringUtils.repeat(str, cnt);
+    }
 }

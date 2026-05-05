@@ -6,16 +6,15 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 public class CustomBeanExpressionResolver extends StandardBeanExpressionResolver {
 
-    private static final String REVERSE = "reverse";
-
-    @SneakyThrows
     @Override
     protected void customizeEvaluationContext(StandardEvaluationContext evalContext) {
         super.customizeEvaluationContext(evalContext);
-        evalContext.registerFunction(REVERSE, Functions.class.getMethod(REVERSE, String.class));
+        registerFunction(evalContext, "reverse", String.class);
+        registerFunction(evalContext, "repeat", String.class, int.class);
     }
 
-//    private void registerFunction(
-//        StandardEvaluationContext evalContext
-//    )
+    @SneakyThrows
+    private void registerFunction(StandardEvaluationContext evalCtx, String methodName, Class<?>... parameterTypes) {
+        evalCtx.registerFunction(methodName, Functions.class.getMethod(methodName, parameterTypes));
+    }
 }

@@ -5,7 +5,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 		https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="str" class="java.lang.String" c:_0="#{#reverse('ABC')}" />
+    <bean id="str" class="java.lang.String" c:_0="#{#reverse(#repeat('ABC', 3))}" />
     <bean id="int" class="java.lang.Integer" factory-method="parseInt" c:_0="17" />
 
 </beans>
