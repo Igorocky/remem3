@@ -194,10 +194,7 @@ public class ExerciseController extends HtmlBuilder
     private ExerciseState actProcessTaskResults(ExerciseState.Started st, TaskResult taskResult) {
         if (taskResult.getHistRec().isPresent()) {
             File file = getCurrentCardFileExn(st);
-            st.getCardUtils().appendHistRecToFile(
-                file,
-                taskResult.getHistRec().get().withStrategy(st.getRepeatStrategyCmp().getStrategyType())
-            );
+            st.getCardUtils().appendHistRecToFile(file, taskResult.getHistRec().get());
             getCurrentCardExn(st).copyFrom(st.getCardUtils().loadCard(file));
         }
         if (taskResult.isCompleted()) {
@@ -237,11 +234,11 @@ public class ExerciseController extends HtmlBuilder
         getCurrentCard(st).ifPresent(card ->
             card.copyFrom(st.getCardUtils().loadCard(getCurrentCardFileExn(st)))
         );
-        Optional<List<Task>> nextTasksOpt = st.getNextTasks().flatMap(tasks -> {
+        Optional<List<org.igye.remem3.app.repeatstrategy.Task>> nextTasksOpt = st.getNextTasks().flatMap(tasks -> {
             if (tasks.size() < 2) {
-                return st.getRepeatStrategy().getNextTasks().map(ExerciseController::getListOfBaseTasks);
+                return st.getRepeatStrategy().getNextTasks();
             } else {
-                List<Task> tail = new ArrayList<>(tasks);
+                List<org.igye.remem3.app.repeatstrategy.Task> tail = new ArrayList<>(tasks);
                 tail.removeFirst();
                 return Optional.of(tail);
             }
@@ -251,28 +248,23 @@ public class ExerciseController extends HtmlBuilder
                 .withNextTasks(nextTasksOpt)
                 .withTaskState(Optional.empty());
         }
-        Task nextTask = nextTasksOpt.get().getFirst();
+        org.igye.remem3.app.repeatstrategy.Task nextTask = nextTasksOpt.get().getFirst();
         return st
             .withNextTasks(nextTasksOpt)
             .withTaskState(makeTaskState(st.getCardUtils(), nextTask));
     }
 
-    private static List<Task> getListOfBaseTasks(List<org.igye.remem3.app.repeatstrategy.Task> ts) {
-        return ts.stream()
-            .map(HasBaseTask.class::cast)
-            .map(HasBaseTask::getBaseTask)
-            .toList();
-    }
-
     private Optional<Card> getCurrentCard(ExerciseState.Started st) {
         return st.getNextTasks()
             .flatMap(nextTasks -> nextTasks.isEmpty() ? Optional.empty() : Optional.of(nextTasks.getFirst()))
+            .map(this::getBaseTask)
             .map(Task::getCard);
     }
 
     private Card getCurrentCardExn(ExerciseState.Started st) {
         return st.getNextTasks()
             .flatMap(nextTasks -> nextTasks.isEmpty() ? Optional.empty() : Optional.of(nextTasks.getFirst()))
+            .map(this::getBaseTask)
             .map(Task::getCard)
             .orElseThrow(() -> new Exn("Cannot get the card for the current task."));
     }
@@ -333,7 +325,7 @@ public class ExerciseController extends HtmlBuilder
             return st.withErrors(List.of("There are no tasks."));
         }
         RepeatStrategy repeatStrategy = st.getRepeatStrategyCmp().makeRepeatStrategy(tasks);
-        Optional<List<Task>> nextTasks = repeatStrategy.getNextTasks().map(ExerciseController::getListOfBaseTasks);
+        Optional<List<org.igye.remem3.app.repeatstrategy.Task>> nextTasks = repeatStrategy.getNextTasks();
         Cache cache = st.getCache();
         cache.put(PAR_EXERCISE_CONFIG, st.getConfig());
         if (StringUtils.isBlank(st.getConfig())) {
@@ -369,13 +361,18 @@ public class ExerciseController extends HtmlBuilder
         }
     }
 
-    private Optional<TaskState> makeTaskState(CardUtils cardUtils, Task task) {
-        return switch (task.getTaskType()) {
-            case TaskType.FillGaps t ->
-                Optional.of(new TaskStateFillGaps(clock, utils, cardUtils, (Card.FillGaps) task.getCard(), t));
-            case TaskType.Translate t ->
-                Optional.of(new TaskStateTranslate(clock, utils, cardUtils, (Card.Translate) task.getCard(), t));
+    private Optional<TaskState> makeTaskState(CardUtils cardUtils, org.igye.remem3.app.repeatstrategy.Task task) {
+        Task baseTask = getBaseTask(task);
+        return switch (baseTask.getTaskType()) {
+            case TaskType.FillGaps t -> Optional.of(new TaskStateFillGaps(clock, utils, cardUtils,
+                (Card.FillGaps) baseTask.getCard(), t, task.getSelectedByStrategyType()));
+            case TaskType.Translate t -> Optional.of(new TaskStateTranslate(clock, utils, cardUtils,
+                (Card.Translate) baseTask.getCard(), t, task.getSelectedByStrategyType()));
         };
+    }
+
+    private Task getBaseTask(org.igye.remem3.app.repeatstrategy.Task task) {
+        return ((HasBaseTask) task).getBaseTask();
     }
 
     private ExerciseState actCancelExercise() {

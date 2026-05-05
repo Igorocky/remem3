@@ -57,7 +57,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -94,7 +94,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang2(), card.getLang1());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -138,7 +138,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -182,7 +182,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -226,7 +226,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang2(), card.getLang1());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -277,7 +277,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -328,7 +328,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -379,7 +379,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang2(), card.getLang1());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -430,7 +430,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang2(), card.getLang1());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -474,7 +474,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -511,7 +511,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -548,7 +548,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -585,7 +585,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -622,7 +622,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -659,7 +659,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -703,7 +703,7 @@ class TaskStateTranslateTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.Translate taskType = new TaskType.Translate(card.getLang1(), card.getLang2());
-        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType);
+        TaskStateTranslate state = new TaskStateTranslate(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();

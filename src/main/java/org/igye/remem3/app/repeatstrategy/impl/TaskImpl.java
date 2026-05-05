@@ -58,6 +58,11 @@ public class TaskImpl implements Task, HasBaseTask {
         return dir;
     }
 
+    @Override
+    public RepeatStrategyType getSelectedByStrategyType() {
+        return repeatStrategyType;
+    }
+
     private File getFile() {
         if (file == null) {
             file = baseTask.getCard().getFile().orElseThrow(() -> new Exn("A file is not set for a card."));

@@ -1,17 +1,13 @@
 package org.igye.remem3.app.controllers2.exercise;
 
 import lombok.RequiredArgsConstructor;
-import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.app.taskstate.TaskState;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.NotImplemented;
-import org.igye.remem3.utils.Utils;
 
 import java.io.File;
-import java.time.Clock;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,11 +26,6 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     public static final String ACT_SKIP_TASK = "Exercise_ACT_SKIP_TASK";
     public static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "Exercise_ACT_COPY_CARD_PATH_TO_CLIPBOARD";
     public static final String ACT_OPEN_CARD = "Exercise_ACT_OPEN_CARD";
-
-    private final Clock clock;
-    private final Settings settings;
-    private final Cache cache;
-    private final Utils utils;
 
     @Override
     public HtmlElem render(ExerciseState st) {

@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import lombok.With;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -15,7 +14,6 @@ import java.time.Instant;
 @ToString
 public class HistRec implements org.igye.remem3.app.repeatstrategy.HistRec {
     private Instant time;
-    @With
     private RepeatStrategyType strategy;
     private String taskType;
     private BigDecimal mark;

@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
+import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.app.taskstate.TaskResult;
@@ -35,6 +36,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private final Utils utils;
     private final Card.FillGaps card;
     private final TaskType.FillGaps taskType;
+    private final RepeatStrategyType taskSelectedByStrategy;
     private final List<String> cardErrors;
     private final List<TextPart.Gap> gaps;
 
@@ -45,12 +47,15 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
     private boolean showHints;
     private boolean showAnswers;
 
-    public TaskStateFillGaps(Clock clock, Utils utils, CardUtils cardUtils, Card.FillGaps card,
-                             TaskType.FillGaps taskType) {
+    public TaskStateFillGaps(
+        Clock clock, Utils utils, CardUtils cardUtils,
+        Card.FillGaps card, TaskType.FillGaps taskType, RepeatStrategyType taskSelectedByStrategy
+    ) {
         this.clock = clock;
         this.utils = utils;
         this.card = card;
         this.taskType = taskType;
+        this.taskSelectedByStrategy = taskSelectedByStrategy;
         cardErrors = cardUtils.validateCard(card);
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             gaps = null;
@@ -203,6 +208,7 @@ public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
         }
         return HistRec.builder()
             .time(clock.instant())
+            .strategy(taskSelectedByStrategy)
             .taskType(taskType.getCode())
             .mark(allAnsAreCorrect ? BigDecimal.ONE : BigDecimal.ZERO)
             .notes(note.toString().trim())

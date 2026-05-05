@@ -11,9 +11,9 @@ import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 import org.igye.remem3.app.controllers.components.RepeatStrategyCmp;
-import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.app.taskstate.TaskState;
 
 import java.util.List;

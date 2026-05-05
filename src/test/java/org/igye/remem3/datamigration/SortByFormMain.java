@@ -7,6 +7,7 @@ import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.NotImplemented;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import tools.jackson.databind.ObjectMapper;
 
@@ -43,6 +44,11 @@ public class SortByFormMain {
             @Override
             public String getCacheFile() {
                 throw new Exn("not implemented");
+            }
+
+            @Override
+            public String getBeansFile() {
+                throw new NotImplemented();
             }
 
             @Override

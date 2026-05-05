@@ -63,7 +63,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -103,7 +103,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -150,7 +150,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -204,7 +204,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -258,7 +258,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -312,7 +312,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -359,7 +359,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -413,7 +413,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -467,7 +467,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();
@@ -518,7 +518,7 @@ class TaskStateFillGapsTest extends HtmlBuilder {
             .notes("N")
             .build();
         TaskType.FillGaps taskType = new TaskType.FillGaps(card.getLang());
-        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType);
+        TaskStateFillGaps state = new TaskStateFillGaps(clock, utils, cards, card, taskType, null);
 
         //first render
         HtmlElem html = state.render();

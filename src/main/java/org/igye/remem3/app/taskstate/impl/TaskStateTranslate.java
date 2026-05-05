@@ -6,6 +6,7 @@ import org.apache.commons.lang3.Strings;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
+import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.taskstate.TaskResult;
 import org.igye.remem3.app.taskstate.TaskState;
@@ -35,6 +36,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     private final Utils utils;
     private final Card.Translate card;
     private final TaskType.Translate taskType;
+    private final RepeatStrategyType taskSelectedByStrategy;
     private final List<String> cardErrors;
     private final String textToTranslate;
     private final String example;
@@ -50,12 +52,15 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
 
     private boolean showAnswerRequested;
 
-    public TaskStateTranslate(Clock clock, Utils utils, CardUtils cardUtils, Card.Translate card,
-                              TaskType.Translate taskType) {
+    public TaskStateTranslate(
+        Clock clock, Utils utils, CardUtils cardUtils,
+        Card.Translate card, TaskType.Translate taskType, RepeatStrategyType taskSelectedByStrategy
+    ) {
         this.clock = clock;
         this.utils = utils;
         this.card = card;
         this.taskType = taskType;
+        this.taskSelectedByStrategy = taskSelectedByStrategy;
         cardErrors = new ArrayList<>(cardUtils.validateCard(card));
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             textToTranslate = null;
@@ -127,6 +132,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                 histRec = Optional.of(
                     HistRec.builder()
                         .time(clock.instant())
+                        .strategy(taskSelectedByStrategy)
                         .taskType(taskType.getCode())
                         .mark(mark)
                         .notes(notes)
@@ -153,6 +159,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
                     histRec = Optional.of(
                         HistRec.builder()
                             .time(clock.instant())
+                            .strategy(taskSelectedByStrategy)
                             .taskType(taskType.getCode())
                             .mark(BigDecimal.valueOf(params.getKeyValueParamLong(ACT_COMPLETE_TASK_WITH_MARK)))
                             .notes(utils.makeExpectedActualPair("<<<assessed_by_user>>>", userAnswer))
