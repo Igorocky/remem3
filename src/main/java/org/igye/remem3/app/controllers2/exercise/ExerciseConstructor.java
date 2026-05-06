@@ -2,6 +2,7 @@ package org.igye.remem3.app.controllers2.exercise;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.controllers2.beans.BeansState;
 import org.igye.remem3.app.controllers2.beans.dto.ExerciseDef;
@@ -28,7 +29,8 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
     @Override
     public ExerciseState construct() {
         BeansState beans = stateLookup.getState(BEANS);
-        List<ExerciseDef> exercises = beans.getCtx().getBeansOfType(ExerciseDef.class).values().stream()
+        List<ExerciseDef> exercises = beans.getBeans(ExerciseDef.class).stream()
+            .map(Pair::getRight)
             .sorted(Comparator.comparing(ExerciseDef::getName))
             .toList();
         String selectedExName = cache.getStr(

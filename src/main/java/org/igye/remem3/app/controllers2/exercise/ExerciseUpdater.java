@@ -101,7 +101,10 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             .toList();
         List<String> repeatStrategyTypes = st.getSelectedExercise().getRepeatStrategyTypes();
         RepeatStrategy repeatStrategy = pair.getRight();
-        return new RunningExerciseState(parent, directories, taskTypes, repeatStrategyTypes, repeatStrategy);
+        RunningExerciseState runningSt = new RunningExerciseState(
+            parent, directories, taskTypes, repeatStrategyTypes, repeatStrategy
+        );
+        return actGoToNextTask(runningSt);
     }
 
     private Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> makeRepeatStrategy(ExerciseDef ex) {

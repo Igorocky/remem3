@@ -1,8 +1,7 @@
 package org.igye.remem3.app.controllers2.beans.dto;
 
-import lombok.Getter;
+import lombok.Data;
 import lombok.SneakyThrows;
-import lombok.experimental.SuperBuilder;
 
 import java.io.File;
 import java.util.List;
@@ -14,18 +13,17 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
 
     List<String> getRepeatStrategyTypes();
 
-    @SuperBuilder
-    @Getter
+
+    @Data
     sealed abstract class BaseExerciseDef implements ExerciseDef permits SimpleExerciseDef {
-        private final String name;
+        private String name;
     }
 
-    @SuperBuilder
-    @Getter
+    @Data
     final class SimpleExerciseDef extends BaseExerciseDef {
-        private final List<File> dirs;
-        private final TaskFilter taskFilter;
-        private final RepeatStrategyParams repeatStrategyParams;
+        private List<File> dirs;
+        private TaskFilter taskFilter;
+        private RepeatStrategyParams repeatStrategyParams;
 
         @Override
         public List<String> getDirectories() {

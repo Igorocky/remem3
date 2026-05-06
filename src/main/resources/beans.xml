@@ -2,10 +2,25 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:p="http://www.springframework.org/schema/p"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 		https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="str" class="java.lang.String" c:_0="#{#reverse(#repeat('ABC', 3))}" />
-    <bean id="int" class="java.lang.Integer" factory-method="parseInt" c:_0="17" />
+    <bean id="generalFactoryBean" class="org.igye.remem3.app.controllers2.beans.GeneralFactoryBean"/>
+
+    <bean id="taskFilter" factory-bean="generalFactoryBean" factory-method="make"
+          c:_0="#{#taskTypeIn('translate:_->_')}"/>
+
+    <bean class="org.igye.remem3.app.controllers2.beans.dto.ExerciseDef$SimpleExerciseDef"
+          p:name="exercise1"
+          p:dirs="#{{'/home/igor/remem3/cards'}}"
+          p:taskFilter="#{#taskTypeIn('translate:_->_')}"
+    >
+        <property name="repeatStrategyParams">
+            <bean class="org.igye.remem3.app.controllers2.beans.dto.RepeatStrategyParams$RepeatStrategyCircleParams"
+                  p:randomnessFactor="0.3"
+            />
+        </property>
+    </bean>
 
 </beans>

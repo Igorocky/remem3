@@ -9,8 +9,7 @@ public class CustomBeanExpressionResolver extends StandardBeanExpressionResolver
     @Override
     protected void customizeEvaluationContext(StandardEvaluationContext evalContext) {
         super.customizeEvaluationContext(evalContext);
-        registerFunction(evalContext, "reverse", String.class);
-        registerFunction(evalContext, "repeat", String.class, int.class);
+        registerFunction(evalContext, "taskTypeIn", String[].class);
     }
 
     @SneakyThrows

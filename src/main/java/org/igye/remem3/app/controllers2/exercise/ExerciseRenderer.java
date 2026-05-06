@@ -41,7 +41,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         if (st.getAllExercises().isEmpty()) {
             return text("There are no exercises defined.");
         }
-        return frag(
+        return form(
             h4(text("Select exercise"), rndExerciseSelector(st)),
             div(
                 inpSubmit(ACT_START_EXERCISE, "Start")

@@ -43,10 +43,10 @@ public final class RunningExerciseState implements ExerciseState {
     private final RepeatStrategy repeatStrategy;
     @Getter
     @With
-    private Optional<List<Task>> nextTasks;
+    private Optional<List<Task>> nextTasks = Optional.of(List.of());
     @Getter
     @With
-    private Optional<TaskState> taskState;
+    private Optional<TaskState> taskState = Optional.empty();
 
     public Optional<Card> getCurrentCard() {
         return nextTasks

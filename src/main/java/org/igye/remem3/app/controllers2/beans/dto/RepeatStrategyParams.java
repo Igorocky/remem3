@@ -1,7 +1,6 @@
 package org.igye.remem3.app.controllers2.beans.dto;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Data;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 
 import java.time.Duration;
@@ -15,11 +14,10 @@ public sealed interface RepeatStrategyParams
 
     RepeatStrategyType getRepeatStrategyType();
 
-    @RequiredArgsConstructor
-    @Getter
+    @Data
     final class RepeatStrategyBucketsParams implements RepeatStrategyParams {
-        private final List<Duration> bucketDelays;
-        private final int batchSize;
+        private List<Duration> bucketDelays;
+        private int batchSize;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {
@@ -27,12 +25,11 @@ public sealed interface RepeatStrategyParams
         }
     }
 
-    @RequiredArgsConstructor
-    @Getter
+    @Data
     final class RepeatStrategyCircleParams implements RepeatStrategyParams {
-        private final Instant startTime;
-        private final Optional<Integer> numOfRounds;
-        private final double randomnessFactor;
+        private Instant startTime = Instant.MIN;
+        private Optional<Integer> numOfRounds = Optional.empty();
+        private double randomnessFactor = 0.3;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {
@@ -40,12 +37,11 @@ public sealed interface RepeatStrategyParams
         }
     }
 
-    @RequiredArgsConstructor
-    @Getter
+    @Data
     final class RepeatStrategyQueueParams implements RepeatStrategyParams {
-        private final Instant startTime;
-        private final int step;
-        private final int batchSize;
+        private Instant startTime;
+        private int step;
+        private int batchSize;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {
