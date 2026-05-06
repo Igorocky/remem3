@@ -31,17 +31,21 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
 
     @Override
     public HtmlElem render(ExerciseState st) {
-        return switch (st) {
-            case SelectExerciseState sel -> rndSelectExerciseState(sel);
-            case RunningExerciseState run -> rndRunningExerciseState(run);
-        };
+        return simplePageWithTitle("Exercise",
+            form(
+                switch (st) {
+                    case SelectExerciseState sel -> rndSelectExerciseState(sel);
+                    case RunningExerciseState run -> rndRunningExerciseState(run);
+                }
+            )
+        );
     }
 
     private HtmlElem rndSelectExerciseState(SelectExerciseState st) {
         if (st.getAllExercises().isEmpty()) {
             return text("There are no exercises defined.");
         }
-        return form(
+        return frag(
             h4(text("Select exercise"), rndExerciseSelector(st)),
             div(
                 inpSubmit(ACT_START_EXERCISE, "Start")
