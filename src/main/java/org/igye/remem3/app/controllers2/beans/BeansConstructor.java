@@ -8,11 +8,12 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 @RequiredArgsConstructor
 public class BeansConstructor implements StateConstructor<BeansState> {
+    public static final String BEANS = "beans";
     private final Settings settings;
 
     @Override
     public String getName() {
-        return "beans";
+        return BEANS;
     }
 
     @Override

@@ -1,20 +1,22 @@
 package org.igye.remem3.app.controllers2.exercise;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.app.taskstate.TaskState;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
-import org.igye.remem3.utils.NotImplemented;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
 @RequiredArgsConstructor
 public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<ExerciseState> {
+    public static final String PAR_EXERCISE_DEF = "Exercise_PAR_EXERCISE_DEF";
     public static final String PAR_SHOW_EXERCISE_PARAMS = "Exercise_PAR_SHOW_EXERCISE_PARAMS";
     public static final String PAR_SHOW_DAILY_UNIQUE_COUNT = "Exercise_PAR_SHOW_DAILY_UNIQUE_COUNT";
     public static final String ACT_START_EXERCISE = "Exercise_ACT_START_EXERCISE";
@@ -36,7 +38,25 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     }
 
     private HtmlElem rndSelectExerciseState(SelectExerciseState st) {
-        throw new NotImplemented();
+        if (st.getAllExercises().isEmpty()) {
+            return text("There are no exercises defined.");
+        }
+        return frag(
+            h4(text("Select exercise"), rndExerciseSelector(st)),
+            div(
+                inpSubmit(ACT_START_EXERCISE, "Start")
+                    .attr("style", format("background-color: %s;", GREEN))
+                    .attr("autofocus", "").attr("class", "border-on-focus")
+            )
+        );
+    }
+
+    private HtmlElem rndExerciseSelector(SelectExerciseState st) {
+        ArrayList<Pair<String, ? extends HtmlElem>> options = new ArrayList<>();
+        st.getAllExercises().stream()
+            .map(ex -> Pair.of(ex.getName(), text(ex.getName())))
+            .forEach(options::add);
+        return select(PAR_EXERCISE_DEF, st.getSelectedExercise().getName(), options).submitOnChange();
     }
 
     private HtmlElem rndRunningExerciseState(RunningExerciseState st) {
@@ -45,10 +65,9 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         if (st.getShowMoreParams().isPresent()) {
             boolean historyUpdated = st.getTaskState().map(TaskState::isHistoryUpdated).orElse(false);
             if (st.getShowMoreParams().get()) {
-                String directoriesStr = st.getDirectories().stream().sorted().collect(Collectors.joining(", "));
-                String taskTypesStr = st.getTaskTypes().stream().sorted().collect(Collectors.joining(", "));
-                String repeatStrategyTypesStr = st.getRepeatStrategyTypes().stream()
-                    .sorted().collect(Collectors.joining(", "));
+                String directoriesStr = StringUtils.join(st.getDirectories(), ", ");
+                String taskTypesStr = StringUtils.join(st.getTaskTypes(), ", ");
+                String repeatStrategyTypesStr = StringUtils.join(st.getRepeatStrategyTypes(), ", ");
                 params = frag(
                     div(text(format("Directories: %s", directoriesStr))),
                     div(text(format("Task types: %s", taskTypesStr))),

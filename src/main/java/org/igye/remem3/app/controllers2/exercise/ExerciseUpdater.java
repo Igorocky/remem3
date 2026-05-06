@@ -2,20 +2,30 @@ package org.igye.remem3.app.controllers2.exercise;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.exercise.HasBaseTask;
+import org.igye.remem3.app.controllers2.beans.dto.ExerciseDef;
+import org.igye.remem3.app.controllers2.beans.dto.RepeatStrategyParams;
+import org.igye.remem3.app.controllers2.beans.dto.TaskView;
+import org.igye.remem3.app.controllers2.beans.dto.TaskViewImpl;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.dto.TaskType;
+import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyBuckets;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyQueue;
+import org.igye.remem3.app.repeatstrategy.impl.TaskImpl;
 import org.igye.remem3.app.state.StateUpdater;
 import org.igye.remem3.app.taskstate.TaskResult;
 import org.igye.remem3.app.taskstate.TaskState;
 import org.igye.remem3.app.taskstate.impl.TaskStateFillGaps;
 import org.igye.remem3.app.taskstate.impl.TaskStateTranslate;
-import org.igye.remem3.utils.NotImplemented;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 
@@ -24,7 +34,9 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,9 +45,11 @@ import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_COP
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_OPEN_CARD;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_REFRESH_EXERCISE;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_SKIP_TASK;
+import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_START_EXERCISE;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_EXERCISE_PARAMS;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS;
+import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_EXERCISE_DEF;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SHOW_DAILY_UNIQUE_COUNT;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SHOW_EXERCISE_PARAMS;
 
@@ -56,7 +70,102 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
     }
 
     private ExerciseState updateSelectExerciseState(SelectExerciseState st, RequestParams params) {
-        throw new NotImplemented();
+        if (params.hasParam(PAR_EXERCISE_DEF)) {
+            String exName = params.getParam(PAR_EXERCISE_DEF);
+            st = st.withSelectedExercise(
+                st.getAllExercises().stream()
+                    .filter(ex -> exName.equals(ex.getName()))
+                    .findFirst()
+                    .orElse(st.getSelectedExercise())
+            );
+            cache.put(PAR_EXERCISE_DEF, st.getSelectedExercise().getName());
+        }
+        if (params.hasParam(ACT_START_EXERCISE)) {
+            return actStartExercise(st);
+        }
+        return st;
+    }
+
+    private RunningExerciseState actStartExercise(SelectExerciseState st) {
+        SelectExerciseState parent = st;
+        List<String> directories = st.getSelectedExercise().getDirectories();
+        Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> pair =
+            makeRepeatStrategy(st.getSelectedExercise());
+        List<String> taskTypes = pair.getLeft().stream()
+            .map(HasBaseTask.class::cast)
+            .map(HasBaseTask::getBaseTask)
+            .map(Task::getTaskType)
+            .map(TaskType::getCode)
+            .distinct()
+            .sorted()
+            .toList();
+        List<String> repeatStrategyTypes = st.getSelectedExercise().getRepeatStrategyTypes();
+        RepeatStrategy repeatStrategy = pair.getRight();
+        return new RunningExerciseState(parent, directories, taskTypes, repeatStrategyTypes, repeatStrategy);
+    }
+
+    private Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> makeRepeatStrategy(ExerciseDef ex) {
+        return switch (ex) {
+            case ExerciseDef.SimpleExerciseDef s -> makeSimpleRepeatStrategy(s);
+        };
+    }
+
+    private Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> makeSimpleRepeatStrategy(
+        ExerciseDef.SimpleExerciseDef simpEx
+    ) {
+        validateDirs(simpEx.getDirectories());
+        RepeatStrategyType repeatStrategyType = simpEx.getRepeatStrategyParams().getRepeatStrategyType();
+        Instant historyStartsAt = getHistoryStartsAt(simpEx.getRepeatStrategyParams());
+        List<org.igye.remem3.app.repeatstrategy.Task> allTasks = simpEx.getDirectories().stream()
+            .map(File::new)
+            .map(cardUtils::loadAllCards)
+            .flatMap(Collection::stream)
+            .map(Card::getTasks)
+            .flatMap(Collection::stream)
+            .map(this::makeTaskView)
+            .filter(simpEx.getTaskFilter()::match)
+            .map(TaskViewImpl.class::cast)
+            .map(TaskViewImpl::getTask)
+            .map(task -> makeTaskForRepeatStrategy(task, historyStartsAt, repeatStrategyType))
+            .toList();
+        RepeatStrategy repeatStrategy = switch (simpEx.getRepeatStrategyParams()) {
+            case RepeatStrategyParams.RepeatStrategyCircleParams p -> new RepeatStrategyCircle(
+                utils, allTasks, historyStartsAt, p.getRandomnessFactor(), p.getNumOfRounds()
+            );
+            case RepeatStrategyParams.RepeatStrategyQueueParams p -> new RepeatStrategyQueue(
+                utils, historyStartsAt, p.getBatchSize(), p.getStep(), allTasks
+            );
+            case RepeatStrategyParams.RepeatStrategyBucketsParams p -> new RepeatStrategyBuckets(
+                utils, clock, p.getBatchSize(), allTasks, p.getBucketDelays()
+            );
+        };
+        return Pair.of(allTasks, repeatStrategy);
+    }
+
+    private Instant getHistoryStartsAt(RepeatStrategyParams repeatStrategyParams) {
+        return switch (repeatStrategyParams) {
+            case RepeatStrategyParams.RepeatStrategyCircleParams p -> p.getStartTime();
+            case RepeatStrategyParams.RepeatStrategyQueueParams p -> p.getStartTime();
+            case RepeatStrategyParams.RepeatStrategyBucketsParams p -> Instant.MIN;
+        };
+    }
+
+    private TaskView makeTaskView(Task task) {
+        Card card = task.getCard();
+        return TaskViewImpl.builder()
+            .task(task)
+            .taskType(task.getTaskType())
+            .file(card.getFile().orElseThrow(() -> new Exn("No file set for card %s".formatted(card))))
+            .createdAt(card.getCreatedAt())
+            .build();
+    }
+
+    private org.igye.remem3.app.repeatstrategy.Task makeTaskForRepeatStrategy(
+        Task task,
+        Instant historyStartsAt,
+        RepeatStrategyType repeatStrategyType
+    ) {
+        return new TaskImpl(task, historyStartsAt, repeatStrategyType);
     }
 
     private ExerciseState updateRunningExerciseState(RunningExerciseState st, RequestParams params) {
@@ -190,5 +299,31 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
 
     private Task getBaseTask(org.igye.remem3.app.repeatstrategy.Task task) {
         return ((HasBaseTask) task).getBaseTask();
+    }
+
+    private void validateDirs(List<String> dirs) {
+        List<String> paths = dirs.stream()
+            .map(File::new)
+            .map(this::getCanonicalPath)
+            .distinct()
+            .toList();
+        for (int i = 0; i < paths.size(); i++) {
+            for (int j = 0; j < paths.size(); j++) {
+                if (i != j) {
+                    String p1 = paths.get(i);
+                    String p2 = paths.get(j);
+                    if (p1.startsWith(p2)) {
+                        throw new Exn("Directories cannot be nested, but got '%s' is a subdirectory of '%s'.".formatted(
+                            p2, p1
+                        ));
+                    }
+                }
+            }
+        }
+    }
+
+    @SneakyThrows
+    private String getCanonicalPath(File file) {
+        return file.getCanonicalPath();
     }
 }

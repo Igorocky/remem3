@@ -126,7 +126,7 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
     private <T> T findTypeSupporter(List<Pair<Class<?>, T>> typeSupporters, Class<?> type, String elemType) {
         //todo: implement caching
         for (Pair<Class<?>, T> typeSupporter : typeSupporters) {
-            if (type.isAssignableFrom(typeSupporter.getLeft())) {
+            if (typeSupporter.getLeft().isAssignableFrom(type)) {
                 return typeSupporter.getRight();
             }
         }

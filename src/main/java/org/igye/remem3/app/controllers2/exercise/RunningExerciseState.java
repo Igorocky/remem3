@@ -15,14 +15,12 @@ import org.igye.remem3.utils.Exn;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @AllArgsConstructor
 public final class RunningExerciseState implements ExerciseState {
     @Getter
     private final ExerciseState parent;
-    private List<String> errors = List.of();
     @Getter
     @With
     private Optional<Boolean> showMoreParams = Optional.empty();
@@ -35,11 +33,11 @@ public final class RunningExerciseState implements ExerciseState {
     private boolean showDailyUniqueCount = false;
 
     @Getter
-    private final Set<String> directories;
+    private final List<String> directories;
     @Getter
-    private final Set<String> taskTypes;
+    private final List<String> taskTypes;
     @Getter
-    private final Set<String> repeatStrategyTypes;
+    private final List<String> repeatStrategyTypes;
 
     @Getter
     private final RepeatStrategy repeatStrategy;
