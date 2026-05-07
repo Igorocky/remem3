@@ -11,7 +11,7 @@ public class CustomBeanExpressionResolver extends StandardBeanExpressionResolver
         super.customizeEvaluationContext(evalContext);
         evalContext.setVariable("Exercise", "org.igye.remem3.app.controllers2.beans.dto.ExerciseDef$SimpleExerciseDef");
         evalContext.setVariable("Circle", "org.igye.remem3.app.controllers2.beans.dto.RepeatStrategyParams$RepeatStrategyCircleParams");
-        registerFunction(evalContext, "taskTypeIn", String[].class);
+        registerFunction(evalContext, "taskType", String[].class);
     }
 
     @SneakyThrows

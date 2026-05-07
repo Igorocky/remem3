@@ -130,8 +130,8 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         ExerciseDef.SimpleExerciseDef simpEx
     ) {
         validateDirs(simpEx.getDirectories());
-        RepeatStrategyType repeatStrategyType = simpEx.getRepeatStrategyParams().getRepeatStrategyType();
-        Instant historyStartsAt = getHistoryStartsAt(simpEx.getRepeatStrategyParams());
+        RepeatStrategyType repeatStrategyType = simpEx.getRepeatStrategy().getRepeatStrategyType();
+        Instant historyStartsAt = getHistoryStartsAt(simpEx.getRepeatStrategy());
         List<org.igye.remem3.app.repeatstrategy.Task> allTasks = simpEx.getDirectories().stream()
             .map(File::new)
             .map(cardUtils::loadAllCards)
@@ -144,7 +144,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             .map(TaskViewImpl::getTask)
             .map(task -> makeTaskForRepeatStrategy(task, historyStartsAt, repeatStrategyType))
             .toList();
-        RepeatStrategy repeatStrategy = switch (simpEx.getRepeatStrategyParams()) {
+        RepeatStrategy repeatStrategy = switch (simpEx.getRepeatStrategy()) {
             case RepeatStrategyParams.RepeatStrategyCircleParams p -> new RepeatStrategyCircle(
                 utils, allTasks, historyStartsAt, p.getRandomnessFactor(), p.getNumOfRounds()
             );

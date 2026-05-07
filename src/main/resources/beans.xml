@@ -7,17 +7,15 @@
 		https://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <bean id="taskFilter" factory-bean="generalFactoryBean" factory-method="make"
-          c:_0="#{#taskTypeIn('translate:_->_')}"/>
+          c:_0="#{#taskType('translate:_->_')}"/>
 
     <bean class="#{#Exercise}"
           p:name="exercise1"
           p:dirs="${dir1}"
-          p:taskFilter="#{#taskTypeIn('translate:QUESTION->_')}"
+          p:taskFilter="#{#taskType('translate:QUESTION->_')}"
     >
-        <property name="repeatStrategyParams">
-            <bean class="#{#Circle}"
-                  p:randomnessFactor="0.3"
-            />
+        <property name="repeatStrategy">
+            <bean class="#{#Circle}" p:randomnessFactor="0.3"/>
         </property>
     </bean>
 

@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 public class Functions {
 
-    public static TaskFilter taskTypeIn(String... types) {
+    public static TaskFilter taskType(String... types) {
         TaskTypeMatcher taskTypeMatcher = Arrays.stream(types)
             .map(TaskTypeMatcherImpl::new)
             .map(TaskTypeMatcher.class::cast)

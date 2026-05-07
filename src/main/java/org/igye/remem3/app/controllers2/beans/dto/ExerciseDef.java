@@ -23,7 +23,7 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
     final class SimpleExerciseDef extends BaseExerciseDef {
         private List<File> dirs;
         private TaskFilter taskFilter;
-        private RepeatStrategyParams repeatStrategyParams;
+        private RepeatStrategyParams repeatStrategy;
 
         @Override
         public List<String> getDirectories() {
@@ -32,7 +32,7 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
 
         @Override
         public List<String> getRepeatStrategyTypes() {
-            return List.of(repeatStrategyParams.getRepeatStrategyType().toString());
+            return List.of(repeatStrategy.getRepeatStrategyType().toString());
         }
 
         @SneakyThrows
