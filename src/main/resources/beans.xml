@@ -14,7 +14,7 @@
     <bean class="#{#Exercise}"
           p:name="exercise1"
           p:dirs="${dir1}"
-          p:taskFilter="#{@QA}"
+          p:taskFilter="null"
           p:repeatStrategy="#{@circle}"
     />
 

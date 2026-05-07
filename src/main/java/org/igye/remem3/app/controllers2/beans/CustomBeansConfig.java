@@ -20,6 +20,11 @@ public class CustomBeansConfig {
     private ApplicationContext ctx;
 
     @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
+    }
+
+    @Bean
     public GeneralFactoryBean generalFactoryBean() {
         return new GeneralFactoryBean();
     }
@@ -35,17 +40,12 @@ public class CustomBeansConfig {
     }
 
     @Bean
-    public ConversionServiceFactoryBean conversionServiceFactoryBean() {
+    public ConversionServiceFactoryBean conversionService() {
         ConversionServiceFactoryBean bean = new ConversionServiceFactoryBean();
         bean.setConverters(Set.of(
             taskFilterConverter()
         ));
         return bean;
-    }
-
-    @Bean
-    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-        return new PropertySourcesPlaceholderConfigurer();
     }
 
     @EventListener(ContextRefreshedEvent.class)
