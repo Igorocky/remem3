@@ -1,6 +1,5 @@
 package org.igye.remem3.app.controllers2.beans;
 
-import lombok.SneakyThrows;
 import org.springframework.context.expression.StandardBeanExpressionResolver;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -11,11 +10,6 @@ public class CustomBeanExpressionResolver extends StandardBeanExpressionResolver
         super.customizeEvaluationContext(evalContext);
         evalContext.setVariable("Exercise", "org.igye.remem3.app.controllers2.beans.dto.ExerciseDef$SimpleExerciseDef");
         evalContext.setVariable("Circle", "org.igye.remem3.app.controllers2.beans.dto.RepeatStrategyParams$RepeatStrategyCircleParams");
-        registerFunction(evalContext, "taskType", String[].class);
-    }
-
-    @SneakyThrows
-    private void registerFunction(StandardEvaluationContext evalCtx, String methodName, Class<?>... parameterTypes) {
-        evalCtx.registerFunction(methodName, Functions.class.getMethod(methodName, parameterTypes));
+        Functions.registerFunctions(evalContext);
     }
 }

@@ -6,17 +6,16 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 		https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="taskFilter" factory-bean="generalFactoryBean" factory-method="make"
-          c:_0="#{#taskType('translate:_->_')}"/>
+    <bean id="QA" factory-bean="generalFactoryBean" factory-method="make"
+          c:_0="#{#taskType('translate:QUESTION->ANSWER')}"/>
+
+    <bean id="circle" class="#{#Circle}" p:randomnessFactor="0.4"/>
 
     <bean class="#{#Exercise}"
           p:name="exercise1"
           p:dirs="${dir1}"
-          p:taskFilter="#{#taskType('translate:QUESTION->_')}"
-    >
-        <property name="repeatStrategy">
-            <bean class="#{#Circle}" p:randomnessFactor="0.3"/>
-        </property>
-    </bean>
+          p:taskFilter="#{@QA}"
+          p:repeatStrategy="#{@circle}"
+    />
 
 </beans>

@@ -170,7 +170,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         Card card = task.getCard();
         return TaskViewImpl.builder()
             .task(task)
-            .taskType(task.getTaskType())
+            .type(task.getTaskType())
             .file(card.getFile().orElseThrow(() -> new Exn("No file set for card %s".formatted(card))))
             .createdAt(card.getCreatedAt())
             .build();

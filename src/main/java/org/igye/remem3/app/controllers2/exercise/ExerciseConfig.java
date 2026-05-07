@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.context.event.ContextStartedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 
 @Configuration
@@ -23,8 +23,8 @@ public class ExerciseConfig {
     @Autowired
     private ApplicationContext ctx;
 
-    @EventListener({ContextStartedEvent.class})
-    public void handleContextStart() {
+    @EventListener(ContextRefreshedEvent.class)
+    public void handleContextRefresh() {
         ctx.getBean(ExerciseConstructor.class).setStateLookup(ctx.getBean(StateLookup.class));
     }
 }

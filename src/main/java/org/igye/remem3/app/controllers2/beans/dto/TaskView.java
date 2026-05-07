@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 public interface TaskView {
-    TaskType getTaskType();
+    TaskType getType();
 
     File getFile();
 
