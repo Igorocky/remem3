@@ -8,6 +8,7 @@ import org.igye.remem3.app.controllers.exercise.ExerciseController;
 import org.igye.remem3.app.controllers.movecardstodir.MoveCardsToDirController;
 import org.igye.remem3.app.controllers.newcard.NewCardController;
 import org.igye.remem3.app.controllers.validatecards.ValidateCardsController;
+import org.igye.remem3.app.controllers2.beans.CustomBeansConfig;
 import org.igye.remem3.app.impl.CacheImpl;
 import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.app.impl.SettingsImpl;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties(AppProps.class)
 @ComponentScan(
     basePackages = "org.igye.remem3",
+    excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = CustomBeansConfig.class),
     includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
         UtilsImpl.class,
         CardUtilsImpl.class,

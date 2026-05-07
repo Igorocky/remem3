@@ -93,13 +93,11 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
             } else {
                 idAndState = makeNewState(constructor);
             }
-        } else {
-            idAndState = Pair.of(stateId, stateOpt.get());
-        }
-        String actualStateId = idAndState.getLeft();
-        if (!actualStateId.equals(stateId)) {
+            String actualStateId = idAndState.getLeft();
             Object createdState = idAndState.getRight();
             stateCache.putState(actualStateId, createdState);
+        } else {
+            idAndState = Pair.of(stateId, stateOpt.get());
         }
         return idAndState;
     }

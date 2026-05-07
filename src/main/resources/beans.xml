@@ -6,18 +6,16 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 		https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="generalFactoryBean" class="org.igye.remem3.app.controllers2.beans.GeneralFactoryBean"/>
-
     <bean id="taskFilter" factory-bean="generalFactoryBean" factory-method="make"
           c:_0="#{#taskTypeIn('translate:_->_')}"/>
 
-    <bean class="org.igye.remem3.app.controllers2.beans.dto.ExerciseDef$SimpleExerciseDef"
+    <bean class="#{#Exercise}"
           p:name="exercise1"
-          p:dirs="#{{'/home/igor/remem3/cards'}}"
-          p:taskFilter="#{#taskTypeIn('translate:_->_')}"
+          p:dirs="${dir1}"
+          p:taskFilter="#{#taskTypeIn('translate:QUESTION->_')}"
     >
         <property name="repeatStrategyParams">
-            <bean class="org.igye.remem3.app.controllers2.beans.dto.RepeatStrategyParams$RepeatStrategyCircleParams"
+            <bean class="#{#Circle}"
                   p:randomnessFactor="0.3"
             />
         </property>
