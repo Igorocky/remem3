@@ -2,6 +2,7 @@ package org.igye.remem3.app.controllers2.exercise;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
@@ -103,8 +104,20 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         RepeatStrategy repeatStrategy = pair.getRight();
         RunningExerciseState runningSt = new RunningExerciseState(
             parent, directories, taskTypes, repeatStrategyTypes, repeatStrategy
-        );
+        )
+            .withShowMoreParams(parseShowMoreParams(cache.getStr(PAR_SHOW_EXERCISE_PARAMS, "false")))
+            .withShowDailyUniqueCount(cache.getBool(PAR_SHOW_DAILY_UNIQUE_COUNT, false));
         return actGoToNextTask(runningSt);
+    }
+
+    private Optional<Boolean> parseShowMoreParams(String str) {
+        if (StringUtils.isBlank(str)) {
+            return Optional.empty();
+        } else {
+            return utils.try_(
+                () -> Boolean.parseBoolean(str)
+            );
+        }
     }
 
     private Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> makeRepeatStrategy(ExerciseDef ex) {
