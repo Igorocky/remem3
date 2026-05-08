@@ -14,7 +14,7 @@
     <bean class="#{#Exercise}"
           p:name="exercise1"
           p:dirs="${dir1}"
-          p:taskFilter="null"
+          p:taskFilter="type % {'translate:QUESTION->_', 'translate:_->QUESTION'}"
           p:repeatStrategy="#{@circle}"
     />
 

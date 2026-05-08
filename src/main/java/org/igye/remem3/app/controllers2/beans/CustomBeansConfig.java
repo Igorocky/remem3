@@ -1,8 +1,11 @@
 package org.igye.remem3.app.controllers2.beans;
 
+import org.igye.remem3.app.controllers2.beans.converter.TaskFilterConverter;
+import org.igye.remem3.app.controllers2.beans.converter.TaskTypeMatcherConverter;
+import org.igye.remem3.app.controllers2.beans.spel.GeneralFactoryBean;
+import org.igye.remem3.app.controllers2.beans.spel.SpelEvaluator;
+import org.igye.remem3.app.controllers2.beans.spel.SpelEvaluatorImpl;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
@@ -15,8 +18,6 @@ import java.util.Set;
 @Configuration
 @ImportResource("${app.beans-file}")
 public class CustomBeansConfig {
-    @Autowired
-    private ApplicationContext ctx;
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
@@ -39,10 +40,16 @@ public class CustomBeansConfig {
     }
 
     @Bean
+    public TaskTypeMatcherConverter taskTypeMatcherConverter() {
+        return new TaskTypeMatcherConverter();
+    }
+
+    @Bean
     public ConversionServiceFactoryBean conversionService(ObjectProvider<ConversionService> conversionService) {
         ConversionServiceFactoryBean bean = new ConversionServiceFactoryBean();
         bean.setConverters(Set.of(
-            taskFilterConverter(conversionService)
+            taskFilterConverter(conversionService),
+            taskTypeMatcherConverter()
         ));
         return bean;
     }

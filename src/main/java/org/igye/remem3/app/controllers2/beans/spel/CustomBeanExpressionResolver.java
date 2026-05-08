@@ -1,4 +1,4 @@
-package org.igye.remem3.app.controllers2.beans;
+package org.igye.remem3.app.controllers2.beans.spel;
 
 import org.springframework.context.expression.StandardBeanExpressionResolver;
 import org.springframework.expression.spel.support.StandardEvaluationContext;

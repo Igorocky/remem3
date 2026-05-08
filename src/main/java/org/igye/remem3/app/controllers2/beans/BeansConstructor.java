@@ -2,6 +2,7 @@ package org.igye.remem3.app.controllers2.beans;
 
 import lombok.RequiredArgsConstructor;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.controllers2.beans.spel.CustomBeanExpressionResolver;
 import org.igye.remem3.app.state.StateConstructor;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;

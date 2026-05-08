@@ -1,6 +1,7 @@
 package org.igye.remem3.app.controllers2.beans;
 
 import lombok.RequiredArgsConstructor;
+import org.igye.remem3.app.controllers2.beans.spel.CustomBeanExpressionResolver;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 

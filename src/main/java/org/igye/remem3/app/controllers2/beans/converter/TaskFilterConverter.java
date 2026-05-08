@@ -1,7 +1,8 @@
-package org.igye.remem3.app.controllers2.beans;
+package org.igye.remem3.app.controllers2.beans.converter;
 
 import lombok.RequiredArgsConstructor;
 import org.igye.remem3.app.controllers2.beans.dto.TaskFilter;
+import org.igye.remem3.app.controllers2.beans.spel.SpelEvaluator;
 import org.springframework.core.convert.converter.Converter;
 
 @RequiredArgsConstructor

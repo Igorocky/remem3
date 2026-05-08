@@ -1,4 +1,4 @@
-package org.igye.remem3.app.controllers2.beans;
+package org.igye.remem3.app.controllers2.beans.spel;
 
 import lombok.SneakyThrows;
 import org.igye.remem3.app.TaskTypeMatcher;
