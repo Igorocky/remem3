@@ -7,7 +7,7 @@
 		https://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <bean id="QA" factory-bean="generalFactoryBean" factory-method="make"
-          c:_0="#{#taskType('translate:QUESTION->ANSWER')}"/>
+          c:_0="#{#taskFilter('type % {''translate:QUESTION->ANSWER''}')}"/>
 
     <bean id="circle" class="#{#Circle}" p:randomnessFactor="0.4"/>
 

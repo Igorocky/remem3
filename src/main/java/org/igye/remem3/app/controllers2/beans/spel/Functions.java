@@ -1,26 +1,17 @@
 package org.igye.remem3.app.controllers2.beans.spel;
 
 import lombok.SneakyThrows;
-import org.igye.remem3.app.TaskTypeMatcher;
 import org.igye.remem3.app.controllers2.beans.dto.TaskFilter;
-import org.igye.remem3.app.impl.TaskTypeMatcherImpl;
 import org.springframework.expression.EvaluationContext;
-
-import java.util.Arrays;
 
 public class Functions {
 
     public static void registerFunctions(EvaluationContext evalContext) {
-        registerFunction(evalContext, "taskType", String[].class);
+        registerFunction(evalContext, "taskFilter", TaskFilter.class);
     }
 
-    public static TaskFilter taskType(String... types) {
-        TaskTypeMatcher taskTypeMatcher = Arrays.stream(types)
-            .map(TaskTypeMatcherImpl::new)
-            .map(TaskTypeMatcher.class::cast)
-            .reduce(TaskTypeMatcher::or)
-            .get();
-        return task -> taskTypeMatcher.matches(task.getType());
+    public static TaskFilter taskFilter(TaskFilter taskFilter) {
+        return taskFilter;
     }
 
     @SneakyThrows
