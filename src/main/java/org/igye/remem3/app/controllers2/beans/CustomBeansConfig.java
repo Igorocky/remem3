@@ -2,7 +2,6 @@ package org.igye.remem3.app.controllers2.beans;
 
 import org.igye.remem3.app.controllers2.beans.converter.TaskFilterConverter;
 import org.igye.remem3.app.controllers2.beans.converter.TaskTypeMatcherConverter;
-import org.igye.remem3.app.controllers2.beans.spel.GeneralFactoryBean;
 import org.igye.remem3.app.controllers2.beans.spel.SpelEvaluator;
 import org.igye.remem3.app.controllers2.beans.spel.SpelEvaluatorImpl;
 import org.springframework.beans.factory.ObjectProvider;
@@ -22,11 +21,6 @@ public class CustomBeansConfig {
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
         return new PropertySourcesPlaceholderConfigurer();
-    }
-
-    @Bean
-    public GeneralFactoryBean generalFactoryBean() {
-        return new GeneralFactoryBean();
     }
 
     @Bean

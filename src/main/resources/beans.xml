@@ -6,7 +6,7 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans
 		https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id="QA" factory-bean="generalFactoryBean" factory-method="make"
+    <bean id="QA" class="#{#SPeL}"
           c:_0="#{#taskFilter('type % {''translate:QUESTION->ANSWER''}')}"/>
 
     <bean id="circle" class="#{#Circle}" p:randomnessFactor="0.4"/>
