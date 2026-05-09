@@ -25,12 +25,12 @@ import java.util.Optional;
 import static java.lang.String.format;
 
 public class TaskStateTranslate extends HtmlBuilder implements TaskState {
-    protected static final String PAR_USER_ANS = "PAR_USER_ANS";
-    protected static final String ACT_SUBMIT_ANSWER = "ACT_SUBMIT_ANSWER";
-    protected static final String ACT_SHOW_EXAMPLE = "ACT_SHOW_EXAMPLE";
-    protected static final String ACT_SHOW_ANS = "ACT_SHOW_ANS";
-    protected static final String ACT_COMPLETE_TASK = "ACT_COMPLETE_TASK";
-    protected static final String ACT_COMPLETE_TASK_WITH_MARK = "ACT_COMPLETE_TASK_WITH_MARK";
+    protected static final String PAR_USER_ANS = "TaskStateTranslate_PAR_USER_ANS";
+    protected static final String ACT_SUBMIT_ANSWER = "TaskStateTranslate_ACT_SUBMIT_ANSWER";
+    protected static final String ACT_SHOW_EXAMPLE = "TaskStateTranslate_ACT_SHOW_EXAMPLE";
+    protected static final String ACT_SHOW_ANS = "TaskStateTranslate_ACT_SHOW_ANS";
+    protected static final String ACT_COMPLETE_TASK = "TaskStateTranslate_ACT_COMPLETE_TASK";
+    protected static final String ACT_COMPLETE_TASK_WITH_MARK = "TaskStateTranslate_ACT_COMPLETE_TASK_WITH_MARK";
 
     private final Clock clock;
     private final Utils utils;

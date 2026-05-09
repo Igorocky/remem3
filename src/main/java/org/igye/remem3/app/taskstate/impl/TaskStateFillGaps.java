@@ -26,11 +26,11 @@ import java.util.Optional;
 import static java.lang.String.format;
 
 public class TaskStateFillGaps extends HtmlBuilder implements TaskState {
-    public static final String PAR_USER_ANS = "PAR_USER_ANS";
-    public static final String ACT_SUBMIT_ANSWERS = "ACT_SUBMIT_ANSWERS";
-    public static final String ACT_SHOW_HINT = "ACT_SHOW_HINT";
-    public static final String ACT_SHOW_ANS = "ACT_SHOW_ANS";
-    public static final String ACT_COMPLETE_TASK = "ACT_COMPLETE_TASK";
+    public static final String PAR_USER_ANS = "TaskStateFillGaps_PAR_USER_ANS";
+    public static final String ACT_SUBMIT_ANSWERS = "TaskStateFillGaps_ACT_SUBMIT_ANSWERS";
+    public static final String ACT_SHOW_HINT = "TaskStateFillGaps_ACT_SHOW_HINT";
+    public static final String ACT_SHOW_ANS = "TaskStateFillGaps_ACT_SHOW_ANS";
+    public static final String ACT_COMPLETE_TASK = "TaskStateFillGaps_ACT_COMPLETE_TASK";
 
     private final Clock clock;
     private final Utils utils;

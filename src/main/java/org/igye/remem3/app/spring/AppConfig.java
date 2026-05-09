@@ -10,6 +10,7 @@ import org.igye.remem3.app.controllers.newcard.NewCardController;
 import org.igye.remem3.app.controllers.validatecards.ValidateCardsController;
 import org.igye.remem3.app.controllers2.beans.BeansConfig;
 import org.igye.remem3.app.controllers2.beans.CustomBeansConfig;
+import org.igye.remem3.app.controllers2.convertfillgapstotrnaslate.ConvertFillGapsToTranslateConfig;
 import org.igye.remem3.app.controllers2.exercise.ExerciseConfig;
 import org.igye.remem3.app.controllers2.index.IndexConfig;
 import org.igye.remem3.app.controllers2.newcard.NewCardConfig;
@@ -57,7 +58,10 @@ import java.util.stream.Collectors;
         MoveCardsToDirController.class,
     })
 )
-@Import({IndexConfig.class, NewCardConfig.class, BeansConfig.class, ExerciseConfig.class, ValidateCardsConfig.class})
+@Import({
+    IndexConfig.class, NewCardConfig.class, BeansConfig.class, ExerciseConfig.class, ValidateCardsConfig.class,
+    ConvertFillGapsToTranslateConfig.class
+})
 public class AppConfig {
 
     @Bean
