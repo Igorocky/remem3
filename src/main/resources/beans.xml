@@ -11,8 +11,7 @@
 
     <bean id="circle" class="#{#Circle}" p:randomnessFactor="0.4"/>
 
-    <bean class="#{#Exercise}"
-          p:name="exercise1"
+    <bean id="exercise1" class="#{#Exercise}"
           p:dirs="${dir1}"
           p:taskFilter="type % {'translate:QUESTION->_', 'translate:_->QUESTION'}"
           p:repeatStrategy="#{@circle}"

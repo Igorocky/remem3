@@ -7,6 +7,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.app.controllers.exercise.HasBaseTask;
 import org.igye.remem3.app.controllers2.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers2.beans.dto.RepeatStrategyParams;
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_CANCEL_EXERCISE;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_COPY_CARD_PATH_TO_CLIPBOARD;
@@ -50,7 +52,10 @@ import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_STA
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_EXERCISE_PARAMS;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS;
-import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_EXERCISE_DEF;
+import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SELECTED_DIR;
+import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SELECTED_EXERCISE;
+import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SELECTED_STRATEGY;
+import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SELECTED_TASK_FILTER;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SHOW_DAILY_UNIQUE_COUNT;
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SHOW_EXERCISE_PARAMS;
 
@@ -70,28 +75,44 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         };
     }
 
-    private ExerciseState updateSelectExerciseState(SelectExerciseState st, RequestParams params) {
-        if (params.hasParam(PAR_EXERCISE_DEF)) {
-            String exName = params.getParam(PAR_EXERCISE_DEF);
-            st = st.withSelectedExercise(
-                st.getAllExercises().stream()
-                    .filter(ex -> exName.equals(ex.getName()))
-                    .findFirst()
-                    .orElse(st.getSelectedExercise())
-            );
-            cache.put(PAR_EXERCISE_DEF, st.getSelectedExercise().getName());
+    private SelectExerciseState updateSelectablePart(
+        SelectExerciseState st,
+        RequestParams params,
+        String paramName,
+        Function<String, SelectExerciseState> setter
+    ) {
+        if (params.hasParam(paramName)) {
+            String id = params.getParam(paramName);
+            cache.put(paramName, id);
+            return setter.apply(id);
         }
+        return st;
+    }
+
+    private ExerciseState updateSelectExerciseState(SelectExerciseState st, RequestParams params) {
+        st = updateSelectablePart(st, params, PAR_SELECTED_EXERCISE, st::setSelectedExercise);
+        if (params.hasKeyValueParam(PAR_SELECTED_DIR)) {
+            st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR, false, params));
+            cache.put(PAR_SELECTED_DIR, st.getSelectedDir().getSelectedDirectoryStr());
+        }
+        st = updateSelectablePart(st, params, PAR_SELECTED_TASK_FILTER, st::setSelectedTaskFilter);
+        st = updateSelectablePart(st, params, PAR_SELECTED_STRATEGY, st::setSelectedStrategy);
         if (params.hasParam(ACT_START_EXERCISE)) {
             return actStartExercise(st);
         }
         return st;
     }
 
-    private RunningExerciseState actStartExercise(SelectExerciseState st) {
+    private ExerciseState actStartExercise(SelectExerciseState st) {
+        Optional<ExerciseDef> exerciseToStart = st.makeSelectedExercise();
+        if (exerciseToStart.isEmpty()) {
+            return st;
+        }
         SelectExerciseState parent = st;
-        List<String> directories = st.getSelectedExercise().getDirectories();
+        ExerciseDef selectedExercise = exerciseToStart.get();
+        List<String> directories = selectedExercise.getDirectories();
         Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> pair =
-            makeRepeatStrategy(st.getSelectedExercise());
+            makeRepeatStrategy(selectedExercise);
         List<String> taskTypes = pair.getLeft().stream()
             .map(HasBaseTask.class::cast)
             .map(HasBaseTask::getBaseTask)
@@ -100,7 +121,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             .distinct()
             .sorted()
             .toList();
-        List<String> repeatStrategyTypes = st.getSelectedExercise().getRepeatStrategyTypes();
+        List<String> repeatStrategyTypes = selectedExercise.getRepeatStrategyTypes();
         RepeatStrategy repeatStrategy = pair.getRight();
         RunningExerciseState runningSt = new RunningExerciseState(
             parent, directories, taskTypes, repeatStrategyTypes, repeatStrategy
