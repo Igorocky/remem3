@@ -9,7 +9,7 @@
     <bean id="QA" class="#{#SPeL}"
           c:_0="#{#taskFilter('type % {''translate:QUESTION->ANSWER''}')}"/>
 
-    <bean id="circle" class="#{#Circle}" p:randomnessFactor="0.4"/>
+    <bean id="circle" class="#{#Circle}" p:randomness="0.4"/>
 
     <bean id="exercise1" class="#{#Exercise}"
           p:dirs="${dir1}"

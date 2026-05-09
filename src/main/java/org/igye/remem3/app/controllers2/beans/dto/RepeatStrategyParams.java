@@ -16,7 +16,7 @@ public sealed interface RepeatStrategyParams
 
     @Data
     final class RepeatStrategyBucketsParams implements RepeatStrategyParams {
-        private List<Duration> bucketDelays;
+        private List<Duration> delays;
         private int batchSize;
 
         @Override
@@ -28,8 +28,8 @@ public sealed interface RepeatStrategyParams
     @Data
     final class RepeatStrategyCircleParams implements RepeatStrategyParams {
         private Instant startTime = Instant.MIN;
-        private Optional<Integer> numOfRounds = Optional.empty();
-        private double randomnessFactor = 0.3;
+        private Optional<Integer> rounds = Optional.empty();
+        private double randomness = 0.3;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {
