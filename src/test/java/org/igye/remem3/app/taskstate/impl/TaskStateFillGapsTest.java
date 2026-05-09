@@ -32,7 +32,7 @@ import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.ACT_COMPLETE_
 import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.ACT_SHOW_ANS;
 import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.ACT_SHOW_HINT;
 import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.ACT_SUBMIT_ANSWERS;
-import static org.igye.remem3.app.taskstate.impl.TaskStateTranslate.PAR_USER_ANS;
+import static org.igye.remem3.app.taskstate.impl.TaskStateFillGaps.PAR_USER_ANS;
 
 
 class TaskStateFillGapsTest extends HtmlBuilder {
