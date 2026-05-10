@@ -17,6 +17,8 @@ public interface Settings {
 
     String getCardEditor();
 
+    List<String> getPropsToPassToBeans();
+
     List<BucketDelaysDto> getBucketDelays();
 
     List<Pair<String, File>> getExercises();

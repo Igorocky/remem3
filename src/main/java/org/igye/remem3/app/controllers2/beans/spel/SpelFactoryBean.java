@@ -1,11 +1,13 @@
 package org.igye.remem3.app.controllers2.beans.spel;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.FactoryBean;
 
-@RequiredArgsConstructor
 public class SpelFactoryBean implements FactoryBean<Object> {
     private final Object object;
+
+    public SpelFactoryBean(Object object) {
+        this.object = object;
+    }
 
     @Override
     public Object getObject() {

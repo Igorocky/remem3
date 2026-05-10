@@ -43,6 +43,10 @@ public class SettingsImpl implements Settings {
     @Builder.Default
     private String cardEditor = "";
     @Builder.Default
+    private List<String> propsToPassToBeans = List.of();
+
+
+    @Builder.Default
     private List<BucketDelaysDto> bucketDelays = List.of();
     @Builder.Default
     private List<Pair<String, File>> exercises = List.of();
@@ -74,6 +78,7 @@ public class SettingsImpl implements Settings {
             .cacheFile(checkNotBlank(props.getCacheFile(), PROP_CACHE_FILE))
             .beansFile(checkNotBlank(props.getBeansFile(), PROP_BEANS_FILE))
             .cardEditor(checkNotBlank(props.getCardEditor(), PROP_CARD_EDITOR))
+            .propsToPassToBeans(props.getPropsToPassToBeans())
             .bucketDelays(parseBucketDelays(props.getBucketDelays(), utils))
             .exercises(loadExercises(props.getExercises()))
             .build();
