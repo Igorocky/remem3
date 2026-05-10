@@ -20,3 +20,8 @@
 .font-family-monospace {
     font-family: 'Courier New', monospace;
 }
+
+.list-of-cards pre {
+    font-size: 1.2em;
+    margin-top: 0px;
+}

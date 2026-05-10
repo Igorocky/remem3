@@ -37,11 +37,11 @@ public class ConvertFillGapsToTranslateUpdater implements StateUpdater<State> {
         st.getNewTranslateCards().stream()
             .filter(p -> st.getSelectedCardKeys().contains(p.getLeft()))
             .map(Pair::getRight)
-            .forEach(c -> {
-                c.setCreatedAt(Optional.of(Instant.now()));
+            .forEach(card -> {
+                card.setCreatedAt(Optional.of(Instant.now()));
                 cardUtils.saveCard(
-                    new File(c.getFile().get().getParentFile(), cardUtils.makeFileNameForCard(c)),
-                    c
+                    new File(card.getFile().get().getParentFile(), cardUtils.makeFileNameForCard(card)),
+                    card
                 );
             });
     }

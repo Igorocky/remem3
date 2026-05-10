@@ -16,6 +16,7 @@ import org.springframework.core.annotation.Order;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
@@ -56,6 +57,7 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
             .filter(File::isFile)
             .filter(file -> file.getName().endsWith(CARD_EXTENSION))
             .map(cardUtils::loadCard)
+            .sorted(Comparator.comparing(Card::getOrder))
             .toList();
         return CardExplorerState.builder()
             .dir(dir)

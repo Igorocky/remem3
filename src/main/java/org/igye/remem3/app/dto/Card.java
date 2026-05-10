@@ -22,7 +22,11 @@ public sealed interface Card permits Card.BaseCard {
 
     BigDecimal getOrder();
 
+    void setOrder(BigDecimal order);
+
     Optional<Instant> getCreatedAt();
+
+    void setCreatedAt(Optional<Instant> createdAt);
 
     List<HistRec> getHistory();
 
@@ -34,8 +38,6 @@ public sealed interface Card permits Card.BaseCard {
 
     void copyFrom(Card other);
 
-    void setCreatedAt(Optional<Instant> createdAt);
-
     @SuperBuilder
     @ToString(exclude = {"taskTypes", "tasks"})
     //todo: check why @EqualsAndHashCode is needed. It looks like comparing by tasks is wrong.
@@ -45,11 +47,12 @@ public sealed interface Card permits Card.BaseCard {
         @Builder.Default
         private Optional<File> file = Optional.empty();
         @Getter
+        @Setter
         @Builder.Default
         private BigDecimal order = BigDecimal.ZERO;
         @Getter
-        @Builder.Default
         @Setter
+        @Builder.Default
         private Optional<Instant> createdAt = Optional.empty();
         @Getter
         @Builder.Default

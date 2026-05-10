@@ -12,6 +12,7 @@ import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;
 
 import java.io.File;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,10 +48,15 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             cards.stream()
                 .map(card -> List.of(frag(
                     rndCardFile(card),
-                    rndCard(card)
+                    rndCard(card),
+                    div("font-size:0.8em;",
+                        text("order %s created at %s".formatted(
+                            card.getOrder(), card.getCreatedAt().map(Instant::toString).orElse("?")
+                        ))
+                    )
                 )))
                 .toList()
-        ).attr("class", "table-single-border");
+        ).attr("class", "table-single-border list-of-cards");
     }
 
     private HtmlElem rndCardFile(Card card) {
@@ -75,19 +81,19 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     private HtmlElem rndTranslateCard(Card.Translate card) {
         List<HtmlElem> elems = new ArrayList<>();
         elems.add(
-            rndCardSection(card.getLang1() + " " + (card.isExactMatch1() ? "=" : "~"), text(card.getText1()))
+            rndCardSection(card.getLang1() + " " + (card.isExactMatch1() ? "=" : "~"), pre(text(card.getText1())))
         );
         if (StringUtils.isNotBlank(card.getExample1())) {
-            elems.add(rndCardSection("Example", text(card.getExample1())));
+            elems.add(rndCardSection("Example", pre(text(card.getExample1()))));
         }
         elems.add(
-            rndCardSection(card.getLang2() + " " + (card.isExactMatch2() ? "=" : "~"), text(card.getText2()))
+            rndCardSection(card.getLang2() + " " + (card.isExactMatch2() ? "=" : "~"), pre(text(card.getText2())))
         );
         if (StringUtils.isNotBlank(card.getExample2())) {
-            elems.add(rndCardSection("Example", text(card.getExample2())));
+            elems.add(rndCardSection("Example", pre(text(card.getExample2()))));
         }
         if (StringUtils.isNotBlank(card.getNotes())) {
-            elems.add(rndCardSection("Notes", text(card.getNotes())));
+            elems.add(rndCardSection("Notes", pre(text(card.getNotes()))));
         }
         elems.add(rndAttrsIfPresent(card));
         return div(elems);
@@ -95,13 +101,12 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
 
     private HtmlElem rndFillGapsCard(Card.FillGaps card) {
         List<HtmlElem> elems = new ArrayList<>();
-        elems.add(rndCardSection(card.getLang(), null));
         if (StringUtils.isNotBlank(card.getDescr())) {
-            elems.add(rndCardSection("Description", text(card.getDescr())));
+            elems.add(rndCardSection("Description", pre(text(card.getDescr()))));
         }
-        elems.add(rndCardSection("Text", rndText(card.getText())));
+        elems.add(rndCardSection(card.getLang(), rndText(card.getText())));
         if (StringUtils.isNotBlank(card.getNotes())) {
-            elems.add(rndCardSection("Notes", text(card.getDescr())));
+            elems.add(rndCardSection("Notes", pre(text(card.getNotes()))));
         }
         elems.add(rndAttrsIfPresent(card));
         return div(elems);
