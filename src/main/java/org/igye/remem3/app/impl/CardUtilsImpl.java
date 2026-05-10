@@ -58,7 +58,7 @@ public class CardUtilsImpl implements CardUtils {
     private static final String ATTR_HIST = "###hist";
     private static final String ATTR_CREATED_AT = "###created_at";
     private static final String ATTR_PREFIX = "###attr__";
-    private static final String CARD_EXTENSION = ".card";
+    public static final String CARD_EXTENSION = ".card";
     public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg" + CARD_EXTENSION;
     public static final String CARD_TRANSLATE_FILE_EXTENSION = ".tr" + CARD_EXTENSION;
     public static final DateTimeFormatter HIST_TIME_FORMATTER = DateTimeFormatter.ofPattern(

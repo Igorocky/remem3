@@ -40,7 +40,7 @@ import static org.igye.remem3.app.controllers.movecardstodir.MoveCardsToDirRende
 import static org.igye.remem3.app.controllers.movecardstodir.MoveCardsToDirRenderer.PAR_SELECTED_BUNDLE_ID;
 
 @RequiredArgsConstructor
-@Order(4)
+@Order(5)
 public class MoveCardsToDirConstructor implements StateConstructor<State> {
     private final Settings settings;
     private final Cache cache;

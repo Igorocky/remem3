@@ -35,7 +35,7 @@ import static org.igye.remem3.app.controllers.convertfillgapstotrnaslate.Convert
 import static org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateRenderer.PAR_SELECTED_CARD;
 
 @RequiredArgsConstructor
-@Order(3)
+@Order(4)
 public class ConvertFillGapsToTranslateConstructor implements StateConstructor<State> {
 
     private final Settings settings;

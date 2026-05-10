@@ -12,7 +12,7 @@ import java.io.File;
 import static org.igye.remem3.app.controllers.validatecards.ValidateCardsRenderer.PAR_DIR;
 
 @RequiredArgsConstructor
-@Order(5)
+@Order(6)
 public class ValidateCardsConstructor implements StateConstructor<ValidateCardsState> {
     private final Settings settings;
     private final Cache cache;

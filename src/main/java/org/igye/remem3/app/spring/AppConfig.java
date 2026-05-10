@@ -4,6 +4,7 @@ import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.beans.BeansConfig;
 import org.igye.remem3.app.controllers.beans.CustomBeansConfig;
+import org.igye.remem3.app.controllers.cardexplorer.CardExplorerConfig;
 import org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateConfig;
 import org.igye.remem3.app.controllers.exercise.ExerciseConfig;
 import org.igye.remem3.app.controllers.index.IndexConfig;
@@ -44,8 +45,14 @@ import java.util.List;
     })
 )
 @Import({
-    IndexConfig.class, NewCardConfig.class, BeansConfig.class, ExerciseConfig.class, ValidateCardsConfig.class,
-    ConvertFillGapsToTranslateConfig.class, MoveCardsToDirConfig.class
+    NewCardConfig.class,
+    ExerciseConfig.class,
+    CardExplorerConfig.class,
+    ConvertFillGapsToTranslateConfig.class,
+    MoveCardsToDirConfig.class,
+    ValidateCardsConfig.class,
+    BeansConfig.class,
+    IndexConfig.class
 })
 public class AppConfig {
 
