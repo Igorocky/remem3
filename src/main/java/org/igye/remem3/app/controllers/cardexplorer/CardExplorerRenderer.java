@@ -30,6 +30,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             h4(text("Card explorer")),
             form(
                 rndDirSelector("Directory", st.getDir()),
+                text("%s cards".formatted(st.getCards().size())),
                 rndCards(st.getCards())
             )
         );
