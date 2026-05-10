@@ -1,28 +1,19 @@
 package org.igye.remem3.app.controllers2.beans;
 
-import org.igye.remem3.app.controllers2.beans.converter.TaskFilterConverter;
-import org.igye.remem3.app.controllers2.beans.converter.TaskTypeMatcherConverter;
-import org.igye.remem3.app.controllers2.beans.spel.SpelEvaluatorImpl;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.ConversionServiceFactoryBean;
 import org.springframework.core.convert.ConversionService;
 
-import java.util.Set;
+import java.util.function.Consumer;
 
+@RequiredArgsConstructor
 public class CustomConversionServiceFactoryBean extends ConversionServiceFactoryBean {
-    private final SpelEvaluatorImpl spelEvaluator;
-
-    public CustomConversionServiceFactoryBean() {
-        spelEvaluator = new SpelEvaluatorImpl();
-        setConverters(Set.of(
-            new TaskFilterConverter(spelEvaluator),
-            new TaskTypeMatcherConverter()
-        ));
-    }
+    private final Consumer<ConversionService> onConversionServiceCreated;
 
     @Override
     public ConversionService getObject() {
         ConversionService conversionService = super.getObject();
-        spelEvaluator.setConversionService(conversionService);
+        onConversionServiceCreated.accept(conversionService);
         return conversionService;
     }
 }
