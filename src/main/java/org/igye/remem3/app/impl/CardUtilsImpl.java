@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateRenderer.ATTR_AUTO_GENERATED_FROM;
 
 @RequiredArgsConstructor
 public class CardUtilsImpl implements CardUtils {
@@ -126,9 +127,31 @@ public class CardUtilsImpl implements CardUtils {
 
     @Override
     public List<String> validateCard(Card card) {
-        return switch (card) {
+        List<String> errors = switch (card) {
             case Card.FillGaps c -> validateFillGapsCard(c);
             case Card.Translate c -> validateTranslateCard(c);
+        };
+        card.getFile().map(File::getParentFile).ifPresent(dir -> getReferencedCards(card).forEach(refCardName -> {
+            File refCardFile = new File(dir, refCardName);
+            if (!refCardFile.exists()) {
+                errors.add("A referenced card %s doesn't exist.".formatted(refCardName));
+            }
+        }));
+        return errors;
+    }
+
+    @Override
+    public List<String> getReferencedCards(Card card) {
+        return switch (card) {
+            case Card.FillGaps _ -> List.of();
+            case Card.Translate c -> {
+                String generatedFrom = c.getAttrs().get(ATTR_AUTO_GENERATED_FROM);
+                if (generatedFrom != null) {
+                    yield List.of(generatedFrom.substring(0, Math.max(generatedFrom.indexOf(":"), 0)));
+                } else {
+                    yield List.of();
+                }
+            }
         };
     }
 

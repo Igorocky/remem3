@@ -17,6 +17,8 @@ public interface CardUtils {
 
     List<String> validateCard(Card card);
 
+    List<String> getReferencedCards(Card card);
+
     void appendHistRecToFile(File file, HistRec histRec);
 
     Card makeCard(CardDto cardDto);

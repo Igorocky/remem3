@@ -3,8 +3,6 @@ package org.igye.remem3.app.controllers.convertfillgapstotrnaslate;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 import org.igye.remem3.app.dto.Card;
@@ -30,8 +28,6 @@ public class ConvertFillGapsToTranslateRenderer extends HtmlBuilder implements S
     public static final Pattern EXISTING_CARD_KEY_PAT = Pattern.compile("^([^:]+):(.*)$", Pattern.DOTALL);
 
     private final Settings settings;
-    private final Cache cache;
-    private final CardUtils cardUtils;
 
     @Override
     public HtmlElem render(State st) {
