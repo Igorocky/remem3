@@ -74,14 +74,6 @@ public class ConvertFillGapsToTranslateConstructor implements StateConstructor<S
             .filter(Optional::isPresent)
             .map(Optional::get)
             .collect(Collectors.toSet());
-        return makeState(dirSelector, gapSecondLang, selectedCardKeys);
-    }
-
-    public State makeState(
-        DirSelectorCmp dirSelector,
-        String gapSecondLang,
-        Set<NewCardKey> selectedCardKeys
-    ) {
         List<Card> allCards = cardUtils.loadAllCards(dirSelector.getSelectedDirectory());
         List<Card.FillGaps> fillGapsCards = allCards.stream()
             .filter(c -> c instanceof Card.FillGaps)

@@ -74,7 +74,8 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         return frag(
             rndDirSelector(st),
             rndTaskFilterSelector(st),
-            rndStrategySelector(st)
+            rndStrategySelector(st),
+            br()
         );
     }
 
