@@ -2,12 +2,6 @@ package org.igye.remem3.app.spring;
 
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.controllers.IndexController;
-import org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateController;
-import org.igye.remem3.app.controllers.exercise.ExerciseController;
-import org.igye.remem3.app.controllers.movecardstodir.MoveCardsToDirController;
-import org.igye.remem3.app.controllers.newcard.NewCardController;
-import org.igye.remem3.app.controllers.validatecards.ValidateCardsController;
 import org.igye.remem3.app.controllers2.beans.BeansConfig;
 import org.igye.remem3.app.controllers2.beans.CustomBeansConfig;
 import org.igye.remem3.app.controllers2.convertfillgapstotrnaslate.ConvertFillGapsToTranslateConfig;
@@ -26,8 +20,6 @@ import org.igye.remem3.app.state.StateUpdater;
 import org.igye.remem3.app.state.impl.StateRepositoryImpl;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.utils.impl.UtilsImpl;
-import org.igye.remem3.web.DispatcherController;
-import org.igye.remem3.web.StatefulWebController;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -40,9 +32,6 @@ import java.io.File;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Configuration
 @EnableConfigurationProperties(AppProps.class)
@@ -52,11 +41,6 @@ import java.util.stream.Collectors;
     includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
         UtilsImpl.class,
         CardUtilsImpl.class,
-        NewCardController.class,
-        ExerciseController.class,
-        ValidateCardsController.class,
-        ConvertFillGapsToTranslateController.class,
-        MoveCardsToDirController.class,
     })
 )
 @Import({
@@ -93,29 +77,5 @@ public class AppConfig {
         List<StateRenderer<?>> stateRenderers
     ) {
         return new StateRepositoryImpl(clock, Duration.ofHours(1), stateConstructors, stateUpdaters, stateRenderers);
-    }
-
-    @Bean
-    public IndexController indexController(
-        NewCardController newCardController,
-        ExerciseController exerciseController,
-        ConvertFillGapsToTranslateController convertFillGapsToTranslateController,
-        MoveCardsToDirController moveCardsToDirController,
-        ValidateCardsController validateCardsController
-    ) {
-        return new IndexController(List.of(
-            newCardController,
-            exerciseController,
-            convertFillGapsToTranslateController,
-            moveCardsToDirController,
-            validateCardsController
-        ));
-    }
-
-    @Bean
-    public DispatcherController dispatcherController(List<StatefulWebController<?, ?>> allControllers) {
-        Map<String, StatefulWebController<?, ?>> controllerMap = allControllers.stream()
-            .collect(Collectors.toMap(StatefulWebController::getId, Function.identity()));
-        return new DispatcherController(controllerMap);
     }
 }
