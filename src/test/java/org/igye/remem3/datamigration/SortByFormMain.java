@@ -67,6 +67,11 @@ public class SortByFormMain {
             }
 
             @Override
+            public List<String> getPropsToPassToBeans() {
+                throw new NotImplemented();
+            }
+
+            @Override
             public List<BucketDelaysDto> getBucketDelays() {
                 throw new Exn("not implemented");
             }
