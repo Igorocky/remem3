@@ -5,12 +5,14 @@ import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.app.state.StateConstructor;
+import org.springframework.core.annotation.Order;
 
 import java.io.File;
 
 import static org.igye.remem3.app.controllers2.validatecards.ValidateCardsRenderer.PAR_DIR;
 
 @RequiredArgsConstructor
+@Order(5)
 public class ValidateCardsConstructor implements StateConstructor<ValidateCardsState> {
     private final Settings settings;
     private final Cache cache;
@@ -18,6 +20,11 @@ public class ValidateCardsConstructor implements StateConstructor<ValidateCardsS
     @Override
     public String getName() {
         return "validate_cards";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Validate cards";
     }
 
     @Override

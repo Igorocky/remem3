@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers2.beans.spel.CustomBeanExpressionResolver;
 import org.igye.remem3.app.state.StateConstructor;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 
 import java.util.Map;
 
 @RequiredArgsConstructor
+@Order(1000)
 public class BeansConstructor implements StateConstructor<BeansState> {
     public static final String BEANS = "beans";
     private final Settings settings;
@@ -17,6 +19,11 @@ public class BeansConstructor implements StateConstructor<BeansState> {
     @Override
     public String getName() {
         return BEANS;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Beans";
     }
 
     @Override

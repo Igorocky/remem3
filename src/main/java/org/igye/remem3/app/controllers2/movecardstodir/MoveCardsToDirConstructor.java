@@ -19,6 +19,7 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.impl.RequestParamsImpl;
+import org.springframework.core.annotation.Order;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -40,6 +41,7 @@ import static org.igye.remem3.app.controllers2.movecardstodir.MoveCardsToDirRend
 import static org.igye.remem3.app.controllers2.movecardstodir.MoveCardsToDirRenderer.PAR_SELECTED_BUNDLE_ID;
 
 @RequiredArgsConstructor
+@Order(4)
 public class MoveCardsToDirConstructor implements StateConstructor<State> {
     private final Settings settings;
     private final Cache cache;
@@ -49,6 +51,11 @@ public class MoveCardsToDirConstructor implements StateConstructor<State> {
     @Override
     public String getName() {
         return "move_cards_to_dir";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Move cards to another directory";
     }
 
     @Override

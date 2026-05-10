@@ -16,12 +16,15 @@ public class IndexConstructor implements StateConstructor<IndexState> {
     }
 
     @Override
+    public String getDisplayName() {
+        return "Index";
+    }
+
+    @Override
     public IndexState construct() {
         return new IndexState(
             stateConstructors.stream()
-                .map(StateConstructor::getName)
-                .filter(StringUtils::isNotBlank)
-                .sorted()
+                .filter(c -> StringUtils.isNotBlank(c.getName()))
                 .toList()
         );
     }

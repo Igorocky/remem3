@@ -15,6 +15,7 @@ import org.igye.remem3.app.state.StateConstructor;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.impl.RequestParamsImpl;
+import org.springframework.core.annotation.Order;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +36,7 @@ import static org.igye.remem3.app.controllers2.convertfillgapstotrnaslate.Conver
 import static org.igye.remem3.app.controllers2.convertfillgapstotrnaslate.ConvertFillGapsToTranslateRenderer.PAR_SELECTED_CARD;
 
 @RequiredArgsConstructor
+@Order(3)
 public class ConvertFillGapsToTranslateConstructor implements StateConstructor<State> {
 
     private final Settings settings;
@@ -44,6 +46,11 @@ public class ConvertFillGapsToTranslateConstructor implements StateConstructor<S
     @Override
     public String getName() {
         return "convert_fill_gaps_to_translate";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Convert FillGaps cards to Translate cards";
     }
 
     @Override

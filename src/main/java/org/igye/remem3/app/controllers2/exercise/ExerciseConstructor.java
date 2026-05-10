@@ -12,6 +12,7 @@ import org.igye.remem3.app.controllers2.beans.dto.RepeatStrategyParams;
 import org.igye.remem3.app.controllers2.beans.dto.TaskFilter;
 import org.igye.remem3.app.state.StateConstructor;
 import org.igye.remem3.app.state.StateLookup;
+import org.springframework.core.annotation.Order;
 
 import java.io.File;
 import java.util.Comparator;
@@ -24,6 +25,7 @@ import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SEL
 import static org.igye.remem3.app.controllers2.exercise.ExerciseRenderer.PAR_SELECTED_TASK_FILTER;
 
 @RequiredArgsConstructor
+@Order(2)
 public class ExerciseConstructor implements StateConstructor<ExerciseState> {
     private final Cache cache;
     private final Settings settings;
@@ -33,6 +35,11 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
     @Override
     public String getName() {
         return "exercise";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Exercises";
     }
 
     @Override
