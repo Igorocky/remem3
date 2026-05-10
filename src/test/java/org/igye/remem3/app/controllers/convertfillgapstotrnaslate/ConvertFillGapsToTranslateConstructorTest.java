@@ -1,6 +1,5 @@
 package org.igye.remem3.app.controllers.convertfillgapstotrnaslate;
 
-import org.igye.remem3.app.controllers2.convertfillgapstotrnaslate.ConvertFillGapsToTranslateConstructor;
 import org.igye.remem3.app.dto.Card;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -8,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.igye.remem3.app.controllers2.convertfillgapstotrnaslate.ConvertFillGapsToTranslateRenderer.ATTR_AUTO_GENERATED_FROM;
+import static org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateRenderer.ATTR_AUTO_GENERATED_FROM;
 
 class ConvertFillGapsToTranslateConstructorTest {
     @Test
