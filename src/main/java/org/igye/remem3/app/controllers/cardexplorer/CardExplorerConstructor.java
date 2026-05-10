@@ -46,7 +46,7 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
 
     @Override
     public boolean isSingleton() {
-        return true;
+        return false;
     }
 
     @SneakyThrows
