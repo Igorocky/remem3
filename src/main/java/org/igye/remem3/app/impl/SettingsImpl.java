@@ -45,13 +45,7 @@ public class SettingsImpl implements Settings {
     @Builder.Default
     private List<String> propsToPassToBeans = List.of();
 
-
-    @Builder.Default
-    private List<BucketDelaysDto> bucketDelays = List.of();
-    @Builder.Default
-    private List<Pair<String, File>> exercises = List.of();
-
-    public static Settings load(AppProps props, Utils utils) {
+    public static Settings load(AppProps props) {
         List<String> languages = props.getLanguages();
         checkNotEmpty(languages, PROP_LANGUAGES);
         if (languages.contains("_")) {
@@ -79,8 +73,6 @@ public class SettingsImpl implements Settings {
             .beansFile(checkNotBlank(props.getBeansFile(), PROP_BEANS_FILE))
             .cardEditor(checkNotBlank(props.getCardEditor(), PROP_CARD_EDITOR))
             .propsToPassToBeans(props.getPropsToPassToBeans())
-            .bucketDelays(parseBucketDelays(props.getBucketDelays(), utils))
-            .exercises(loadExercises(props.getExercises()))
             .build();
     }
 

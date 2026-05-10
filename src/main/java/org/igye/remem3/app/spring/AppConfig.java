@@ -60,8 +60,8 @@ public class AppConfig {
     }
 
     @Bean
-    public Settings settings(AppProps appProps, Utils utils) {
-        return SettingsImpl.load(appProps, utils);
+    public Settings settings(AppProps appProps) {
+        return SettingsImpl.load(appProps);
     }
 
     @Bean

@@ -1,9 +1,7 @@
 package org.igye.remem3.datamigration;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.dto.BucketDelaysDto;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.impl.CardUtilsImpl;
 import org.igye.remem3.utils.Exn;
@@ -69,16 +67,6 @@ public class SortByFormMain {
             @Override
             public List<String> getPropsToPassToBeans() {
                 throw new NotImplemented();
-            }
-
-            @Override
-            public List<BucketDelaysDto> getBucketDelays() {
-                throw new Exn("not implemented");
-            }
-
-            @Override
-            public List<Pair<String, File>> getExercises() {
-                throw new Exn("not implemented");
             }
         };
     }

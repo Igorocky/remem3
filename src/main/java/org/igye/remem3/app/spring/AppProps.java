@@ -18,8 +18,4 @@ public class AppProps {
     private final String beansFile;
     private final String cardEditor;
     private final List<String> propsToPassToBeans;
-
-
-    private final String bucketDelays;
-    private final List<String> exercises;
 }
