@@ -9,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +19,8 @@ import java.util.Optional;
 
 public sealed interface Card permits Card.BaseCard {
     Optional<File> getFile();
+
+    BigDecimal getOrder();
 
     Optional<Instant> getCreatedAt();
 
@@ -43,6 +46,9 @@ public sealed interface Card permits Card.BaseCard {
         private Optional<File> file = Optional.empty();
         @Getter
         @Builder.Default
+        private BigDecimal order = BigDecimal.ZERO;
+        @Getter
+        @Builder.Default
         @Setter
         private Optional<Instant> createdAt = Optional.empty();
         @Getter
@@ -58,6 +64,7 @@ public sealed interface Card permits Card.BaseCard {
         @Override
         public void copyFrom(Card other) {
             file = other.getFile();
+            order = other.getOrder();
             createdAt = other.getCreatedAt();
             history = new ArrayList<>(other.getHistory());
             taskTypes = null;

@@ -56,6 +56,7 @@ public class CardUtilsImpl implements CardUtils {
     private static final String ATTR_EXAMPLE_2 = "###example2";
     private static final String ATTR_NOTES = "###notes";
     private static final String ATTR_HIST = "###hist";
+    private static final String ATTR_ORDER = "###order";
     private static final String ATTR_CREATED_AT = "###created_at";
     private static final String ATTR_PREFIX = "###attr__";
     public static final String CARD_EXTENSION = ".card";
@@ -304,7 +305,7 @@ public class CardUtilsImpl implements CardUtils {
         appendText(sb, card.getText());
         sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
         saveAttrs(sb, card.getAttrs());
-        appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
+        appendOrderCreatedAtAndHist(sb, card.getOrder(), card.getCreatedAt(), card.getHistory());
         return sb.toString();
     }
 
@@ -320,7 +321,7 @@ public class CardUtilsImpl implements CardUtils {
         sb.append("\n\n").append(ATTR_EXAMPLE_2).append("\n").append(card.getExample2());
         sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
         saveAttrs(sb, card.getAttrs());
-        appendCreatedAtAndHist(sb, card.getCreatedAt(), card.getHistory());
+        appendOrderCreatedAtAndHist(sb, card.getOrder(), card.getCreatedAt(), card.getHistory());
         return sb.toString();
     }
 
@@ -330,7 +331,13 @@ public class CardUtilsImpl implements CardUtils {
             .forEach(e -> sb.append("\n\n").append(ATTR_PREFIX).append(e.getKey()).append("\n").append(e.getValue()));
     }
 
-    private void appendCreatedAtAndHist(StringBuilder sb, Optional<Instant> createdAt, List<HistRec> hist) {
+    private void appendOrderCreatedAtAndHist(
+        StringBuilder sb,
+        BigDecimal order,
+        Optional<Instant> createdAt,
+        List<HistRec> hist
+    ) {
+        sb.append("\n\n").append(ATTR_ORDER).append("\n").append(order);
         sb.append("\n\n").append(ATTR_CREATED_AT).append("\n").append(
             createdAt.map(this::instantToStr).orElse("")
         );
@@ -402,6 +409,7 @@ public class CardUtilsImpl implements CardUtils {
         Map<String, List<String>> props = parseProps(str);
         return Card.Translate.builder()
             .file(file)
+            .order(getBigDecimal(props, ATTR_ORDER, BigDecimal.ZERO))
             .createdAt(getInstantOpt(props, ATTR_CREATED_AT))
             .lang1(getStr(props, ATTR_LANG_1, "").trim())
             .text1(getStr(props, ATTR_TEXT_1, "").trim())
@@ -421,6 +429,7 @@ public class CardUtilsImpl implements CardUtils {
         Map<String, List<String>> props = parseProps(str);
         return Card.FillGaps.builder()
             .file(file)
+            .order(getBigDecimal(props, ATTR_ORDER, BigDecimal.ZERO))
             .createdAt(getInstantOpt(props, ATTR_CREATED_AT))
             .lang(getStr(props, ATTR_LANG, "").trim())
             .descr(getStr(props, ATTR_DESCR, "").trim())
@@ -444,9 +453,17 @@ public class CardUtilsImpl implements CardUtils {
             ));
     }
 
-
     private String getStr(Map<String, List<String>> props, String propName, String defaultValue) {
         return StringUtils.join(props.computeIfAbsent(propName, _ -> List.of(defaultValue)), "\n");
+    }
+
+    private BigDecimal getBigDecimal(Map<String, List<String>> props, String propName, BigDecimal defaultValue) {
+        try {
+            String resStr = StringUtils.join(props.get(propName), "").trim();
+            return new BigDecimal(resStr);
+        } catch (Exception _) {
+            return defaultValue;
+        }
     }
 
     private boolean getBool(Map<String, List<String>> props, String propName, boolean defaultValue) {
