@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<CardExplorerState> {
     public static final String PAR_DIR = "CardExplorer_PAR_DIR";
     public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
+    public static final String ACT_REFRESH = "CardExplorer_ACT_REFRESH";
 
 
     @Override
@@ -30,7 +31,10 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             h4(text("Card explorer")),
             form(
                 rndDirSelector("Directory", st.getDir()),
-                text("%s cards".formatted(st.getCards().size())),
+                table(List.of(List.of(
+                    text("%s cards".formatted(st.getCards().size())),
+                    inpSubmit(ACT_REFRESH, "Reload")
+                ))),
                 rndCards(st.getCards())
             )
         );
