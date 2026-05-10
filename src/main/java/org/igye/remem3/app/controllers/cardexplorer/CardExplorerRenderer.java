@@ -109,8 +109,8 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
 
     private HtmlElem rndCardSection(String name, HtmlElem content) {
         return frag(
-            div("font-weight:bold; margin-top:5px;", text(name)),
-            div(content)
+            div("font-weight:bold; margin-top:5px;margin-left:10px", text(name)),
+            div("margin-left:10px;margin-bottom:5px", content)
         );
     }
 
@@ -143,7 +143,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     .sorted(Map.Entry.comparingByKey())
                     .map(entry -> List.of(text(entry.getKey() + ":"), text(entry.getValue())))
                     .toList()
-            )
+            ).attr("class", "table-no-border")
         );
     }
 
