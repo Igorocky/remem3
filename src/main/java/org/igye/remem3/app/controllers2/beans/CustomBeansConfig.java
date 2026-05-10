@@ -12,26 +12,26 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 import java.util.Set;
 
-@Configuration
+@Configuration("__customBeansConfig")
 @ImportResource("${app.beans-file}")
 public class CustomBeansConfig {
 
-    @Bean
+    @Bean("__propertySourcesPlaceholderConfigurer")
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
         return new PropertySourcesPlaceholderConfigurer();
     }
 
-    @Bean
+    @Bean("__spelEvaluator")
     public SpelEvaluator spelEvaluator() {
         return new SpelEvaluatorImpl();
     }
 
-    @Bean
+    @Bean("__taskFilterConverter")
     public TaskFilterConverter taskFilterConverter() {
         return new TaskFilterConverter(spelEvaluator());
     }
 
-    @Bean
+    @Bean("__taskTypeMatcherConverter")
     public TaskTypeMatcherConverter taskTypeMatcherConverter() {
         return new TaskTypeMatcherConverter();
     }
