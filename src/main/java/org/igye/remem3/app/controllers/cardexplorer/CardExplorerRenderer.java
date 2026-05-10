@@ -12,10 +12,10 @@ import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.utils.Exn;
 
 import java.io.File;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -53,12 +53,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             cards.stream()
                 .map(card -> List.of(frag(
                     rndCardFile(card),
-                    rndCard(card),
-                    div("font-size:0.8em;",
-                        text("order %s created at %s".formatted(
-                            card.getOrder(), card.getCreatedAt().map(Instant::toString).orElse("?")
-                        ))
-                    )
+                    rndCard(card)
                 )))
                 .toList()
         ).attr("class", "table-single-border list-of-cards");
@@ -71,7 +66,9 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         File file = card.getFile().get();
         return frag(
             inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getName()), "Edit"),
-            text(file.getName())
+            text("%s Created at %s Order %s".formatted(
+                file.getName(), card.getCreatedAt().map(Objects::toString).orElse("?"), card.getOrder()
+            ))
         );
     }
 
@@ -119,7 +116,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
 
     private HtmlElem rndCardSection(String name, HtmlElem content) {
         return frag(
-            div("font-weight:bold; margin-top:5px;margin-left:10px", text(name)),
+            div("font-weight:bold; margin-top:3px;margin-left:10px", text(name)),
             div("margin-left:10px;", content)
         );
     }
