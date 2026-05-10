@@ -124,7 +124,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         List<String> repeatStrategyTypes = selectedExercise.getRepeatStrategyTypes();
         RepeatStrategy repeatStrategy = pair.getRight();
         RunningExerciseState runningSt = new RunningExerciseState(
-            parent, directories, taskTypes, repeatStrategyTypes, repeatStrategy
+            parent, selectedExercise.getName(), directories, taskTypes, repeatStrategyTypes, repeatStrategy
         )
             .withShowMoreParams(parseShowMoreParams(cache.getStr(PAR_SHOW_EXERCISE_PARAMS, "false")))
             .withShowDailyUniqueCount(cache.getBool(PAR_SHOW_DAILY_UNIQUE_COUNT, false));

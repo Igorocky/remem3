@@ -184,7 +184,10 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
             );
         }
         return frag(
-            h4(text("Exercise")),
+            div("font-size:1.1em; margin-bottom: 10px;",
+                span("font-weight:bold;", text("Exercise ")),
+                span(text(st.getExerciseName()))
+            ),
             inpSubmit(ACT_TOGGLE_SHOW_EXERCISE_PARAMS,
                 st.getShowMoreParams().isPresent() ? "Hide parameters" : "Show parameters"
             ),

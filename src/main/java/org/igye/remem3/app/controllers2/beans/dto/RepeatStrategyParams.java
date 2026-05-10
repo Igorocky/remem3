@@ -17,7 +17,7 @@ public sealed interface RepeatStrategyParams
     @Data
     final class RepeatStrategyBucketsParams implements RepeatStrategyParams {
         private List<Duration> delays;
-        private int batchSize;
+        private int batchSize = 5;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {
@@ -39,9 +39,9 @@ public sealed interface RepeatStrategyParams
 
     @Data
     final class RepeatStrategyQueueParams implements RepeatStrategyParams {
-        private Instant startTime;
-        private int step;
-        private int batchSize;
+        private Instant startTime = Instant.MIN;
+        private int step = 5;
+        private int batchSize = 5;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {

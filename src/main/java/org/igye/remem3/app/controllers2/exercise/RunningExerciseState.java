@@ -22,6 +22,8 @@ public final class RunningExerciseState implements ExerciseState {
     @Getter
     private final ExerciseState parent;
     @Getter
+    private final String exerciseName;
+    @Getter
     @With
     private Optional<Boolean> showMoreParams = Optional.empty();
     @Getter

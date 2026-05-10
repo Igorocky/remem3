@@ -158,6 +158,26 @@ public class HtmlBuilder {
         return div(null, content);
     }
 
+    protected HtmlTag span(String style, List<? extends HtmlElem> children) {
+        return h(
+            "span",
+            style == null ? null : Map.of("style", style),
+            CollectionUtils.isEmpty(children) ? List.of(text("")) : children
+        );
+    }
+
+    protected HtmlTag span(String style, HtmlElem... content) {
+        return span(style, childrenArrayToList(content));
+    }
+
+    protected HtmlTag span(List<? extends HtmlElem> children) {
+        return span(null, children);
+    }
+
+    protected HtmlTag span(HtmlElem... content) {
+        return span(null, content);
+    }
+
     protected HtmlTag table(List<? extends List<? extends HtmlElem>> tableData) {
         return h("table",
             tableData.stream()
