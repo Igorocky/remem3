@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<CardExplorerState> {
     public static final String PAR_DIR = "CardExplorer_PAR_DIR";
-    public static final String ACT_REFRESH = "CardExplorer_ACT_REFRESH";
     public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
 
 
@@ -30,7 +29,6 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             h4(text("Card explorer")),
             form(
                 rndDirSelector("Directory", st.getDir()),
-                div("margin-top:5px;margin-bottom:10px;", inpSubmit(ACT_REFRESH, "Refresh")),
                 rndCards(st.getCards())
             )
         );
@@ -47,10 +45,10 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     private HtmlElem rndCards(List<Card> cards) {
         return table(
             cards.stream()
-                .map(card -> List.of(
+                .map(card -> List.of(frag(
                     rndCardFile(card),
                     rndCard(card)
-                ))
+                )))
                 .toList()
         ).attr("class", "table-single-border");
     }
@@ -76,16 +74,20 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
 
     private HtmlElem rndTranslateCard(Card.Translate card) {
         List<HtmlElem> elems = new ArrayList<>();
-        rndCardSection(card.getLang1() + " " + (card.isExactMatch1() ? "=" : "~"), text(card.getText1()));
+        elems.add(
+            rndCardSection(card.getLang1() + " " + (card.isExactMatch1() ? "=" : "~"), text(card.getText1()))
+        );
         if (StringUtils.isNotBlank(card.getExample1())) {
-            rndCardSection("Example", text(card.getExample1()));
+            elems.add(rndCardSection("Example", text(card.getExample1())));
         }
-        rndCardSection(card.getLang2() + " " + (card.isExactMatch2() ? "=" : "~"), text(card.getText2()));
+        elems.add(
+            rndCardSection(card.getLang2() + " " + (card.isExactMatch2() ? "=" : "~"), text(card.getText2()))
+        );
         if (StringUtils.isNotBlank(card.getExample2())) {
-            rndCardSection("Example", text(card.getExample2()));
+            elems.add(rndCardSection("Example", text(card.getExample2())));
         }
         if (StringUtils.isNotBlank(card.getNotes())) {
-            rndCardSection("Notes", text(card.getNotes()));
+            elems.add(rndCardSection("Notes", text(card.getNotes())));
         }
         elems.add(rndAttrsIfPresent(card));
         return div(elems);
