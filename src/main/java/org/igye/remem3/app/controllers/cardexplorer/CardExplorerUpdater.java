@@ -35,12 +35,12 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
 
     @SneakyThrows
     private void actOpenCard(CardExplorerState st, RequestParams params) {
-        String fileName = params.getKeyValueParam(ACT_OPEN_CARD_IN_EDITOR);
+        String filePath = params.getKeyValueParam(ACT_OPEN_CARD_IN_EDITOR);
         st.getCards().stream()
             .map(Card::getFile)
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .filter(file -> file.getName().equals(fileName))
+            .filter(file -> file.getAbsolutePath().equals(filePath))
             .forEach(file -> {
                 try {
                     new ProcessBuilder(settings.getCardEditor(), file.getAbsolutePath()).start();

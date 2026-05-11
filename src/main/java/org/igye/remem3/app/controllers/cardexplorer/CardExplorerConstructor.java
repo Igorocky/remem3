@@ -13,10 +13,12 @@ import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.impl.RequestParamsImpl;
 import org.springframework.core.annotation.Order;
 
+import java.io.File;
 import java.util.Comparator;
 import java.util.List;
 
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_RECURSIVE;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_SORT_ASC;
 
 @RequiredArgsConstructor
@@ -48,18 +50,22 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
 
     @SneakyThrows
     public CardExplorerState readStateFromParams(RequestParams params) {
-        DirSelectorCmp dir = new DirSelectorCmpImpl(settings, cache, PAR_DIR, false, params);
+        DirSelectorCmp dirSelectorCmp = new DirSelectorCmpImpl(settings, cache, PAR_DIR, false, params);
         boolean sortAsc = Boolean.parseBoolean(params.getParam(PAR_SORT_ASC, String.valueOf(true)));
-        Comparator<Card> comparator = Comparator.comparing(Card::getOrder);
+        boolean recursive = params.hasParam(PAR_RECURSIVE);
+        Comparator<Card> comparator = Comparator.comparing((Card card) -> card.getFile().get().getParentFile())
+            .thenComparing(Card::getOrder);
         if (!sortAsc) {
             comparator = comparator.reversed();
         }
-        List<Card> cards = cardUtils.loadCardsNonRec(dir.getSelectedDirectory()).stream()
+        File dir = dirSelectorCmp.getSelectedDirectory();
+        List<Card> cards = (recursive ? cardUtils.loadAllCards(dir) : cardUtils.loadCardsNonRec(dir)).stream()
             .sorted(comparator)
             .toList();
         return CardExplorerState.builder()
-            .dir(dir)
+            .dir(dirSelectorCmp)
             .sortAsc(sortAsc)
+            .recursive(recursive)
             .cards(cards)
             .build();
     }

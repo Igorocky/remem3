@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<CardExplorerState> {
     public static final String PAR_DIR = "CardExplorer_PAR_DIR";
     public static final String PAR_SORT_ASC = "CardExplorer_PAR_SORT_ASC";
+    public static final String PAR_RECURSIVE = "CardExplorer_PAR_RECURSIVE";
     public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
     public static final String ACT_REFRESH = "CardExplorer_ACT_REFRESH";
 
@@ -36,10 +37,18 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                 table(List.of(List.of(
                     text("%s cards".formatted(st.getCards().size())),
                     rndSortSelector(st),
+                    rndRecursiveCheckbox(st),
                     inpSubmit(ACT_REFRESH, "Reload")
                 ))),
-                rndCards(st.getCards())
+                rndCards(st)
             )
+        );
+    }
+
+    private HtmlElem rndRecursiveCheckbox(CardExplorerState st) {
+        return frag(
+            text("Recursive"),
+            inpCheckbox(PAR_RECURSIVE, PAR_RECURSIVE, st.isRecursive()).submitOnChange()
         );
     }
 
@@ -58,26 +67,28 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     }
 
 
-    private HtmlElem rndCards(List<Card> cards) {
+    private HtmlElem rndCards(CardExplorerState st) {
         return table(
-            cards.stream()
+            st.getCards().stream()
                 .map(card -> List.of(frag(
-                    rndCardFile(card),
+                    rndCardFile(card, st.isRecursive()),
                     rndCard(card)
                 )))
                 .toList()
         ).attr("class", "table-single-border list-of-cards");
     }
 
-    private HtmlElem rndCardFile(Card card) {
+    private HtmlElem rndCardFile(Card card, boolean renderFullPath) {
         if (card.getFile().isEmpty()) {
             return null;
         }
         File file = card.getFile().get();
         return frag(
-            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getName()), "Edit"),
+            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getAbsolutePath()), "Edit"),
             span("color:lightgrey;", text("%s Created at %s Order %s".formatted(
-                file.getName(), card.getCreatedAt().map(Objects::toString).orElse("?"), card.getOrder()
+                renderFullPath ? file.getAbsolutePath() : file.getName(),
+                card.getCreatedAt().map(Objects::toString).orElse("?"),
+                card.getOrder()
             )))
         );
     }

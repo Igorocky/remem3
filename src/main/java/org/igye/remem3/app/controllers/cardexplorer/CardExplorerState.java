@@ -12,5 +12,6 @@ import java.util.List;
 public class CardExplorerState {
     private final DirSelectorCmp dir;
     private final boolean sortAsc;
+    private final boolean recursive;
     private List<Card> cards;
 }
