@@ -166,10 +166,10 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             .toList();
         RepeatStrategy repeatStrategy = switch (simpEx.getRepeatStrategy()) {
             case RepeatStrategyParams.RepeatStrategyCircleParams p -> new RepeatStrategyCircle(
-                utils, allTasks, historyStartsAt, p.getRandomness(), p.getRounds()
+                utils, allTasks, p.getRandomness(), p.getRounds()
             );
             case RepeatStrategyParams.RepeatStrategyQueueParams p -> new RepeatStrategyQueue(
-                utils, historyStartsAt, p.getBatchSize(), p.getStep(), allTasks
+                utils, p.getBatchSize(), p.getStep(), allTasks
             );
             case RepeatStrategyParams.RepeatStrategyBucketsParams p -> new RepeatStrategyBuckets(
                 utils, clock, p.getBatchSize(), allTasks, p.getDelays()
@@ -182,7 +182,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         return switch (repeatStrategyParams) {
             case RepeatStrategyParams.RepeatStrategyCircleParams p -> p.getStartTime();
             case RepeatStrategyParams.RepeatStrategyQueueParams p -> p.getStartTime();
-            case RepeatStrategyParams.RepeatStrategyBucketsParams p -> Instant.MIN;
+            case RepeatStrategyParams.RepeatStrategyBucketsParams _ -> Instant.MIN;
         };
     }
 

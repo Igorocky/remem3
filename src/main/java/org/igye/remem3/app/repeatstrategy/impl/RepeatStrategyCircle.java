@@ -16,6 +16,7 @@ import org.igye.remem3.utils.Utils;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -38,7 +39,6 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     public RepeatStrategyCircle(
         Utils utils,
         List<Task> allTasks,
-        Instant startTime,
         double randomnessFactor,
         Optional<Integer> numOfRounds
     ) {
@@ -46,7 +46,12 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             throw new Exn("There are no tasks.");
         }
         this.allTasks = Collections.unmodifiableList(allTasks);
-        this.startTime = startTime;
+        this.startTime = allTasks.stream()
+            .map(Task::getHist)
+            .flatMap(Collection::stream)
+            .map(HistRec::getTime)
+            .min(Instant::compareTo)
+            .orElseGet(Instant::now);
         this.randomnessFactor = utils.getInRange(0, randomnessFactor, 1);
         this.numOfRounds = numOfRounds.map(n -> Math.max(1, Math.min(n, MAX_NUM_OF_ROUNDS)));
         rnd = new Random();
@@ -151,14 +156,10 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     private List<TaskDto> getTaskDtos() {
         return allTasks.stream()
             .map(task -> {
-                List<HistRec> hist = task.getHist().stream()
-                    .filter(histRec -> startTime.isBefore(histRec.getTime()))
-                    .toList();
+                List<HistRec> hist = task.getHist();
                 return TaskDto.builder()
                     .task(task)
-                    .hist(
-                        hist
-                    )
+                    .hist(hist)
                     .lastTime(hist.isEmpty() ? startTime : hist.getLast().getTime())
                     .build();
             })

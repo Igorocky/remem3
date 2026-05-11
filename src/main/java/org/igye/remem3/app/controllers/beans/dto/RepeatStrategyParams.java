@@ -27,7 +27,7 @@ public sealed interface RepeatStrategyParams
 
     @Data
     final class RepeatStrategyCircleParams implements RepeatStrategyParams {
-        private Instant startTime = Instant.MIN;
+        private Instant startTime = Instant.now();
         private Optional<Integer> rounds = Optional.empty();
         private double randomness = 0.3;
 
