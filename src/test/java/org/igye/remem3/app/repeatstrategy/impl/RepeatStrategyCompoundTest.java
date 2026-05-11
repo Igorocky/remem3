@@ -15,8 +15,11 @@ import tools.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 class RepeatStrategyCompoundTest {
@@ -53,6 +56,51 @@ class RepeatStrategyCompoundTest {
         Assertions.assertEquals(10, cnt);
     }
 
+    @Test
+    void getNextTasks_returns_tasks_with_specified_probability() {
+        //given
+        RepeatStrategy str1 = new RepeatStrategyCircle(
+            utils, makeTasks(5, "1"), 0.3, Optional.empty()
+        );
+        RepeatStrategy str2 = new RepeatStrategyCircle(
+            utils, makeTasks(2, "2"), 0.3, Optional.empty()
+        );
+        RepeatStrategy str3 = new RepeatStrategyCircle(
+            utils, makeTasks(3, "3"), 0.3, Optional.empty()
+        );
+        RepeatStrategyCompound compound = new RepeatStrategyCompound(List.of(
+            Pair.of(10, str1), Pair.of(30, str2), Pair.of(60, str3)
+        ));
+        int maxCnt = 10_000;
+        int cnt = 0;
+        Map<String, AtomicInteger> counts = new HashMap<>();
+
+        //when
+        Optional<List<Task>> nextTasksOpt = compound.getNextTasks();
+        while (nextTasksOpt.isPresent() && cnt < maxCnt) {
+            List<Task> nextTasks = nextTasksOpt.get();
+            cnt += nextTasks.size();
+            nextTasks.forEach(task -> {
+                task.getHist().add(makeHistRec());
+                counts.computeIfAbsent(((TestTask) task).getContent(), _ -> new AtomicInteger(0)).incrementAndGet();
+            });
+            nextTasksOpt = compound.getNextTasks();
+        }
+
+        //then
+        assertCnt(maxCnt, 0.1, counts.get("1").get());
+        assertCnt(maxCnt, 0.3, counts.get("2").get());
+        assertCnt(maxCnt, 0.6, counts.get("3").get());
+    }
+
+    private void assertCnt(int maxCnt, double pct, int actualCnt) {
+        double expCnt = maxCnt * pct;
+        double minExpCnt = expCnt * 0.9;
+        double maxExpCnt = expCnt * 1.1;
+        Assertions.assertTrue(minExpCnt <= actualCnt);
+        Assertions.assertTrue(actualCnt <= maxExpCnt);
+    }
+
     private List<Task> makeTasks(int count, String content) {
         return Stream.generate(() -> content).limit(count).map(_ -> makeTask(content)).toList();
     }
@@ -67,6 +115,7 @@ class RepeatStrategyCompoundTest {
 
     private static class TestTask implements Task {
         private final List<HistRec> hist = new ArrayList<>();
+        @Getter
         private final String content;
 
         private TestTask(String content) {
