@@ -106,7 +106,7 @@ public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer
     private HtmlElem rndBundles(State st) {
         Predicate<Card> cardFilter = constructor.makeCardFilter(st.getCardType(), st.getLang());
         Set<String> selectedBundleIds = st.getSelectedBundleIds();
-        return table(
+        HtmlTag table = table(
             st.getSortedBundlesToList().stream()
                 .map(bundle -> List.of(
                     inpCheckbox(PAR_SELECTED_BUNDLE_ID, bundle.getId(), selectedBundleIds.contains(bundle.getId())),
@@ -116,6 +116,10 @@ public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer
                 ))
                 .toList()
         ).attr("class", "table-single-border");
+        return frag(
+            text("%s bundles".formatted(st.getSortedBundlesToList().size())),
+            table
+        );
     }
 
     private HtmlElem rndHistory(List<String> hist) {
