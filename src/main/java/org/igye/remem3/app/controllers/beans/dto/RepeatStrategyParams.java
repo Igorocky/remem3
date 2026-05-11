@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public sealed interface RepeatStrategyParams
     permits RepeatStrategyParams.RepeatStrategyBucketsParams, RepeatStrategyParams.RepeatStrategyCircleParams,
-    RepeatStrategyParams.RepeatStrategyQueueParams {
+    RepeatStrategyParams.RepeatStrategyRetryFailedParams, RepeatStrategyParams.RepeatStrategyQueueParams {
 
     RepeatStrategyType getRepeatStrategyType();
 
@@ -34,6 +34,17 @@ public sealed interface RepeatStrategyParams
         @Override
         public RepeatStrategyType getRepeatStrategyType() {
             return RepeatStrategyType.CIRCLE;
+        }
+    }
+
+    @Data
+    final class RepeatStrategyRetryFailedParams implements RepeatStrategyParams {
+        private Instant startTime = Instant.now();
+        private double randomness = 0.3;
+
+        @Override
+        public RepeatStrategyType getRepeatStrategyType() {
+            return RepeatStrategyType.RETRY_FAILED;
         }
     }
 

@@ -12,6 +12,7 @@ public class CustomBeanExpressionResolver extends StandardBeanExpressionResolver
         super.customizeEvaluationContext(evalCtx);
         regClassName(evalCtx, "SPeL", SpelFactoryBean.class);
         regClassName(evalCtx, "Circle", RepeatStrategyParams.RepeatStrategyCircleParams.class);
+        regClassName(evalCtx, "RetryFailed", RepeatStrategyParams.RepeatStrategyRetryFailedParams.class);
         regClassName(evalCtx, "Queue", RepeatStrategyParams.RepeatStrategyQueueParams.class);
         regClassName(evalCtx, "Buckets", RepeatStrategyParams.RepeatStrategyBucketsParams.class);
         regClassName(evalCtx, "Exercise", ExerciseDef.SimpleExerciseDef.class);

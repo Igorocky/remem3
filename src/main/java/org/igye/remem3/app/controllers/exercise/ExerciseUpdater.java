@@ -20,6 +20,7 @@ import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyBuckets;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyQueue;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyRetryFailed;
 import org.igye.remem3.app.repeatstrategy.impl.TaskImpl;
 import org.igye.remem3.app.state.StateUpdater;
 import org.igye.remem3.app.taskstate.TaskResult;
@@ -168,6 +169,9 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             case RepeatStrategyParams.RepeatStrategyCircleParams p -> new RepeatStrategyCircle(
                 utils, allTasks, p.getRandomness(), p.getRounds()
             );
+            case RepeatStrategyParams.RepeatStrategyRetryFailedParams p -> new RepeatStrategyRetryFailed(
+                utils, allTasks, p.getRandomness()
+            );
             case RepeatStrategyParams.RepeatStrategyQueueParams p -> new RepeatStrategyQueue(
                 utils, p.getBatchSize(), p.getStep(), allTasks
             );
@@ -181,6 +185,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
     private Instant getHistoryStartsAt(RepeatStrategyParams repeatStrategyParams) {
         return switch (repeatStrategyParams) {
             case RepeatStrategyParams.RepeatStrategyCircleParams p -> p.getStartTime();
+            case RepeatStrategyParams.RepeatStrategyRetryFailedParams p -> p.getStartTime();
             case RepeatStrategyParams.RepeatStrategyQueueParams p -> p.getStartTime();
             case RepeatStrategyParams.RepeatStrategyBucketsParams _ -> Instant.MIN;
         };
