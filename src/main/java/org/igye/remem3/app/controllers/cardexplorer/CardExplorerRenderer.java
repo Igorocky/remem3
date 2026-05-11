@@ -2,6 +2,7 @@ package org.igye.remem3.app.controllers.cardexplorer;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<CardExplorerState> {
     public static final String PAR_DIR = "CardExplorer_PAR_DIR";
+    public static final String PAR_SORT_ASC = "CardExplorer_PAR_SORT_ASC";
     public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
     public static final String ACT_REFRESH = "CardExplorer_ACT_REFRESH";
 
@@ -33,11 +35,19 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                 rndDirSelector("Directory", st.getDir()),
                 table(List.of(List.of(
                     text("%s cards".formatted(st.getCards().size())),
+                    rndSortSelector(st),
                     inpSubmit(ACT_REFRESH, "Reload")
                 ))),
                 rndCards(st.getCards())
             )
         );
+    }
+
+    private HtmlElem rndSortSelector(CardExplorerState st) {
+        return select(PAR_SORT_ASC, String.valueOf(st.isSortAsc()),
+            Pair.of("true", text("ASC")),
+            Pair.of("false", text("DSC"))
+        ).submitOnChange();
     }
 
     private HtmlTag rndDirSelector(String title, DirSelectorCmp dirSelector) {
@@ -66,9 +76,9 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         File file = card.getFile().get();
         return frag(
             inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getName()), "Edit"),
-            text("%s Created at %s Order %s".formatted(
+            span("color:lightgrey;", text("%s Created at %s Order %s".formatted(
                 file.getName(), card.getCreatedAt().map(Objects::toString).orElse("?"), card.getOrder()
-            ))
+            )))
         );
     }
 

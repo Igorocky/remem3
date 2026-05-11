@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_SORT_ASC;
 
 @RequiredArgsConstructor
 @Order(3)
@@ -48,11 +49,17 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
     @SneakyThrows
     public CardExplorerState readStateFromParams(RequestParams params) {
         DirSelectorCmp dir = new DirSelectorCmpImpl(settings, cache, PAR_DIR, false, params);
+        boolean sortAsc = Boolean.parseBoolean(params.getParam(PAR_SORT_ASC, String.valueOf(true)));
+        Comparator<Card> comparator = Comparator.comparing(Card::getOrder);
+        if (!sortAsc) {
+            comparator = comparator.reversed();
+        }
         List<Card> cards = cardUtils.loadCardsNonRec(dir.getSelectedDirectory()).stream()
-            .sorted(Comparator.comparing(Card::getOrder))
+            .sorted(comparator)
             .toList();
         return CardExplorerState.builder()
             .dir(dir)
+            .sortAsc(sortAsc)
             .cards(cards)
             .build();
     }

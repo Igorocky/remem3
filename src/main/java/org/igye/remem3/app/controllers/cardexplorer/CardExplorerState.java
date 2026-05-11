@@ -11,5 +11,6 @@ import java.util.List;
 @Getter
 public class CardExplorerState {
     private final DirSelectorCmp dir;
+    private final boolean sortAsc;
     private List<Card> cards;
 }
