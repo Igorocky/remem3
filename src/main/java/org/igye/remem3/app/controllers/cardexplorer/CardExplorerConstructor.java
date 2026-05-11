@@ -13,14 +13,10 @@ import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.impl.RequestParamsImpl;
 import org.springframework.core.annotation.Order;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
-import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_EXTENSION;
 
 @RequiredArgsConstructor
 @Order(3)
@@ -52,11 +48,7 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
     @SneakyThrows
     public CardExplorerState readStateFromParams(RequestParams params) {
         DirSelectorCmp dir = new DirSelectorCmpImpl(settings, cache, PAR_DIR, false, params);
-        List<Card> cards = Files.list(dir.getSelectedDirectory().toPath())
-            .map(Path::toFile)
-            .filter(File::isFile)
-            .filter(file -> file.getName().endsWith(CARD_EXTENSION))
-            .map(cardUtils::loadCard)
+        List<Card> cards = cardUtils.loadCardsNonRec(dir.getSelectedDirectory()).stream()
             .sorted(Comparator.comparing(Card::getOrder))
             .toList();
         return CardExplorerState.builder()

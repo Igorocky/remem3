@@ -16,8 +16,6 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.igye.remem3.app.impl.CardUtilsImpl.CARD_EXTENSION;
-
 @RequiredArgsConstructor
 public class SetOrderForCardsMain {
     private final CardUtils cardUtils;
@@ -38,11 +36,7 @@ public class SetOrderForCardsMain {
 
     @SneakyThrows
     private void setOrderForCardsInDir(File dir) {
-        List<Card> cards = Files.list(dir.toPath())
-            .map(Path::toFile)
-            .filter(File::isFile)
-            .filter(file -> file.getName().endsWith(CARD_EXTENSION))
-            .map(cardUtils::loadCard)
+        List<Card> cards = cardUtils.loadCardsNonRec(dir).stream()
             .sorted(Comparator.comparing(card -> card.getCreatedAt().orElse(Instant.MIN)))
             .toList();
         for (int i = 0; i < cards.size(); i++) {

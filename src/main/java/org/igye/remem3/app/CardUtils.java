@@ -13,6 +13,8 @@ public interface CardUtils {
 
     List<Card> loadAllCards(File dir);
 
+    List<Card> loadCardsNonRec(File dir);
+
     void saveCard(File file, Card card);
 
     List<String> validateCard(Card card);

@@ -12,11 +12,13 @@ import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.Func;
 import org.igye.remem3.utils.Utils;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -27,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -93,20 +96,22 @@ public class CardUtilsImpl implements CardUtils {
     @SneakyThrows
     @Override
     public List<Card> loadAllCards(File dir) {
-        try (Stream<Path> stream = Files.walk(dir.toPath())) {
-            return stream
-                .map(Path::toFile)
-                .filter(File::isFile)
-                .filter(file -> file.getName().endsWith(CARD_EXTENSION))
-                .map(this::loadCard)
-                .toList();
-        }
+        return loadCards(dir, Files::walk);
+    }
+
+    @Override
+    public List<Card> loadCardsNonRec(File dir) {
+        return loadCards(dir, Files::list);
     }
 
     @Override
     public void saveCard(File file, Card card) {
         try {
-            file.getParentFile().mkdirs();
+            File dir = file.getParentFile();
+            dir.mkdirs();
+            if (card.getOrder() == null) {
+                card.setOrder(getOrderForNewCard(dir));
+            }
             utils.writeStringToFile(
                 switch (card) {
                     case Card.FillGaps c -> fillGapsCardToString(c);
@@ -337,7 +342,9 @@ public class CardUtilsImpl implements CardUtils {
         Optional<Instant> createdAt,
         List<HistRec> hist
     ) {
-        sb.append("\n\n").append(ATTR_ORDER).append("\n").append(order);
+        if (order != null) {
+            sb.append("\n\n").append(ATTR_ORDER).append("\n").append(order);
+        }
         sb.append("\n\n").append(ATTR_CREATED_AT).append("\n").append(
             createdAt.map(this::instantToStr).orElse("")
         );
@@ -409,7 +416,7 @@ public class CardUtilsImpl implements CardUtils {
         Map<String, List<String>> props = parseProps(str);
         return Card.Translate.builder()
             .file(file)
-            .order(getBigDecimal(props, ATTR_ORDER, BigDecimal.ZERO))
+            .order(getBigDecimal(props, ATTR_ORDER, null))
             .createdAt(getInstantOpt(props, ATTR_CREATED_AT))
             .lang1(getStr(props, ATTR_LANG_1, "").trim())
             .text1(getStr(props, ATTR_TEXT_1, "").trim())
@@ -429,7 +436,7 @@ public class CardUtilsImpl implements CardUtils {
         Map<String, List<String>> props = parseProps(str);
         return Card.FillGaps.builder()
             .file(file)
-            .order(getBigDecimal(props, ATTR_ORDER, BigDecimal.ZERO))
+            .order(getBigDecimal(props, ATTR_ORDER, null))
             .createdAt(getInstantOpt(props, ATTR_CREATED_AT))
             .lang(getStr(props, ATTR_LANG, "").trim())
             .descr(getStr(props, ATTR_DESCR, "").trim())
@@ -551,5 +558,30 @@ public class CardUtilsImpl implements CardUtils {
         } else {
             throw new Exn(format("Duplicated key '%s'.", key));
         }
+    }
+
+    @SneakyThrows
+    private List<Card> loadCards(File dir, Func<Path, Stream<Path>> dirToStream) {
+        try (Stream<Path> stream = dirToStream.apply(dir.toPath())) {
+            return stream
+                .map(Path::toFile)
+                .filter(File::isFile)
+                .filter(file -> file.getName().endsWith(CARD_EXTENSION))
+                .map(this::loadCard)
+                .toList();
+        }
+    }
+
+    private BigDecimal getOrderForNewCard(File dir) {
+        BigDecimal maxExistingOrder = loadCardsNonRec(dir).stream()
+            .map(Card::getOrder)
+            .filter(Objects::nonNull)
+            .max(BigDecimal::compareTo)
+            .orElse(BigDecimal.ZERO);
+        return getNextOrder(maxExistingOrder);
+    }
+
+    protected BigDecimal getNextOrder(BigDecimal prevOrder) {
+        return prevOrder.setScale(0, RoundingMode.UP).add(BigDecimal.ONE);
     }
 }

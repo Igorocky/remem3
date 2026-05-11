@@ -48,8 +48,7 @@ public sealed interface Card permits Card.BaseCard {
         private Optional<File> file = Optional.empty();
         @Getter
         @Setter
-        @Builder.Default
-        private BigDecimal order = BigDecimal.ZERO;
+        private BigDecimal order;
         @Getter
         @Setter
         @Builder.Default

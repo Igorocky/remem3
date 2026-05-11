@@ -211,7 +211,7 @@ class CardUtilsImplTest {
 
         Card parsedCard = cards.parseFillGapsCard(cards.fillGapsCardToString(card), Optional.empty());
         Assertions.assertEquals(card, parsedCard);
-        Assertions.assertEquals(BigDecimal.ZERO, parsedCard.getOrder());
+        Assertions.assertNull(parsedCard.getOrder());
     }
 
     @Test
@@ -266,7 +266,7 @@ class CardUtilsImplTest {
 
         Card parsedCard = cards.parseTranslateCard(cards.translateCardToString(card), Optional.empty());
         Assertions.assertEquals(card, parsedCard);
-        Assertions.assertEquals(BigDecimal.ZERO, parsedCard.getOrder());
+        Assertions.assertNull(parsedCard.getOrder());
     }
 
     @Test
@@ -449,5 +449,16 @@ class CardUtilsImplTest {
             cards.parseProps("###a\n1\n\r\n2")
         );
 
+    }
+
+    @Test
+    void getNextOrder() {
+        CardUtilsImpl cardUtils = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        Assertions.assertEquals(new BigDecimal("1"), cardUtils.getNextOrder(new BigDecimal("0")));
+        Assertions.assertEquals(new BigDecimal("2"), cardUtils.getNextOrder(new BigDecimal("1")));
+        Assertions.assertEquals(new BigDecimal("3"), cardUtils.getNextOrder(new BigDecimal("2")));
+        Assertions.assertEquals(new BigDecimal("2"), cardUtils.getNextOrder(new BigDecimal("0.1")));
+        Assertions.assertEquals(new BigDecimal("2"), cardUtils.getNextOrder(new BigDecimal("0.99")));
+        Assertions.assertEquals(new BigDecimal("2"), cardUtils.getNextOrder(new BigDecimal("0.999")));
     }
 }
