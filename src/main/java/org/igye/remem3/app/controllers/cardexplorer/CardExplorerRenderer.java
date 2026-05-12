@@ -24,6 +24,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String PAR_DIR = "CardExplorer_PAR_DIR";
     public static final String PAR_SORT_ASC = "CardExplorer_PAR_SORT_ASC";
     public static final String PAR_RECURSIVE = "CardExplorer_PAR_RECURSIVE";
+    public static final String PAR_FILTER = "CardExplorer_PAR_FILTER";
     public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
     public static final String ACT_REFRESH = "CardExplorer_ACT_REFRESH";
 
@@ -35,10 +36,11 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             form(
                 rndDirSelector("Directory", st.getDir()),
                 table(List.of(List.of(
+                    inpSubmit(ACT_REFRESH, "Reload"),
                     text("%s cards".formatted(st.getCards().size())),
                     rndSortSelector(st),
                     rndRecursiveCheckbox(st),
-                    inpSubmit(ACT_REFRESH, "Reload")
+                    inpText(PAR_FILTER, st.getFilter(), ACT_REFRESH).autofocus()
                 ))),
                 rndCards(st)
             )

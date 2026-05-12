@@ -13,5 +13,6 @@ public class CardExplorerState {
     private final DirSelectorCmp dir;
     private final boolean sortAsc;
     private final boolean recursive;
+    private final String filter;
     private List<Card> cards;
 }
