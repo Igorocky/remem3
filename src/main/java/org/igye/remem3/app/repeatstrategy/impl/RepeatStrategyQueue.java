@@ -38,6 +38,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     private final List<Task> allTasks;
     private final List<Integer> bucketDelays;
     private final int maxBucketNum;
+    private final Instant startTimeForParams;
 
     public RepeatStrategyQueue(Utils utils, int batchSize, int step, List<Task> allTasks) {
         if (CollectionUtils.isEmpty(allTasks)) {
@@ -61,6 +62,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         bucketDelays.set(bucketDelays.size() - 1, maxDelay);
         this.bucketDelays = Collections.unmodifiableList(bucketDelays);
         this.maxBucketNum = bucketDelays.size() - 1;
+        this.startTimeForParams = Instant.now();
     }
 
     @Override
@@ -173,6 +175,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         List<List<HistRec>> sessionHist = allTasks.stream()
             .map(TaskDto::getTask)
             .map(Task::getHist)
+            .map(h -> h.stream().filter(r -> startTimeForParams.isBefore(r.getTime())).toList())
             .toList();
         Pair<Integer, Integer> count = utils.getMinMax(sessionHist, List::size, Integer::compareTo, Pair.of(0, 0));
         Pair<Integer, Integer> streak = utils.getMinMax(
