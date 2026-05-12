@@ -8,10 +8,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
 import org.igye.remem3.app.controllers.beans.dto.TaskFilter;
+import org.igye.remem3.app.controllers.beans.dto.TaskView;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.CUSTOM_EXERCISE_NAME;
 
@@ -29,6 +33,8 @@ public final class SelectExerciseState implements ExerciseState {
     private final DirSelectorCmp selectedDir;
     @With
     private final Optional<Pair<String, TaskFilter>> selectedTaskFilter;
+    @With
+    private final Optional<Integer> numberOfTasks;
     @With
     private final Optional<Pair<String, RepeatStrategyParams>> selectedStrategy;
 
@@ -59,13 +65,20 @@ public final class SelectExerciseState implements ExerciseState {
         );
     }
 
-    public SelectExerciseState setSelectedTaskFilter(String id) {
-        return withSelectedTaskFilter(
+    public SelectExerciseState setSelectedTaskFilter(String id, Function<File, Stream<TaskView>> taskLoader) {
+        SelectExerciseState st = withSelectedTaskFilter(
             allTaskFilters.stream()
                 .filter(pair -> pair.getLeft().equals(id))
                 .findFirst()
                 .or(() -> Optional.ofNullable(allTaskFilters.isEmpty() ? null : allTaskFilters.getFirst()))
         );
+        if (st.getSelectedExercise().isEmpty()) {
+            SelectExerciseState finalSt = st;
+            st = st.withNumberOfTasks(st.getSelectedTaskFilter().map(Pair::getRight).map(taskFilter ->
+                taskLoader.apply(finalSt.getSelectedDir().getSelectedDirectory()).filter(taskFilter::match).count()
+            ).map(Long::intValue));
+        }
+        return st;
     }
 
     public SelectExerciseState setSelectedStrategy(String id) {

@@ -9,7 +9,6 @@ import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
-import org.igye.remem3.app.controllers.beans.dto.TaskView;
 import org.igye.remem3.app.controllers.beans.dto.TaskViewImpl;
 import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.app.dto.Card;
@@ -67,6 +66,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
     private final Clock clock;
     private final Utils utils;
     private final Settings settings;
+    private final ExerciseConstructor constructor;
 
     @Override
     public ExerciseState update(ExerciseState st, RequestParams params) {
@@ -96,7 +96,10 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR, false, params));
             cache.put(PAR_SELECTED_DIR, st.getSelectedDir().getSelectedDirectoryStr());
         }
-        st = updateSelectablePart(st, params, PAR_SELECTED_TASK_FILTER, st::setSelectedTaskFilter);
+        SelectExerciseState finalSt = st;
+        st = updateSelectablePart(st, params, PAR_SELECTED_TASK_FILTER,
+            id -> finalSt.setSelectedTaskFilter(id, constructor::loadTasks)
+        );
         st = updateSelectablePart(st, params, PAR_SELECTED_STRATEGY, st::setSelectedStrategy);
         if (params.hasParam(ACT_START_EXERCISE)) {
             return actStartExercise(st);
@@ -180,7 +183,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             .flatMap(Collection::stream)
             .map(Card::getTasks)
             .flatMap(Collection::stream)
-            .map(this::makeTaskView)
+            .map(constructor::makeTaskView)
             .filter(simpEx.getTaskFilter()::match)
             .map(TaskViewImpl.class::cast)
             .map(TaskViewImpl::getTask)
@@ -201,16 +204,6 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             );
         };
         return Pair.of(allTasks, repeatStrategy);
-    }
-
-    private TaskView makeTaskView(Task task) {
-        Card card = task.getCard();
-        return TaskViewImpl.builder()
-            .task(task)
-            .type(task.getTaskType())
-            .file(card.getFile().orElseThrow(() -> new Exn("No file set for card %s".formatted(card))))
-            .createdAt(card.getCreatedAt())
-            .build();
     }
 
     private org.igye.remem3.app.repeatstrategy.Task makeTaskForRepeatStrategy(

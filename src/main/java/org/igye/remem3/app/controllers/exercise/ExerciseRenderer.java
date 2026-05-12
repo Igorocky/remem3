@@ -106,7 +106,8 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
                 PAR_SELECTED_TASK_FILTER,
                 st.getSelectedTaskFilter().map(Pair::getLeft),
                 "No task filters are defined."
-            )
+            ),
+            text(st.getNumberOfTasks().map("%s tasks"::formatted).orElse(""))
         )));
     }
 

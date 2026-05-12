@@ -39,8 +39,8 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     inpSubmit(ACT_REFRESH, "Reload"),
                     text("%s cards".formatted(st.getCards().size())),
                     rndSortSelector(st),
-                    rndRecursiveCheckbox(st),
-                    inpText(PAR_FILTER, st.getFilter(), ACT_REFRESH).autofocus()
+                    inpText(PAR_FILTER, st.getFilter(), ACT_REFRESH).autofocus(),
+                    rndRecursiveCheckbox(st)
                 ))),
                 rndCards(st)
             )

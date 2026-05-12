@@ -4,19 +4,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.beans.BeansState;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
 import org.igye.remem3.app.controllers.beans.dto.TaskFilter;
+import org.igye.remem3.app.controllers.beans.dto.TaskView;
+import org.igye.remem3.app.controllers.beans.dto.TaskViewImpl;
 import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.dto.Card;
+import org.igye.remem3.app.dto.Task;
 import org.igye.remem3.app.state.StateConstructor;
 import org.igye.remem3.app.state.StateLookup;
+import org.igye.remem3.utils.Exn;
 import org.springframework.core.annotation.Order;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.igye.remem3.app.controllers.beans.BeansConstructor.BEANS;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_DIR;
@@ -28,6 +36,7 @@ import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELE
 @Order(2)
 public class ExerciseConstructor implements StateConstructor<ExerciseState> {
     private final Cache cache;
+    private final CardUtils cardUtils;
     private final Settings settings;
     @Setter
     private StateLookup stateLookup;
@@ -70,7 +79,7 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
         st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR, false,
             new File(cache.getStr(PAR_SELECTED_DIR, ""))
         ));
-        st = st.setSelectedTaskFilter(cache.getStr(PAR_SELECTED_TASK_FILTER, ""));
+        st = st.setSelectedTaskFilter(cache.getStr(PAR_SELECTED_TASK_FILTER, ""), this::loadTasks);
         st = st.setSelectedStrategy(cache.getStr(PAR_SELECTED_STRATEGY, ""));
         return st;
     }
@@ -78,5 +87,22 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
     @Override
     public boolean isSingleton() {
         return true;
+    }
+
+    public Stream<TaskView> loadTasks(File dir) {
+        return cardUtils.loadAllCards(dir).stream()
+            .map(Card::getTasks)
+            .flatMap(Collection::stream)
+            .map(this::makeTaskView);
+    }
+
+    public TaskView makeTaskView(Task task) {
+        Card card = task.getCard();
+        return TaskViewImpl.builder()
+            .task(task)
+            .type(task.getTaskType())
+            .file(card.getFile().orElseThrow(() -> new Exn("No file set for card %s".formatted(card))))
+            .createdAt(card.getCreatedAt())
+            .build();
     }
 }
