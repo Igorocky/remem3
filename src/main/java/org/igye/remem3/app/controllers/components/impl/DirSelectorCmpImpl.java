@@ -8,6 +8,7 @@ import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
+import org.igye.remem3.utils.impl.NatOrdStringImpl;
 import org.igye.remem3.web.RequestParams;
 
 import java.io.File;
@@ -82,7 +83,9 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
                     : Arrays.stream(subDirs)
                       .filter(dir -> !dir.getName().startsWith("."))
                       .map(File::getName)
+                      .map(NatOrdStringImpl::new)
                       .sorted()
+                      .map(NatOrdStringImpl::getValue)
                       .toList();
                 options = new ArrayList<>();
                 options.add(".");
