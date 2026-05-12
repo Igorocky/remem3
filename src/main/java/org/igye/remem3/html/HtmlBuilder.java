@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class HtmlBuilder {
     protected static final String GREEN = "#0077008a";
@@ -181,8 +182,10 @@ public class HtmlBuilder {
     protected HtmlTag table(List<? extends List<? extends HtmlElem>> tableData) {
         return h("table",
             tableData.stream()
+                .filter(Objects::nonNull)
                 .map(rowData -> h("tr",
                     rowData.stream()
+                        .filter(Objects::nonNull)
                         .map(cellData -> h("td", cellData == null ? text("") : cellData))
                         .toList()
                 ))

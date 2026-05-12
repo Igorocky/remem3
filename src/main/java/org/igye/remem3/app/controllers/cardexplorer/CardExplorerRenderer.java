@@ -102,7 +102,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     }
 
     private HtmlElem rndTranslateCard(Card.Translate card) {
-        List<HtmlElem> elems = new ArrayList<>();
+        List<List<HtmlElem>> elems = new ArrayList<>();
         elems.add(
             rndCardSection(card.getLang1() + " " + (card.isExactMatch1() ? "=" : "~"), pre(text(card.getText1())))
         );
@@ -119,11 +119,11 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             elems.add(rndCardSection("Notes", pre(text(card.getNotes()))));
         }
         elems.add(rndAttrsIfPresent(card));
-        return div(elems);
+        return div(table(elems).attr("class", "table-no-border vertical-align-top"));
     }
 
     private HtmlElem rndFillGapsCard(Card.FillGaps card) {
-        List<HtmlElem> elems = new ArrayList<>();
+        List<List<HtmlElem>> elems = new ArrayList<>();
         if (StringUtils.isNotBlank(card.getDescr())) {
             elems.add(rndCardSection("Description", pre(text(card.getDescr()))));
         }
@@ -132,13 +132,13 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             elems.add(rndCardSection("Notes", pre(text(card.getNotes()))));
         }
         elems.add(rndAttrsIfPresent(card));
-        return div(elems);
+        return div(table(elems).attr("class", "table-no-border vertical-align-top"));
     }
 
-    private HtmlElem rndCardSection(String name, HtmlElem content) {
-        return frag(
-            div("font-weight:bold; margin-top:3px;margin-left:10px", text(name)),
-            div("margin-left:10px;", content)
+    private List<HtmlElem> rndCardSection(String name, HtmlElem content) {
+        return List.of(
+            div("font-weight:bold;", text(name)),
+            content
         );
     }
 
@@ -160,7 +160,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         );
     }
 
-    private HtmlElem rndAttrsIfPresent(Card card) {
+    private List<HtmlElem> rndAttrsIfPresent(Card card) {
         if (card.getAttrs().isEmpty()) {
             return null;
         }
@@ -171,7 +171,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     .sorted(Map.Entry.comparingByKey())
                     .map(entry -> List.of(text(entry.getKey() + ":"), text(entry.getValue())))
                     .toList()
-            ).attr("class", "table-no-border")
+            ).attr("class", "table-no-border vertical-align-top")
         );
     }
 
