@@ -16,6 +16,7 @@ public class CustomBeanExpressionResolver extends StandardBeanExpressionResolver
         regClassName(evalCtx, "Queue", RepeatStrategyParams.RepeatStrategyQueueParams.class);
         regClassName(evalCtx, "Buckets", RepeatStrategyParams.RepeatStrategyBucketsParams.class);
         regClassName(evalCtx, "Exercise", ExerciseDef.SimpleExerciseDef.class);
+        regClassName(evalCtx, "CompoundExercise", ExerciseDef.CompoundExerciseDef.class);
         Functions.registerFunctions(evalCtx);
     }
 

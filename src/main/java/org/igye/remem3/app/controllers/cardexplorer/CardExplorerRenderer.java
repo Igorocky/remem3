@@ -119,7 +119,10 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             elems.add(rndCardSection("Notes", pre(text(card.getNotes()))));
         }
         elems.add(rndAttrsIfPresent(card));
-        return div(table(elems).attr("class", "table-no-border vertical-align-top"));
+        return div(
+            table(elems)
+                .attr("class", "table-no-border vertical-align-top first-col-text-align-right")
+        );
     }
 
     private HtmlElem rndFillGapsCard(Card.FillGaps card) {
@@ -132,13 +135,16 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             elems.add(rndCardSection("Notes", pre(text(card.getNotes()))));
         }
         elems.add(rndAttrsIfPresent(card));
-        return div(table(elems).attr("class", "table-no-border vertical-align-top"));
+        return div(
+            table(elems)
+                .attr("class", "table-no-border vertical-align-top first-col-text-align-right")
+        );
     }
 
     private List<HtmlElem> rndCardSection(String name, HtmlElem content) {
         return List.of(
             div("font-weight:bold;", text(name)),
-            content
+            div("margin-left:5px;", content)
         );
     }
 
@@ -171,7 +177,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     .sorted(Map.Entry.comparingByKey())
                     .map(entry -> List.of(text(entry.getKey() + ":"), text(entry.getValue())))
                     .toList()
-            ).attr("class", "table-no-border vertical-align-top")
+            ).attr("class", "table-no-border vertical-align-top first-col-text-align-right")
         );
     }
 

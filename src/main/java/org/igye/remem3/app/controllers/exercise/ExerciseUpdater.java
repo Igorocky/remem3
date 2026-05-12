@@ -19,6 +19,7 @@ import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyBuckets;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCircle;
+import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyCompound;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyQueue;
 import org.igye.remem3.app.repeatstrategy.impl.RepeatStrategyRetryFailed;
 import org.igye.remem3.app.repeatstrategy.impl.TaskImpl;
@@ -111,8 +112,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         SelectExerciseState parent = st;
         ExerciseDef selectedExercise = exerciseToStart.get();
         List<String> directories = selectedExercise.getDirectories();
-        Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> pair =
-            makeRepeatStrategy(selectedExercise);
+        Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> pair = makeRepeatStrategy(selectedExercise);
         List<String> taskTypes = pair.getLeft().stream()
             .map(HasBaseTask.class::cast)
             .map(HasBaseTask::getBaseTask)
@@ -144,7 +144,28 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
     private Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> makeRepeatStrategy(ExerciseDef ex) {
         return switch (ex) {
             case ExerciseDef.SimpleExerciseDef s -> makeSimpleRepeatStrategy(s);
+            case ExerciseDef.CompoundExerciseDef c -> makeCompoundRepeatStrategy(c);
         };
+    }
+
+    private Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> makeCompoundRepeatStrategy(
+        ExerciseDef.CompoundExerciseDef compEx
+    ) {
+        validateDirs(compEx.getDirectories());
+        List<Pair<Integer, Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy>>> tasksAndStrategies =
+            compEx.getExercises().stream()
+                .map(pair -> Pair.of(pair.getLeft(), makeRepeatStrategy(pair.getRight())))
+                .toList();
+        List<org.igye.remem3.app.repeatstrategy.Task> allTasks = tasksAndStrategies.stream()
+            .map(p -> p.getRight().getLeft())
+            .flatMap(Collection::stream)
+            .toList();
+        RepeatStrategyCompound strategy = new RepeatStrategyCompound(
+            tasksAndStrategies.stream()
+                .map(p -> Pair.of(p.getLeft(), p.getRight().getRight()))
+                .toList()
+        );
+        return Pair.of(allTasks, strategy);
     }
 
     private Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> makeSimpleRepeatStrategy(

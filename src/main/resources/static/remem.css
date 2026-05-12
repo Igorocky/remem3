@@ -30,3 +30,7 @@
 table.vertical-align-top td {
     vertical-align: top;
 }
+
+table.first-col-text-align-right td:first-child {
+    text-align: right;
+}
