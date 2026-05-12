@@ -61,9 +61,8 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
                 return Optional.empty();
             } else {
                 this.round++;
-                //todo: tweak task history and pass Optional.of(1)
                 this.circle = new RepeatStrategyCircle(
-                    utils, notPassedTasks, randomnessFactor, Optional.of(round)
+                    utils, notPassedTasks, randomnessFactor, Optional.of(1)
                 );
                 return circle.getNextTasks();
             }
@@ -105,6 +104,9 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
     private List<Task> getNotPassedTasks() {
         return allTasks.stream()
             .filter(task -> task.getHist().isEmpty() || !task.getHist().getLast().isPassed())
+            .map(TaskImpl.class::cast)
+            .map(task -> new TaskImpl(task.getBaseTask(), Instant.now(), task.getSelectedByStrategyType()))
+            .map(Task.class::cast)
             .toList();
     }
 
