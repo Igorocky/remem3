@@ -7,15 +7,19 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public sealed interface RepeatStrategyParams
     permits RepeatStrategyParams.RepeatStrategyBucketsParams, RepeatStrategyParams.RepeatStrategyCircleParams,
     RepeatStrategyParams.RepeatStrategyRetryFailedParams, RepeatStrategyParams.RepeatStrategyQueueParams {
 
+    Supplier<Instant> getStartTime();
+
     RepeatStrategyType getRepeatStrategyType();
 
     @Data
     final class RepeatStrategyBucketsParams implements RepeatStrategyParams {
+        private Supplier<Instant> startTime = () -> Instant.MIN;
         private List<Duration> delays;
         private int batchSize = 5;
 
@@ -27,7 +31,7 @@ public sealed interface RepeatStrategyParams
 
     @Data
     final class RepeatStrategyCircleParams implements RepeatStrategyParams {
-        private Instant startTime = Instant.now();
+        private Supplier<Instant> startTime = Instant::now;
         private Optional<Integer> rounds = Optional.empty();
         private double randomness = 0.3;
 
@@ -39,7 +43,7 @@ public sealed interface RepeatStrategyParams
 
     @Data
     final class RepeatStrategyRetryFailedParams implements RepeatStrategyParams {
-        private Instant startTime = Instant.now();
+        private Supplier<Instant> startTime = Instant::now;
         private double randomness = 0.3;
 
         @Override
@@ -50,7 +54,7 @@ public sealed interface RepeatStrategyParams
 
     @Data
     final class RepeatStrategyQueueParams implements RepeatStrategyParams {
-        private Instant startTime = Instant.MIN;
+        private Supplier<Instant> startTime = () -> Instant.MIN;
         private int step = 5;
         private int batchSize = 5;
 

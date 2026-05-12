@@ -16,12 +16,14 @@ import org.igye.remem3.utils.Utils;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -134,10 +136,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         List<TaskDto> tasks = getTaskDtos();
         int minHistLen = tasks.isEmpty()
             ? 0
-            : tasks.stream()
-              .map(TaskDto::getHist)
-              .map(List::size)
-              .reduce(Integer.MAX_VALUE, Math::min);
+            : tasks.stream().map(TaskDto::getHist).map(List::size).reduce(Integer.MAX_VALUE, Math::min);
         return Stats.builder()
             .tasks(tasks)
             .minHistLen(minHistLen)
@@ -154,7 +153,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     }
 
     private List<TaskDto> getTaskDtos() {
-        return allTasks.stream()
+        ArrayList<TaskDto> res = allTasks.stream()
             .map(task -> {
                 List<HistRec> hist = task.getHist();
                 return TaskDto.builder()
@@ -163,7 +162,9 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
                     .lastTime(hist.isEmpty() ? startTime : hist.getLast().getTime())
                     .build();
             })
-            .toList();
+            .collect(Collectors.toCollection(ArrayList::new));
+        Collections.shuffle(res);
+        return res;
     }
 
     @Getter

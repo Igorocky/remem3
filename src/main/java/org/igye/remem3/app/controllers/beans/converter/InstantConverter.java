@@ -8,6 +8,9 @@ public class InstantConverter implements Converter<String, Instant> {
 
     @Override
     public Instant convert(String str) {
+        if ("now".equals(str)) {
+            return Instant.now();
+        }
         return str == null ? null : Instant.parse(str);
     }
 }

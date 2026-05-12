@@ -48,7 +48,7 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
             .orElseGet(Instant::now);
         this.round = 1;
         this.circle = new RepeatStrategyCircle(
-            utils, getNotPassedTasks(), randomnessFactor, Optional.of(1)
+            utils, getNotPassedTasks(false), randomnessFactor, Optional.of(1)
         );
     }
 
@@ -56,13 +56,13 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
     public Optional<List<Task>> getNextTasks() {
         Optional<List<Task>> nextTasks = circle.getNextTasks();
         if (nextTasks.isEmpty()) {
-            List<Task> notPassedTasks = getNotPassedTasks();
+            List<Task> notPassedTasks = getNotPassedTasks(true);
             if (notPassedTasks.isEmpty()) {
                 return Optional.empty();
             } else {
                 this.round++;
                 this.circle = new RepeatStrategyCircle(
-                    utils, notPassedTasks, randomnessFactor, Optional.of(1)
+                    utils, notPassedTasks, randomnessFactor, Optional.of(2)
                 );
                 return circle.getNextTasks();
             }
@@ -76,7 +76,7 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
         return frag(
             text(String.format("%s: ", RepeatStrategyType.RETRY_FAILED)),
             text(format("Round: %s", round)),
-            text(format("Passed: %s/%s", allTasks.size() - getNotPassedTasks().size(), allTasks.size()))
+            text(format("Passed: %s/%s", allTasks.size() - getNotPassedTasks(false).size(), allTasks.size()))
         );
     }
 
@@ -86,7 +86,7 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Randomness: %s", randomnessFactor))),
             div(text(format("Round: %s", round))),
-            div(text(format("Passed: %s/%s", allTasks.size() - getNotPassedTasks().size(), allTasks.size()))),
+            div(text(format("Passed: %s/%s", allTasks.size() - getNotPassedTasks(false).size(), allTasks.size()))),
             div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS))))
         );
     }
@@ -101,13 +101,21 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
         return Optional.empty();
     }
 
-    private List<Task> getNotPassedTasks() {
+    private List<Task> getNotPassedTasks(boolean preserveLastHistRec) {
         return allTasks.stream()
             .filter(task -> task.getHist().isEmpty() || !task.getHist().getLast().isPassed())
-            .map(TaskImpl.class::cast)
-            .map(task -> new TaskImpl(task.getBaseTask(), Instant.now(), task.getSelectedByStrategyType()))
-            .map(Task.class::cast)
+            .map(task -> truncateHist(task, preserveLastHistRec))
             .toList();
+    }
+
+    private Task truncateHist(Task task, boolean preserveLastRec) {
+        TaskImpl taskImpl = (TaskImpl) task;
+        return new TaskImpl(
+            taskImpl.getBaseTask(),
+            //we need to preserve the last history record so the Circle strategy shows tasks in consistent order
+            (task.getHist().isEmpty() || !preserveLastRec) ? Instant.now() : task.getHist().getLast().getTime(),
+            task.getSelectedByStrategyType()
+        );
     }
 
 }
