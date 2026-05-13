@@ -26,13 +26,15 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
     private final double randomnessFactor;
     private final List<Task> allTasks;
     private final Instant startTime;
+    private final boolean keepOrder;
     private int round;
     private RepeatStrategyCircle circle;
 
     public RepeatStrategyRetryFailed(
         Utils utils,
         List<Task> allTasks,
-        double randomnessFactor
+        double randomnessFactor,
+        boolean keepOrder
     ) {
         if (CollectionUtils.isEmpty(allTasks)) {
             throw new Exn("There are no tasks.");
@@ -46,9 +48,10 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
             .map(HistRec::getTime)
             .min(Instant::compareTo)
             .orElseGet(Instant::now);
+        this.keepOrder = keepOrder;
         this.round = 1;
         this.circle = new RepeatStrategyCircle(
-            utils, getNotPassedTasks(false), randomnessFactor, Optional.of(1)
+            utils, getNotPassedTasks(false), randomnessFactor, Optional.of(1), keepOrder
         );
     }
 
@@ -62,7 +65,7 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
             } else {
                 this.round++;
                 this.circle = new RepeatStrategyCircle(
-                    utils, notPassedTasks, randomnessFactor, Optional.of(2)
+                    utils, notPassedTasks, randomnessFactor, Optional.of(2), keepOrder
                 );
                 return circle.getNextTasks();
             }
@@ -84,6 +87,7 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
     public HtmlElem renderMoreParams(boolean historyUpdated) {
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
+            div(text(format("Keep order: %s", keepOrder))),
             div(text(format("Randomness: %s", randomnessFactor))),
             div(text(format("Round: %s", round))),
             div(text(format("Passed: %s/%s", allTasks.size() - getNotPassedTasks(false).size(), allTasks.size()))),

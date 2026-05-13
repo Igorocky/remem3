@@ -36,13 +36,15 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
     private final Instant startTime;
     private final double randomnessFactor;
     private final Optional<Integer> numOfRounds;
+    private final boolean keepOrder;
     private final Random rnd;
 
     public RepeatStrategyCircle(
         Utils utils,
         List<Task> allTasks,
         double randomnessFactor,
-        Optional<Integer> numOfRounds
+        Optional<Integer> numOfRounds,
+        boolean keepOrder
     ) {
         if (CollectionUtils.isEmpty(allTasks)) {
             throw new Exn("There are no tasks.");
@@ -56,6 +58,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             .orElseGet(Instant::now);
         this.randomnessFactor = utils.getInRange(0, randomnessFactor, 1);
         this.numOfRounds = numOfRounds.map(n -> Math.max(1, Math.min(n, MAX_NUM_OF_ROUNDS)));
+        this.keepOrder = keepOrder;
         rnd = new Random();
     }
 
@@ -94,6 +97,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         String tasksStr = numOfTasksToSelectFrom == 1 ? "task" : "tasks";
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
+            div(text(format("Keep order: %s", keepOrder))),
             div(text(format("Randomness: %s (%s %s)", randomnessFactor, numOfTasksToSelectFrom, tasksStr))),
             numOfRounds.isPresent()
                 ? div(text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get())))
@@ -163,7 +167,9 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
                     .build();
             })
             .collect(Collectors.toCollection(ArrayList::new));
-        Collections.shuffle(res);
+        if (!keepOrder) {
+            Collections.shuffle(res);
+        }
         return res;
     }
 

@@ -28,7 +28,9 @@ import org.igye.remem3.app.taskstate.TaskState;
 import org.igye.remem3.app.taskstate.impl.TaskStateFillGaps;
 import org.igye.remem3.app.taskstate.impl.TaskStateTranslate;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.NatOrdPath;
 import org.igye.remem3.utils.Utils;
+import org.igye.remem3.utils.impl.NatOrdPathImpl;
 import org.igye.remem3.web.RequestParams;
 
 import java.awt.*;
@@ -39,6 +41,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -97,9 +100,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             cache.put(PAR_SELECTED_DIR, st.getSelectedDir().getSelectedDirectoryStr());
         }
         SelectExerciseState finalSt = st;
-        st = updateSelectablePart(st, params, PAR_SELECTED_TASK_FILTER,
-            id -> finalSt.setSelectedTaskFilter(id, constructor::loadTasks)
-        );
+        st = updateSelectablePart(st, params, PAR_SELECTED_TASK_FILTER, finalSt::setSelectedTaskFilter);
         st = updateSelectablePart(st, params, PAR_SELECTED_STRATEGY, st::setSelectedStrategy);
         if (params.hasParam(ACT_START_EXERCISE)) {
             return actStartExercise(st);
@@ -177,10 +178,18 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         validateDirs(simpEx.getDirectories());
         RepeatStrategyType repeatStrategyType = simpEx.getRepeatStrategy().getRepeatStrategyType();
         Instant historyStartsAt = simpEx.getRepeatStrategy().getStartTime().get();
+        Comparator<Pair<NatOrdPath, Card>> comparator = Comparator.comparing((Pair<NatOrdPath, Card> pair) ->
+            pair.getLeft()
+        ).thenComparing((Pair<NatOrdPath, Card> pair) ->
+            pair.getRight().getOrder()
+        );
         List<org.igye.remem3.app.repeatstrategy.Task> allTasks = simpEx.getDirectories().stream()
             .map(File::new)
             .map(cardUtils::loadAllCards)
             .flatMap(Collection::stream)
+            .map(card -> Pair.of(((NatOrdPath) new NatOrdPathImpl(card.getFile().get().getParentFile())), card))
+            .sorted(comparator)
+            .map(Pair::getRight)
             .map(Card::getTasks)
             .flatMap(Collection::stream)
             .map(constructor::makeTaskView)
@@ -191,10 +200,10 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             .toList();
         RepeatStrategy repeatStrategy = switch (simpEx.getRepeatStrategy()) {
             case RepeatStrategyParams.RepeatStrategyCircleParams p -> new RepeatStrategyCircle(
-                utils, allTasks, p.getRandomness(), p.getRounds()
+                utils, allTasks, p.getRandomness(), p.getRounds(), p.isKeepOrder()
             );
             case RepeatStrategyParams.RepeatStrategyRetryFailedParams p -> new RepeatStrategyRetryFailed(
-                utils, allTasks, p.getRandomness()
+                utils, allTasks, p.getRandomness(), p.isKeepOrder()
             );
             case RepeatStrategyParams.RepeatStrategyQueueParams p -> new RepeatStrategyQueue(
                 utils, p.getBatchSize(), p.getStep(), allTasks

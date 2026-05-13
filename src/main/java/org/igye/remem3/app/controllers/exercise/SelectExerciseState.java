@@ -21,21 +21,29 @@ import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.CUSTOM_E
 
 @AllArgsConstructor
 @Builder
-@Getter
 public final class SelectExerciseState implements ExerciseState {
+    @Getter
     private final List<ExerciseDef> allExercises;
+    @Getter
     private final List<Pair<String, TaskFilter>> allTaskFilters;
+    @Getter
     private final List<Pair<String, RepeatStrategyParams>> allStrategies;
+    private final Function<File, Stream<TaskView>> taskLoader;
 
     @With
+    @Getter
     private final Optional<ExerciseDef> selectedExercise;
     @With
+    @Getter
     private final DirSelectorCmp selectedDir;
     @With
+    @Getter
     private final Optional<Pair<String, TaskFilter>> selectedTaskFilter;
+    //numberOfTasks depends on the selected dir and task filter
+    @Builder.Default
+    private Optional<Pair<Pair<String, String>, Integer>> numberOfTasks = Optional.empty();
     @With
-    private final Optional<Integer> numberOfTasks;
-    @With
+    @Getter
     private final Optional<Pair<String, RepeatStrategyParams>> selectedStrategy;
 
     public Optional<ExerciseDef> makeSelectedExercise() {
@@ -65,20 +73,37 @@ public final class SelectExerciseState implements ExerciseState {
         );
     }
 
-    public SelectExerciseState setSelectedTaskFilter(String id, Function<File, Stream<TaskView>> taskLoader) {
-        SelectExerciseState st = withSelectedTaskFilter(
+    public SelectExerciseState setSelectedTaskFilter(String id) {
+        return withSelectedTaskFilter(
             allTaskFilters.stream()
                 .filter(pair -> pair.getLeft().equals(id))
                 .findFirst()
                 .or(() -> Optional.ofNullable(allTaskFilters.isEmpty() ? null : allTaskFilters.getFirst()))
         );
-        if (st.getSelectedExercise().isEmpty()) {
-            SelectExerciseState finalSt = st;
-            st = st.withNumberOfTasks(st.getSelectedTaskFilter().map(Pair::getRight).map(taskFilter ->
-                taskLoader.apply(finalSt.getSelectedDir().getSelectedDirectory()).filter(taskFilter::match).count()
-            ).map(Long::intValue));
+    }
+
+    public Optional<Integer> getNumberOfTasks() {
+        if (selectedExercise.isPresent()) {
+            return Optional.empty();
         }
-        return st;
+        if (numberOfTasks.isEmpty()) {
+            numberOfTasks = calcNumberOfTasks();
+            return numberOfTasks.map(Pair::getRight);
+        }
+        Pair<String, String> calculatedFor = numberOfTasks.get().getLeft();
+        boolean numOfTasksIsStale = !selectedDir.getSelectedDirectoryStr().equals(calculatedFor.getLeft())
+            || selectedTaskFilter.map(tf -> !tf.getLeft().equals(calculatedFor.getRight())).orElse(false);
+        if (numOfTasksIsStale) {
+            numberOfTasks = calcNumberOfTasks();
+        }
+        return numberOfTasks.map(Pair::getRight);
+    }
+
+    private Optional<Pair<Pair<String, String>, Integer>> calcNumberOfTasks() {
+        return selectedTaskFilter.map(tf -> {
+            long count = taskLoader.apply(selectedDir.getSelectedDirectory()).filter(tf.getRight()::match).count();
+            return Pair.of(Pair.of(selectedDir.getSelectedDirectoryStr(), tf.getLeft()), (int) count);
+        });
     }
 
     public SelectExerciseState setSelectedStrategy(String id) {

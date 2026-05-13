@@ -34,6 +34,7 @@ public sealed interface RepeatStrategyParams
         private Supplier<Instant> startTime = Instant::now;
         private Optional<Integer> rounds = Optional.empty();
         private double randomness = 0.3;
+        private boolean keepOrder = false;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {
@@ -45,6 +46,7 @@ public sealed interface RepeatStrategyParams
     final class RepeatStrategyRetryFailedParams implements RepeatStrategyParams {
         private Supplier<Instant> startTime = Instant::now;
         private double randomness = 0.3;
+        private boolean keepOrder = false;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {

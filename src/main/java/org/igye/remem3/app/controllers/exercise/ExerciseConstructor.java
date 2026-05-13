@@ -74,12 +74,13 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
             .allExercises(allExercises)
             .allTaskFilters(allTaskFilters)
             .allStrategies(allStrategies)
+            .taskLoader(this::loadTasks)
             .build();
         st = st.setSelectedExercise(cache.getStr(PAR_SELECTED_EXERCISE, ""));
         st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR, false,
             new File(cache.getStr(PAR_SELECTED_DIR, ""))
         ));
-        st = st.setSelectedTaskFilter(cache.getStr(PAR_SELECTED_TASK_FILTER, ""), this::loadTasks);
+        st = st.setSelectedTaskFilter(cache.getStr(PAR_SELECTED_TASK_FILTER, ""));
         st = st.setSelectedStrategy(cache.getStr(PAR_SELECTED_STRATEGY, ""));
         return st;
     }
