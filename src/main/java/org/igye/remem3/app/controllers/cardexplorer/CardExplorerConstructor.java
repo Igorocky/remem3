@@ -3,6 +3,7 @@ package org.igye.remem3.app.controllers.cardexplorer;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
@@ -12,6 +13,8 @@ import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.app.state.StateConstructor;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.NatOrdPath;
+import org.igye.remem3.utils.impl.NatOrdPathImpl;
 import org.igye.remem3.web.RequestParams;
 import org.igye.remem3.web.impl.RequestParamsImpl;
 import org.springframework.core.annotation.Order;
@@ -62,15 +65,20 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
         Predicate<Card> filter = StringUtils.isBlank(filterStr)
             ? _ -> true
             : card -> cardMatches(card, filterStr);
-        Comparator<Card> comparator = Comparator.comparing((Card card) -> card.getFile().get().getParentFile())
-            .thenComparing(Card::getOrder);
+        Comparator<Pair<NatOrdPath, Card>> comparator = Comparator.comparing((Pair<NatOrdPath, Card> pair) ->
+            pair.getLeft()
+        ).thenComparing((Pair<NatOrdPath, Card> pair) ->
+            pair.getRight().getOrder()
+        );
         if (!sortAsc) {
             comparator = comparator.reversed();
         }
         File dir = dirSelectorCmp.getSelectedDirectory();
         List<Card> cards = (recursive ? cardUtils.loadAllCards(dir) : cardUtils.loadCardsNonRec(dir)).stream()
             .filter(filter)
+            .map(card -> Pair.of(((NatOrdPath) new NatOrdPathImpl(card.getFile().get().getParentFile())), card))
             .sorted(comparator)
+            .map(Pair::getRight)
             .toList();
         return CardExplorerState.builder()
             .dir(dirSelectorCmp)
