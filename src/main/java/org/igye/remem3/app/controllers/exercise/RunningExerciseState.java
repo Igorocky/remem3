@@ -34,13 +34,6 @@ public final class RunningExerciseState implements ExerciseState {
     private boolean showDailyUniqueCount = false;
 
     @Getter
-    private final List<String> directories;
-    @Getter
-    private final List<String> taskTypes;
-    @Getter
-    private final List<String> repeatStrategyTypes;
-
-    @Getter
     private final RepeatStrategy repeatStrategy;
     @Getter
     @With

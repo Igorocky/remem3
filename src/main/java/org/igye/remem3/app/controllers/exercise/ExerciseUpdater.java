@@ -115,20 +115,10 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         }
         SelectExerciseState parent = st;
         ExerciseDef selectedExercise = exerciseToStart.get();
-        List<String> directories = selectedExercise.getDirectories();
         Pair<List<org.igye.remem3.app.repeatstrategy.Task>, RepeatStrategy> pair = makeRepeatStrategy(selectedExercise);
-        List<String> taskTypes = pair.getLeft().stream()
-            .map(HasBaseTask.class::cast)
-            .map(HasBaseTask::getBaseTask)
-            .map(Task::getTaskType)
-            .map(TaskType::getCode)
-            .distinct()
-            .sorted()
-            .toList();
-        List<String> repeatStrategyTypes = selectedExercise.getRepeatStrategyTypes();
         RepeatStrategy repeatStrategy = pair.getRight();
         RunningExerciseState runningSt = new RunningExerciseState(
-            parent, selectedExercise.getName(), directories, taskTypes, repeatStrategyTypes, repeatStrategy
+            parent, selectedExercise.getName(), repeatStrategy
         )
             .withShowMoreParams(parseShowMoreParams(cache.getStr(PAR_SHOW_EXERCISE_PARAMS, "false")))
             .withShowDailyUniqueCount(cache.getBool(PAR_SHOW_DAILY_UNIQUE_COUNT, false));

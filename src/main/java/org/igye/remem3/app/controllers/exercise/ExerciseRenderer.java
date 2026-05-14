@@ -1,7 +1,6 @@
 package org.igye.remem3.app.controllers.exercise;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.state.StateRenderer;
@@ -140,12 +139,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         if (st.getShowMoreParams().isPresent()) {
             boolean historyUpdated = st.getTaskState().map(TaskState::isHistoryUpdated).orElse(false);
             if (st.getShowMoreParams().get()) {
-                String directoriesStr = StringUtils.join(st.getDirectories(), ", ");
-                String taskTypesStr = StringUtils.join(st.getTaskTypes(), ", ");
-                String repeatStrategyTypesStr = StringUtils.join(st.getRepeatStrategyTypes(), ", ");
                 params = frag(
-                    div(text(format("Directories: %s", directoriesStr))),
-                    div(text(format("Task types: %s", taskTypesStr))),
                     div(
                         text(format("Current card: %s ", cardPath.orElse("not available"))),
                         cardPath.isEmpty() ? null : frag(
@@ -157,7 +151,6 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
                         .map(_ -> div(text(format("History updated: %s", historyUpdated ? "Yes" : "No"))))
                         .orElse(null),
                     br(),
-                    div(text(format("Repeat strategies: %s", repeatStrategyTypesStr))),
                     div(st.getRepeatStrategy().renderMoreParams(historyUpdated))
                 );
             } else {

@@ -5,13 +5,10 @@ import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
-import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
-import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Utils;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -25,12 +22,10 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
-public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy {
+public class RepeatStrategyCircle extends BaseRepeatStrategy {
 
     public static final int MAX_NUM_OF_ROUNDS = 1_000_000;
-    public static final BigDecimal DEFAULT_RND_FACTOR = new BigDecimal("0.3");
 
-    private final List<Task> allTasks;
     private final Instant startTime;
     private final double randomnessFactor;
     private final Optional<Integer> numOfRounds;
@@ -44,8 +39,8 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         Optional<Integer> numOfRounds,
         boolean keepOrder
     ) {
-        this.allTasks = Collections.unmodifiableList(allTasks);
-        this.startTime = allTasks.stream()
+        super(allTasks);
+        this.startTime = getAllTasks().stream()
             .map(Task::getHist)
             .flatMap(Collection::stream)
             .map(HistRec::getTime)
@@ -59,7 +54,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
 
     @Override
     public Optional<List<Task>> getNextTasks() {
-        if (allTasks.isEmpty()) {
+        if (getAllTasks().isEmpty()) {
             return Optional.empty();
         }
         Stats stats = getStats();
@@ -83,7 +78,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             numOfRounds.isPresent()
                 ? text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get()))
                 : text(format("Round: %s", progressInfo.getRound())),
-            text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), allTasks.size()))
+            text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), getAllTasks().size()))
         );
     }
 
@@ -95,13 +90,16 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         String tasksStr = numOfTasksToSelectFrom == 1 ? "task" : "tasks";
         //todo: add directories and task types
         return frag(
-            div(text(format("Number of tasks: %s", allTasks.size()))),
+            div(text(format("Repeat strategy: %s", RepeatStrategyType.CIRCLE))),
+            div(text(format("Directories: %s", getDirectoriesStr()))),
+            div(text(format("Task types: %s", getTaskTypesStr()))),
+            div(text(format("Number of tasks: %s", getAllTasks().size()))),
             div(text(format("Keep order: %s", keepOrder))),
             div(text(format("Randomness: %s (%s %s)", randomnessFactor, numOfTasksToSelectFrom, tasksStr))),
             numOfRounds.isPresent()
                 ? div(text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get())))
                 : div(text(format("Round: %s", progressInfo.getRound()))),
-            div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), allTasks.size()))),
+            div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), getAllTasks().size()))),
             div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS))))
         );
     }
@@ -120,14 +118,14 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         int minHistLen = stats.getMinHistLen();
         int numOfTasksWithMinHistLen = stats.getTasksWithMinHistLen().size();
         //numOfTasksWithMinHistLen == 0 this will be at the end of the last round
-        int round = historyUpdated && (numOfTasksWithMinHistLen == allTasks.size() || numOfTasksWithMinHistLen == 0)
+        int round = historyUpdated && (numOfTasksWithMinHistLen == getAllTasks().size() || numOfTasksWithMinHistLen == 0)
             ? minHistLen
             : minHistLen + 1;
         int roundProgress;
-        if (numOfTasksWithMinHistLen == allTasks.size()) {
-            roundProgress = historyUpdated ? allTasks.size() : 1;
+        if (numOfTasksWithMinHistLen == getAllTasks().size()) {
+            roundProgress = historyUpdated ? getAllTasks().size() : 1;
         } else {
-            roundProgress = allTasks.size() - numOfTasksWithMinHistLen + (historyUpdated ? 0 : 1);
+            roundProgress = getAllTasks().size() - numOfTasksWithMinHistLen + (historyUpdated ? 0 : 1);
         }
         return ProgressInfo.builder()
             .round(round)
@@ -151,12 +149,12 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
                     })
                     .toList()
             )
-            .numOfTasksToSelectFrom(Math.max(1L, Math.round(allTasks.size() * randomnessFactor)))
+            .numOfTasksToSelectFrom(Math.max(1L, Math.round(getAllTasks().size() * randomnessFactor)))
             .build();
     }
 
     private List<TaskDto> getTaskDtos() {
-        ArrayList<TaskDto> res = allTasks.stream()
+        ArrayList<TaskDto> res = getAllTasks().stream()
             .map(task -> {
                 List<HistRec> hist = task.getHist();
                 return TaskDto.builder()

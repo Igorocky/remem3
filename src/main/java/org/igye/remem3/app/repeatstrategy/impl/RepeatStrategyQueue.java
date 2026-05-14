@@ -6,9 +6,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
-import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
-import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
@@ -22,28 +20,25 @@ import java.util.Optional;
 
 import static java.lang.String.format;
 
-public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
+public class RepeatStrategyQueue extends BaseRepeatStrategy {
 
     public static final int MIN_BATCH_SIZE = 1;
     public static final int MAX_BATCH_SIZE = 10;
-    public static final int DEFAULT_BATCH_SIZE = 5;
     public static final int MIN_STEP = 1;
     public static final int MAX_STEP = 20;
-    public static final int DEFAULT_STEP = 5;
 
     private final Utils utils;
     private final int batchSize;
     private final int step;
-    private final List<Task> allTasks;
     private final List<Integer> bucketDelays;
     private final int maxBucketNum;
     private final Instant startTimeForParams;
 
     public RepeatStrategyQueue(Utils utils, int batchSize, int step, List<Task> allTasks) {
+        super(allTasks);
         this.utils = utils;
         this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
         this.step = utils.getInRange(MIN_STEP, step, MAX_STEP);
-        this.allTasks = Collections.unmodifiableList(allTasks);
         List<Integer> bucketDelays = new ArrayList<>();
         int maxDelay = utils.getInRange(0, allTasks.size() - batchSize, allTasks.size());
         do {
@@ -63,7 +58,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
 
     @Override
     public Optional<List<Task>> getNextTasks() {
-        if (allTasks.isEmpty()) {
+        if (getAllTasks().isEmpty()) {
             return Optional.empty();
         }
         List<TaskDto> allTasks = new ArrayList<>(getTaskDtos());
@@ -145,6 +140,9 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
         }
         CountAndStreak countAndStreak = calcCountAndStreak(allTasks);
         return frag(
+            div(text(format("Repeat strategy: %s", RepeatStrategyType.QUEUE))),
+            div(text(format("Directories: %s", getDirectoriesStr()))),
+            div(text(format("Task types: %s", getTaskTypesStr()))),
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
@@ -226,7 +224,7 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     }
 
     private List<TaskDto> getTaskDtos() {
-        List<TaskDto> allTasks = this.allTasks.stream().map(this::makeTaskDto).toList();
+        List<TaskDto> allTasks = getAllTasks().stream().map(this::makeTaskDto).toList();
         List<HistRecDto> allHistRev = allTasks.stream()
             .flatMap(task -> task.getTask().getHist().stream().map(histRec -> makeHistRecDto(task, histRec)))
             .sorted(Comparator.comparing(HistRecDto::getTime).reversed())

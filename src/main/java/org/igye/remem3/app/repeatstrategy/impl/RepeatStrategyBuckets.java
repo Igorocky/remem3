@@ -8,9 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
-import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
-import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
@@ -32,15 +30,13 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
-public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy {
+public class RepeatStrategyBuckets extends BaseRepeatStrategy {
 
     public static final int MIN_BATCH_SIZE = 1;
     public static final int MAX_BATCH_SIZE = 10;
-    public static final int DEFAULT_BATCH_SIZE = 5;
     private final Utils utils;
     private final Clock clock;
     private final int batchSize;
-    private final List<Task> allTasks;
     private final List<Duration> bucketDelays;
     private final List<BigDecimal> bucketDelaysBigDec;
     private final int maxBucketNum;
@@ -53,13 +49,13 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         List<Task> allTasks,
         List<Duration> bucketDelays
     ) {
+        super(allTasks);
         if (CollectionUtils.isEmpty(bucketDelays)) {
             throw new Exn("At least one bucket must be defined.");
         }
         this.utils = utils;
         this.clock = clock;
         this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
-        this.allTasks = Collections.unmodifiableList(allTasks);
         this.bucketDelays = Collections.unmodifiableList(bucketDelays);
         this.bucketDelaysBigDec = bucketDelays.stream().map(this::durToBigDec).toList();
         this.maxBucketNum = bucketDelays.size() - 1;
@@ -69,7 +65,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
 
     @Override
     public Optional<List<Task>> getNextTasks() {
-        if (allTasks.isEmpty()) {
+        if (getAllTasks().isEmpty()) {
             return Optional.empty();
         }
         List<TaskDto> allTasks = getTaskDtos();
@@ -141,7 +137,10 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
             totalRow.add(text(activeCnt + waitingCnt));
         }
         return frag(
-            div(text(format("Number of tasks: %s", allTasks.size()))),
+            div(text(format("Repeat strategy: %s", RepeatStrategyType.BUCKETS))),
+            div(text(format("Directories: %s", getDirectoriesStr()))),
+            div(text(format("Task types: %s", getTaskTypesStr()))),
+            div(text(format("Number of tasks: %s", getAllTasks().size()))),
             div(text(format("Batch size: %s", batchSize))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
@@ -156,7 +155,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     public Optional<Pair<Long, Long>> getDailyUniqueCount() {
         Instant startOfDay = Instant.now().atZone(java.time.ZoneId.systemDefault())
             .truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant();
-        long actualDailyUniqueCount = allTasks.stream()
+        long actualDailyUniqueCount = getAllTasks().stream()
             .filter(t -> t.getHist().stream().anyMatch(h -> !h.getTime().isBefore(startOfDay)))
             .count();
         return Optional.of(Pair.of(actualDailyUniqueCount, recommDailyUniqueCount));
@@ -259,7 +258,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
     private List<TaskDto> getTaskDtos() {
         Instant curTime = clock.instant();
         AtomicBoolean emptyHistIsPresent = new AtomicBoolean(false);
-        List<TaskDto> res = allTasks.stream()
+        List<TaskDto> res = getAllTasks().stream()
             .map(task -> {
                 List<HistRec> hist = task.getHist();
                 if (hist.isEmpty()) {
