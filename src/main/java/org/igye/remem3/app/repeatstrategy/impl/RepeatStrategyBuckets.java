@@ -56,9 +56,6 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
         if (CollectionUtils.isEmpty(bucketDelays)) {
             throw new Exn("At least one bucket must be defined.");
         }
-        if (CollectionUtils.isEmpty(allTasks)) {
-            throw new Exn("There are no tasks.");
-        }
         this.utils = utils;
         this.clock = clock;
         this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
@@ -72,6 +69,9 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
 
     @Override
     public Optional<List<Task>> getNextTasks() {
+        if (allTasks.isEmpty()) {
+            return Optional.empty();
+        }
         List<TaskDto> allTasks = getTaskDtos();
         ArrayList<TaskDto> activeTasks = getPreferredActiveTasks(allTasks);
         ArrayList<String> preferredDirs = getPreferredDirs(activeTasks);
@@ -164,7 +164,7 @@ public class RepeatStrategyBuckets extends HtmlBuilder implements RepeatStrategy
 
     private Duration getTimeToWait(Duration bucketDelay, List<TaskDto> waitingTasks) {
         if (waitingTasks.isEmpty()) {
-            throw new Exn("waitingTasks must not be empty.");
+            return Duration.MIN;
         }
         return waitingTasks.stream()
             .map(TaskDto::getOverdue)

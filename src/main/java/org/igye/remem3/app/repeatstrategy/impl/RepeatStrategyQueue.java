@@ -3,7 +3,6 @@ package org.igye.remem3.app.repeatstrategy.impl;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
@@ -41,9 +40,6 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
     private final Instant startTimeForParams;
 
     public RepeatStrategyQueue(Utils utils, int batchSize, int step, List<Task> allTasks) {
-        if (CollectionUtils.isEmpty(allTasks)) {
-            throw new Exn("There are no tasks.");
-        }
         this.utils = utils;
         this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
         this.step = utils.getInRange(MIN_STEP, step, MAX_STEP);
@@ -67,6 +63,9 @@ public class RepeatStrategyQueue extends HtmlBuilder implements RepeatStrategy {
 
     @Override
     public Optional<List<Task>> getNextTasks() {
+        if (allTasks.isEmpty()) {
+            return Optional.empty();
+        }
         List<TaskDto> allTasks = new ArrayList<>(getTaskDtos());
         Collections.shuffle(allTasks);
         ArrayList<Task> nextTasks = new ArrayList<>(

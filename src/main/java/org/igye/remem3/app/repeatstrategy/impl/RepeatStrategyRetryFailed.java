@@ -1,6 +1,5 @@
 package org.igye.remem3.app.repeatstrategy.impl;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
@@ -8,7 +7,6 @@ import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
-import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
 import java.time.Instant;
@@ -36,9 +34,6 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
         double randomnessFactor,
         boolean keepOrder
     ) {
-        if (CollectionUtils.isEmpty(allTasks)) {
-            throw new Exn("There are no tasks.");
-        }
         this.utils = utils;
         this.randomnessFactor = randomnessFactor;
         this.allTasks = Collections.unmodifiableList(allTasks);
@@ -57,6 +52,9 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
 
     @Override
     public Optional<List<Task>> getNextTasks() {
+        if (allTasks.isEmpty()) {
+            return Optional.empty();
+        }
         Optional<List<Task>> nextTasks = circle.getNextTasks();
         if (nextTasks.isEmpty()) {
             List<Task> notPassedTasks = getNotPassedTasks(true);
@@ -85,6 +83,7 @@ public class RepeatStrategyRetryFailed extends HtmlBuilder implements RepeatStra
 
     @Override
     public HtmlElem renderMoreParams(boolean historyUpdated) {
+        //todo: add directories and task types
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Keep order: %s", keepOrder))),

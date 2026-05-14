@@ -2,7 +2,6 @@ package org.igye.remem3.app.repeatstrategy.impl;
 
 import lombok.Builder;
 import lombok.Getter;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
@@ -10,7 +9,6 @@ import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
-import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
 import java.math.BigDecimal;
@@ -46,9 +44,6 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         Optional<Integer> numOfRounds,
         boolean keepOrder
     ) {
-        if (CollectionUtils.isEmpty(allTasks)) {
-            throw new Exn("There are no tasks.");
-        }
         this.allTasks = Collections.unmodifiableList(allTasks);
         this.startTime = allTasks.stream()
             .map(Task::getHist)
@@ -57,13 +52,16 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
             .min(Instant::compareTo)
             .orElseGet(Instant::now);
         this.randomnessFactor = utils.getInRange(0, randomnessFactor, 1);
-        this.numOfRounds = numOfRounds.map(n -> Math.max(1, Math.min(n, MAX_NUM_OF_ROUNDS)));
+        this.numOfRounds = numOfRounds.map(n -> Math.clamp(n, 1, MAX_NUM_OF_ROUNDS));
         this.keepOrder = keepOrder;
         rnd = new Random();
     }
 
     @Override
     public Optional<List<Task>> getNextTasks() {
+        if (allTasks.isEmpty()) {
+            return Optional.empty();
+        }
         Stats stats = getStats();
         List<Task> tasksToSelectFrom = stats.getTasksWithMinHistLen().stream()
             .sorted(Comparator.comparing(TaskDto::getLastTime))
@@ -95,6 +93,7 @@ public class RepeatStrategyCircle extends HtmlBuilder implements RepeatStrategy 
         ProgressInfo progressInfo = calcRoundProgress(historyUpdated, stats);
         long numOfTasksToSelectFrom = stats.getNumOfTasksToSelectFrom();
         String tasksStr = numOfTasksToSelectFrom == 1 ? "task" : "tasks";
+        //todo: add directories and task types
         return frag(
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Keep order: %s", keepOrder))),
