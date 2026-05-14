@@ -3,7 +3,10 @@ package org.igye.remem3.app.repeatstrategy.impl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.controllers.exercise.HasBaseTask;
+import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.RepeatStrategyType;
+import org.igye.remem3.app.dto.TaskType;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
@@ -113,7 +116,7 @@ class RepeatStrategyCompoundTest {
         return new TestHistRec(Instant.now(), BigDecimal.ONE);
     }
 
-    private static class TestTask implements Task {
+    private static class TestTask implements Task, HasBaseTask {
         private final List<HistRec> hist = new ArrayList<>();
         @Getter
         private final String content;
@@ -135,6 +138,14 @@ class RepeatStrategyCompoundTest {
         @Override
         public RepeatStrategyType getSelectedByStrategyType() {
             return RepeatStrategyType.CIRCLE;
+        }
+
+        @Override
+        public org.igye.remem3.app.dto.Task getBaseTask() {
+            return new org.igye.remem3.app.dto.Task(
+                Card.Translate.builder().file(Optional.empty()).build(),
+                new TaskType.Translate("", "")
+            );
         }
     }
 
