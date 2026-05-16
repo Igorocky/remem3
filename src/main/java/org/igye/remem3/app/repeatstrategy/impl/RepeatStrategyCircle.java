@@ -58,8 +58,11 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
             return Optional.empty();
         }
         Stats stats = getStats();
-        List<Task> tasksToSelectFrom = stats.getTasksWithMinHistLen().stream()
-            .sorted(Comparator.comparing(TaskDto::getLastTime))
+        ArrayList<TaskDto> taskDtosToSelectFrom = new ArrayList<>(stats.getTasksWithMinHistLen());
+        if (!keepOrder) {
+            taskDtosToSelectFrom.sort(Comparator.comparing(TaskDto::getLastTime));
+        }
+        List<Task> tasksToSelectFrom = taskDtosToSelectFrom.stream()
             .limit(stats.getNumOfTasksToSelectFrom())
             .map(TaskDto::getTask)
             .toList();
@@ -149,7 +152,11 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
                     })
                     .toList()
             )
-            .numOfTasksToSelectFrom(Math.max(1L, Math.round(getAllTasks().size() * randomnessFactor)))
+            .numOfTasksToSelectFrom(
+                keepOrder
+                    ? 1
+                    : Math.max(1L, Math.round(getAllTasks().size() * randomnessFactor))
+            )
             .build();
     }
 
