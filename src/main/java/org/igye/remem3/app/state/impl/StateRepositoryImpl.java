@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +30,7 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
     private final Map<String, StateConstructor<?>> nameToConstructor;
     private final List<Pair<Class<?>, StateUpdater<?>>> stateUpdaters;
     private final List<Pair<Class<?>, StateRenderer<?>>> stateRenderers;
+    private final Map<Class<?>, Object> typeSupporterCache = new HashMap<>();
 
     public StateRepositoryImpl(
         Clock clock,
@@ -122,10 +124,15 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
     }
 
     private <T> T findTypeSupporter(List<Pair<Class<?>, T>> typeSupporters, Class<?> type, String elemType) {
-        //todo: implement caching
+        T res = (T) typeSupporterCache.get(type);
+        if (res != null) {
+            return res;
+        }
         for (Pair<Class<?>, T> typeSupporter : typeSupporters) {
             if (typeSupporter.getLeft().isAssignableFrom(type)) {
-                return typeSupporter.getRight();
+                res = typeSupporter.getRight();
+                typeSupporterCache.put(type, res);
+                return res;
             }
         }
         throw new Exn("Cannot find a %s for %s.".formatted(elemType, type));
