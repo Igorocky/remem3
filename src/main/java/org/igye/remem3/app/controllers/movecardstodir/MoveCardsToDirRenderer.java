@@ -27,6 +27,7 @@ public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer
     public static final String PAR_REPEAT_STRATEGY_TYPE = "MoveCardsToDir_PAR_REPEAT_STRATEGY_TYPE";
     public static final String PAR_DIR_TO_MOVE_TO = "MoveCardsToDir_PAR_DIR_TO_MOVE_TO";
     public static final String PAR_SELECTED_BUNDLE_ID = "MoveCardsToDir_PAR_SELECTED_BUNDLE_ID";
+    public static final String ACT_REFRESH = "MoveCardsToDir_ACT_REFRESH";
     public static final String ACT_MOVE_SELECTED_BUNDLES = "MoveCardsToDir_ACT_MOVE_SELECTED_BUNDLES";
 
     private final Settings settings;
@@ -34,15 +35,14 @@ public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer
 
     @Override
     public HtmlElem render(State st) {
-        //todo: add Refresh button
         return simplePageWithTitle("Move cards to another directory",
             h4(text("Move cards to another directory")),
             rndErrors(st.getErrors()),
             form(
-                rndDirSelector("From directory", st.getDirMoveFrom()),
+                rndDirSelector("From directory", st.getDirMoveFrom(), inpSubmit(ACT_REFRESH, "Reload")),
                 rndCardTypeSelector(st),
                 rndLanguageSelector(st.getLang()),
-                rndDirSelector("To directory", st.getDirMoveTo()),
+                rndDirSelector("To directory", st.getDirMoveTo(), null),
                 br(),
                 rndRepeatStrategyTypeSelector(st),
                 br(),
@@ -64,8 +64,9 @@ public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer
         );
     }
 
-    private HtmlTag rndDirSelector(String title, DirSelectorCmp dirSelector) {
+    private HtmlTag rndDirSelector(String title, DirSelectorCmp dirSelector, HtmlElem reloadBtn) {
         return table(List.of(List.of(
+            reloadBtn == null ? frag() : reloadBtn,
             text(title),
             dirSelector.render()
         )));
