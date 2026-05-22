@@ -81,7 +81,6 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
 
     @Override
     public HtmlElem renderMoreParams(boolean historyUpdated) {
-        //todo: add directories and task types
         return frag(
             div(text(format("Repeat strategy: %s", RepeatStrategyType.RETRY_FAILED))),
             div(text(format("Directories: %s", getDirectoriesStr()))),

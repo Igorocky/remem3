@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.components.DirSelectorCmp;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.html.HtmlBuilder;
@@ -22,6 +22,7 @@ public class ConvertFillGapsToTranslateRenderer extends HtmlBuilder implements S
     public static final String PAR_DIR_TO_CONVERT_TASKS_IN = "ConvertFillGapsToTranslate_PAR_DIR_TO_CONVERT_TASKS_IN";
     public static final String PAR_GAP_SECOND_LANG = "ConvertFillGapsToTranslate_PAR_GAP_SECOND_LANG";
     public static final String PAR_SELECTED_CARD = "ConvertFillGapsToTranslate_PAR_SELECTED_CARD";
+    public static final String ACT_REFRESH = "ConvertFillGapsToTranslate_ACT_REFRESH";
     public static final String ACT_SAVE_SELECTED_CARDS = "ConvertFillGapsToTranslate_ACT_SAVE_SELECTED_CARDS";
 
     public static final String ATTR_AUTO_GENERATED_FROM = "auto_generated_from";
@@ -90,6 +91,7 @@ public class ConvertFillGapsToTranslateRenderer extends HtmlBuilder implements S
 
     private HtmlTag rndDirSelector(DirSelectorCmp dir) {
         return table(List.of(List.of(
+            inpSubmit(ACT_REFRESH, "Reload"),
             text("Directory"),
             frag(dir.render())
         )));

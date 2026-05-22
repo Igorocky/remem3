@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateRenderer.ACT_SAVE_SELECTED_CARDS;
+import static org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateRenderer.PAR_DIR_TO_CONVERT_TASKS_IN;
 
 @RequiredArgsConstructor
 public class ConvertFillGapsToTranslateUpdater implements StateUpdater<State> {
@@ -28,6 +29,7 @@ public class ConvertFillGapsToTranslateUpdater implements StateUpdater<State> {
         st = constructor.readStateFromParams(params);
         if (params.hasParam(ACT_SAVE_SELECTED_CARDS)) {
             actSaveSelectedCards(st);
+            cache.put(PAR_DIR_TO_CONVERT_TASKS_IN, st.getDir().getSelectedDirectoryStr());
             return constructor.readStateFromParams(params);
         }
         return st;

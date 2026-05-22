@@ -5,11 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.With;
 import org.apache.commons.lang3.tuple.Pair;
+import org.igye.remem3.app.components.DirSelectorCmp;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
 import org.igye.remem3.app.controllers.beans.dto.TaskFilter;
 import org.igye.remem3.app.controllers.beans.dto.TaskView;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
 
 import java.io.File;
 import java.util.List;

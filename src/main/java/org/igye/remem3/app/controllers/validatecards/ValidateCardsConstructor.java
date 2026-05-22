@@ -3,7 +3,7 @@ package org.igye.remem3.app.controllers.validatecards;
 import lombok.RequiredArgsConstructor;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.app.state.StateConstructor;
 import org.springframework.core.annotation.Order;
 

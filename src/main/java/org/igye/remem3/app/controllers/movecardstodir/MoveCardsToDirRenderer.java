@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.components.DirSelectorCmp;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.dto.RepeatStrategyType;
@@ -34,6 +34,7 @@ public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer
 
     @Override
     public HtmlElem render(State st) {
+        //todo: add Refresh button
         return simplePageWithTitle("Move cards to another directory",
             h4(text("Move cards to another directory")),
             rndErrors(st.getErrors()),

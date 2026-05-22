@@ -3,7 +3,7 @@ package org.igye.remem3.app.controllers.cardexplorer;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.components.DirSelectorCmp;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.app.state.StateRenderer;

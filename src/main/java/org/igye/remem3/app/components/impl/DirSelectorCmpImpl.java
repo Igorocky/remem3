@@ -1,11 +1,11 @@
-package org.igye.remem3.app.controllers.components.impl;
+package org.igye.remem3.app.components.impl;
 
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.components.DirSelectorCmp;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.impl.NatOrdStringImpl;

@@ -6,7 +6,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.controllers.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.components.impl.DirSelectorCmpImpl;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.state.StateUpdater;
 import org.igye.remem3.web.RequestParams;

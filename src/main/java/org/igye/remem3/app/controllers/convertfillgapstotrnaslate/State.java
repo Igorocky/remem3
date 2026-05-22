@@ -3,7 +3,7 @@ package org.igye.remem3.app.controllers.convertfillgapstotrnaslate;
 import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
-import org.igye.remem3.app.controllers.components.DirSelectorCmp;
+import org.igye.remem3.app.components.DirSelectorCmp;
 import org.igye.remem3.app.dto.Card;
 
 import java.util.List;

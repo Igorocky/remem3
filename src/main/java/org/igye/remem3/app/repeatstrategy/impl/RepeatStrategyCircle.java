@@ -91,7 +91,6 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
         ProgressInfo progressInfo = calcRoundProgress(historyUpdated, stats);
         long numOfTasksToSelectFrom = stats.getNumOfTasksToSelectFrom();
         String tasksStr = numOfTasksToSelectFrom == 1 ? "task" : "tasks";
-        //todo: add directories and task types
         return frag(
             div(text(format("Repeat strategy: %s", RepeatStrategyType.CIRCLE))),
             div(text(format("Directories: %s", getDirectoriesStr()))),
