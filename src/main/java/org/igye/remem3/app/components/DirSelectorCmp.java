@@ -5,6 +5,8 @@ import org.igye.remem3.html.HtmlElem;
 import java.io.File;
 
 public interface DirSelectorCmp {
+    boolean isReadonly();
+
     String getSelectedDirectoryStr();
 
     File getSelectedDirectory();

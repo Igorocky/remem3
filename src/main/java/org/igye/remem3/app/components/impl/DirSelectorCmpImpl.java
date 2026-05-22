@@ -1,5 +1,6 @@
 package org.igye.remem3.app.components.impl;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,6 +22,7 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
     private final Settings settings;
     private final Cache cache;
     private final String baseParamName;
+    @Getter
     private final boolean isReadonly;
     private List<String> selectedDirectoryList;
 
@@ -90,6 +92,7 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
                 options = new ArrayList<>();
                 options.add(".");
                 options.addAll(subDirNames);
+                options.add("+");
             }
             if (i > 0) {
                 selectors.add(text("/"));

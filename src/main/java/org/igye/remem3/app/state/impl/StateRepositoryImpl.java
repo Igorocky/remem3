@@ -30,7 +30,8 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
     private final Map<String, StateConstructor<?>> nameToConstructor;
     private final List<Pair<Class<?>, StateUpdater<?>>> stateUpdaters;
     private final List<Pair<Class<?>, StateRenderer<?>>> stateRenderers;
-    private final Map<Class<?>, Object> typeSupporterCache = new HashMap<>();
+    private final Map<Class<?>, Object> stateUpdaterCache = new HashMap<>();
+    private final Map<Class<?>, Object> stateRendererCache = new HashMap<>();
 
     public StateRepositoryImpl(
         Clock clock,
@@ -56,8 +57,9 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
     public void updateState(String stateId, RequestParams params) {
         Pair<String, Object> idAndState = loadState(stateId);
         Object state = idAndState.getRight();
-        StateUpdater<Object> stateUpdater = (StateUpdater<Object>) findTypeSupporter(
-            stateUpdaters, state.getClass(), "state updater"
+        StateUpdater<Object> stateUpdater = (StateUpdater<Object>) stateUpdaterCache.computeIfAbsent(
+            state.getClass(),
+            _ -> findTypeSupporter(stateUpdaters, state.getClass(), "state updater")
         );
         String actualStateId = idAndState.getLeft();
         Object newState = stateUpdater.update(state, params);
@@ -70,8 +72,9 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
     @Override
     public HtmlElem rednerState(String stateId) {
         Object state = loadState(stateId).getRight();
-        StateRenderer<Object> stateRenderer = (StateRenderer<Object>) findTypeSupporter(
-            stateRenderers, state.getClass(), "state renderer"
+        StateRenderer<Object> stateRenderer = (StateRenderer<Object>) stateRendererCache.computeIfAbsent(
+            state.getClass(),
+            _ -> findTypeSupporter(stateRenderers, state.getClass(), "state renderer")
         );
         return stateRenderer.render(state);
     }
@@ -124,15 +127,9 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
     }
 
     private <T> T findTypeSupporter(List<Pair<Class<?>, T>> typeSupporters, Class<?> type, String elemType) {
-        T res = (T) typeSupporterCache.get(type);
-        if (res != null) {
-            return res;
-        }
         for (Pair<Class<?>, T> typeSupporter : typeSupporters) {
             if (typeSupporter.getLeft().isAssignableFrom(type)) {
-                res = typeSupporter.getRight();
-                typeSupporterCache.put(type, res);
-                return res;
+                return typeSupporter.getRight();
             }
         }
         throw new Exn("Cannot find a %s for %s.".formatted(elemType, type));
