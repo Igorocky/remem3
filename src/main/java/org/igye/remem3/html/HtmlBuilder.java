@@ -220,7 +220,7 @@ public class HtmlBuilder {
             "name", name,
             "value", value,
             "autocomplete", "off",
-            "onkeydown", "preventDefaultOnEnterAction(event,false,%s)".formatted(btnId)
+            "onkeydown", "preventDefaultOnEnterAction(event,true,false,%s)".formatted(btnId)
         ));
         return h("input", attrs);
     }

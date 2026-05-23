@@ -208,7 +208,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         HtmlTag inpText;
         if (Strings.CS.contains(expAnswer, "\n")) {
             inpText = textarea(PAR_USER_ANS, userAnswer, 150, 10)
-                .onkeydown(String.format("preventDefaultOnEnterAction(event,true,\"%s\")", ACT_SUBMIT_ANSWER))
+                .onkeydown(String.format("preventDefaultOnEnterAction(event,false,true,\"%s\")", ACT_SUBMIT_ANSWER))
                 .attr("autofocus", "");
         } else {
             inpText = inpText(PAR_USER_ANS, userAnswer, ACT_SUBMIT_ANSWER).autofocus()
