@@ -13,7 +13,13 @@ import org.igye.remem3.web.RequestParams;
 
 import java.io.File;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import static org.igye.remem3.app.controllers.newcard.NewCardRenderer.ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE1;
+import static org.igye.remem3.app.controllers.newcard.NewCardRenderer.ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE2;
+import static org.igye.remem3.app.controllers.newcard.NewCardRenderer.ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT1;
+import static org.igye.remem3.app.controllers.newcard.NewCardRenderer.ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT2;
 import static org.igye.remem3.app.controllers.newcard.NewCardRenderer.ACT_CREATE_CARD;
 import static org.igye.remem3.app.controllers.newcard.NewCardRenderer.PAR_CARD_FILL_GAPS_LANG;
 import static org.igye.remem3.app.controllers.newcard.NewCardRenderer.PAR_CARD_TRANSLATE_EXACT_MATCH_1;
@@ -34,7 +40,7 @@ public class NewCardUpdater extends HtmlBuilder implements StateUpdater<NewCardS
     @Override
     public Object update(NewCardState state, RequestParams params) {
         //todo: merge the previous and the new states instead of discarding the previous state
-        state = newCardUtils.readStateFromParams(params);
+        state = newCardUtils.readStateFromParams(params).withPrevCard(state.getPrevCard());
         if (state.getDir().isMkDirRequest()) {
             NewCardState finalState = state;
             return State.builder()
@@ -42,15 +48,40 @@ public class NewCardUpdater extends HtmlBuilder implements StateUpdater<NewCardS
                 .onComplete(newDir -> finalState.withDir(((DirSelectorCmpImpl) finalState.getDir()).setPath(newDir)))
                 .onCancel(state)
                 .build();
-        }
-        if (params.hasParam(ACT_CREATE_CARD)) {
+        } else if (params.hasParam(ACT_CREATE_CARD)) {
             state = saveCard(state);
             if (CollectionUtils.isEmpty(state.getErrors())) {
                 cacheSomeSavedParams(state);
+                state = state.withPrevCard(state.getCard());
                 state = clearParamsAfterSave(state);
             }
+        } else if (params.hasParam(ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT1)) {
+            state = actCardTrRestorePrev(state, CardDto.Translate::getText1, CardDto.Translate::withText1);
+        } else if (params.hasParam(ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE1)) {
+            state = actCardTrRestorePrev(state, CardDto.Translate::getExample1, CardDto.Translate::withExample1);
+        } else if (params.hasParam(ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT2)) {
+            state = actCardTrRestorePrev(state, CardDto.Translate::getText2, CardDto.Translate::withText2);
+        } else if (params.hasParam(ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE2)) {
+            state = actCardTrRestorePrev(state, CardDto.Translate::getExample2, CardDto.Translate::withExample2);
         }
         return state;
+    }
+
+    private <T> NewCardState actCardTrRestorePrev(
+        NewCardState st,
+        Function<CardDto.Translate, T> getter,
+        BiFunction<CardDto.Translate, T, CardDto.Translate> setter
+    ) {
+        if (st.getPrevCard() == null) {
+            return st;
+        }
+        return switch (st.getCard()) {
+            case CardDto.Translate card -> switch (st.getPrevCard()) {
+                case CardDto.Translate prevCard -> st.withCard(setter.apply(card, getter.apply(prevCard)));
+                case CardDto.FillGaps _ -> st;
+            };
+            case CardDto.FillGaps _ -> st;
+        };
     }
 
     private NewCardState saveCard(NewCardState st) {

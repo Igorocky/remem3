@@ -13,5 +13,6 @@ import java.util.List;
 public class NewCardState {
     private final List<String> errors;
     private final DirSelectorCmp dir;
+    private final CardDto prevCard;
     private final CardDto card;
 }

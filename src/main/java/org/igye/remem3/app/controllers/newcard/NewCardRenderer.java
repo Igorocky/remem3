@@ -35,6 +35,10 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
     public static final String PAR_CARD_TRANSLATE_NOTES = "NewCard_PAR_CARD_TRANSLATE_NOTES";
 
     public static final String ACT_CREATE_CARD = "NewCard_ACT_CREATE_CARD";
+    public static final String ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT1 = "NewCard_ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT1";
+    public static final String ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE1 = "NewCard_ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE1";
+    public static final String ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT2 = "NewCard_ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT2";
+    public static final String ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE2 = "NewCard_ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE2";
 
     private final Settings settings;
 
@@ -99,13 +103,13 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
                 )))
             ),
             List.of(
-                text("Text 1"),
+                rndClickableText("Text 1", ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT1),
                 textarea(PAR_CARD_TRANSLATE_TEXT_1, card.getText1(), 100, 5).attr("autofocus", "")
                     .attr("tabindex", "1")
                     .onkeydown(format("toggleExactMatch(event,'%s')", PAR_CARD_TRANSLATE_EXACT_MATCH_1))
             ),
             List.of(
-                text("Example 1"),
+                rndClickableText("Example 1", ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE1),
                 textarea(PAR_CARD_TRANSLATE_EXAMPLE_1, card.getExample1(), 100, 1)
             ),
             List.of(
@@ -123,13 +127,13 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
                 )))
             ),
             List.of(
-                text("Text 2"),
+                rndClickableText("Text 2", ACT_CARD_TRANSLATE_RESTORE_PREV_TEXT2),
                 textarea(PAR_CARD_TRANSLATE_TEXT_2, card.getText2(), 100, 5)
                     .attr("tabindex", "2")
                     .onkeydown(format("toggleExactMatch(event,'%s')", PAR_CARD_TRANSLATE_EXACT_MATCH_2))
             ),
             List.of(
-                text("Example 2"),
+                rndClickableText("Example 2", ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE2),
                 textarea(PAR_CARD_TRANSLATE_EXAMPLE_2, card.getExample2(), 100, 1)
             ),
             List.of(
@@ -169,5 +173,12 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
             text("Directory"),
             frag(dir.render())
         )));
+    }
+
+    private HtmlElem rndClickableText(String text, String btnId) {
+        return frag(
+            span("cursor:pointer", text(text)).attr("onclick", "clickBtn('%s')".formatted(btnId)),
+            inpSubmit(btnId, "").attr("style", "display:none")
+        );
     }
 }

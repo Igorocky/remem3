@@ -9,6 +9,12 @@ function preventDefaultOnEnterAction(event, preventDefault, ctrl, btnIdToClick) 
     }
 }
 
+function clickBtn(btnIdToClick) {
+    if (btnIdToClick) {
+        document.getElementById(btnIdToClick).click()
+    }
+}
+
 function selectNextOption(selId) {
     const sel = document.getElementById(selId)
     const selIdx = sel.options.selectedIndex
