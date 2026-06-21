@@ -5,20 +5,22 @@ import lombok.Getter;
 import lombok.With;
 import org.igye.remem3.app.components.DirSelectorCmp;
 
+import java.io.File;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 @Builder
 @Getter
 public class State {
-    private Supplier<Object> onComplete;
-    private Supplier<Object> onCancel;
+    private Function<File, Object> onComplete;
+    private Object onCancel;
 
     @Builder.Default
     @With
     private List<String> errors = List.of();
     @With
     private DirSelectorCmp parentDir;
+    @Builder.Default
     @With
-    private String newDirName;
+    private String newDirName = "";
 }

@@ -63,9 +63,8 @@ public class ConvertFillGapsToTranslateConstructor implements StateConstructor<S
     }
 
     public State readStateFromParams(RequestParams params) {
-        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(
-            settings, cache, PAR_DIR_TO_CONVERT_TASKS_IN, false, params
-        );
+        DirSelectorCmp dirSelector = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_CONVERT_TASKS_IN)
+            .setPath(params);
         String defaultLang = settings.getLanguages().getFirst();
         String gapSecondLangFromParams = params.getParam(
             PAR_GAP_SECOND_LANG,

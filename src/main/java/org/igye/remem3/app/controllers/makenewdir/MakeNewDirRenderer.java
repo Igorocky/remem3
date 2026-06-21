@@ -1,6 +1,5 @@
 package org.igye.remem3.app.controllers.makenewdir;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.app.components.DirSelectorCmp;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.html.HtmlBuilder;
@@ -27,10 +26,10 @@ public class MakeNewDirRenderer extends HtmlBuilder implements StateRenderer<Sta
         );
     }
 
-    private HtmlElem rndButtons() {
+    private HtmlElem rndParentDir(DirSelectorCmp parentDir) {
         return table(List.of(List.of(
-            inpSubmit(ACT_CREATE, "Create"),
-            inpSubmit(ACT_CANCEL, "Cancel")
+            text("Parent directory"),
+            parentDir.render()
         )));
     }
 
@@ -41,21 +40,10 @@ public class MakeNewDirRenderer extends HtmlBuilder implements StateRenderer<Sta
         )));
     }
 
-    private HtmlElem rndParentDir(DirSelectorCmp parentDir) {
+    private HtmlElem rndButtons() {
         return table(List.of(List.of(
-            text("Parent directory"),
-            parentDir.render()
+            inpSubmit(ACT_CREATE, "Create"),
+            inpSubmit(ACT_CANCEL, "Cancel")
         )));
-    }
-
-
-    private HtmlElem rndErrors(List<String> errors) {
-        if (CollectionUtils.isEmpty(errors)) {
-            return null;
-        }
-        return div("color:red;",
-            h3(text("Error")),
-            ul(errors.stream().map(msg -> pre(text(msg))).toList())
-        );
     }
 }

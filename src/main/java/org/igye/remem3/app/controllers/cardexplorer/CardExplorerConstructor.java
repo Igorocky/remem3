@@ -58,7 +58,7 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
 
     @SneakyThrows
     public CardExplorerState readStateFromParams(RequestParams params) {
-        DirSelectorCmp dirSelectorCmp = new DirSelectorCmpImpl(settings, cache, PAR_DIR, false, params);
+        DirSelectorCmp dirSelectorCmp = new DirSelectorCmpImpl(settings, cache, PAR_DIR).setPath(params);
         boolean sortAsc = Boolean.parseBoolean(params.getParam(PAR_SORT_ASC, String.valueOf(true)));
         boolean recursive = params.hasParam(PAR_RECURSIVE);
         String filterStr = params.getParam(PAR_FILTER, "");

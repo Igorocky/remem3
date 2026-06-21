@@ -77,7 +77,7 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
             .taskLoader(this::loadTasks)
             .build();
         st = st.setSelectedExercise(cache.getStr(PAR_SELECTED_EXERCISE, ""));
-        st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR, false,
+        st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR).setPath(
             new File(cache.getStr(PAR_SELECTED_DIR, ""))
         ));
         st = st.setSelectedTaskFilter(cache.getStr(PAR_SELECTED_TASK_FILTER, ""));

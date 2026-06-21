@@ -12,4 +12,6 @@ public interface DirSelectorCmp {
     File getSelectedDirectory();
 
     HtmlElem render();
+
+    boolean isMkDirRequest();
 }

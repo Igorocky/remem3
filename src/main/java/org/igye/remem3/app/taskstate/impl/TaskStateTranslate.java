@@ -280,14 +280,4 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         }
         return frag(content);
     }
-
-    private HtmlElem rndErrors(List<String> errors) {
-        if (CollectionUtils.isEmpty(errors)) {
-            return null;
-        }
-        return div("color:red;",
-            h3(text("Errors in the card")),
-            ul(errors.stream().map(msg -> pre(text(msg))).toList())
-        );
-    }
 }

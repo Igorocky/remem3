@@ -27,7 +27,7 @@ public class ValidateCardsUpdater implements StateUpdater<ValidateCardsState> {
     @Override
     public ValidateCardsState update(ValidateCardsState st, RequestParams params) {
         if (params.hasKeyValueParam(PAR_DIR)) {
-            st = st.withDir(new DirSelectorCmpImpl(settings, cache, PAR_DIR, false, params))
+            st = st.withDir(new DirSelectorCmpImpl(settings, cache, PAR_DIR).setPath(params))
                 .withErrors(List.of());
         }
         if (CollectionUtils.isNotEmpty(st.getErrors())) {

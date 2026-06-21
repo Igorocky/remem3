@@ -1,7 +1,6 @@
 package org.igye.remem3.app.controllers.movecardstodir;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.components.DirSelectorCmp;
@@ -51,16 +50,6 @@ public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer
                     rndBundles(st)
                 )
             )
-        );
-    }
-
-    private HtmlElem rndErrors(List<String> errors) {
-        if (CollectionUtils.isEmpty(errors)) {
-            return null;
-        }
-        return div("color:red;",
-            h3(text("Error")),
-            ul(errors.stream().map(msg -> pre(text(msg))).toList())
         );
     }
 

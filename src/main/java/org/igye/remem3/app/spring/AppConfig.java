@@ -8,6 +8,7 @@ import org.igye.remem3.app.controllers.cardexplorer.CardExplorerConfig;
 import org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateConfig;
 import org.igye.remem3.app.controllers.exercise.ExerciseConfig;
 import org.igye.remem3.app.controllers.index.IndexConfig;
+import org.igye.remem3.app.controllers.makenewdir.MakeNewDirConfig;
 import org.igye.remem3.app.controllers.movecardstodir.MoveCardsToDirConfig;
 import org.igye.remem3.app.controllers.newcard.NewCardConfig;
 import org.igye.remem3.app.controllers.validatecards.ValidateCardsConfig;
@@ -52,7 +53,8 @@ import java.util.List;
     MoveCardsToDirConfig.class,
     ValidateCardsConfig.class,
     BeansConfig.class,
-    IndexConfig.class
+    IndexConfig.class,
+    MakeNewDirConfig.class,
 })
 public class AppConfig {
 

@@ -58,14 +58,4 @@ public class ValidateCardsRenderer extends HtmlBuilder implements StateRenderer<
             ul(errors.stream().map(this::text).toList())
         ).attr("style", "margin-top:10px;");
     }
-
-    private HtmlElem rndErrors(List<String> errors) {
-        if (CollectionUtils.isEmpty(errors)) {
-            return null;
-        }
-        return div("color:red;",
-            h3(text("Error")),
-            ul(errors.stream().map(msg -> pre(text(msg))).toList())
-        );
-    }
 }

@@ -96,7 +96,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
     private ExerciseState updateSelectExerciseState(SelectExerciseState st, RequestParams params) {
         st = updateSelectablePart(st, params, PAR_SELECTED_EXERCISE, st::setSelectedExercise);
         if (params.hasKeyValueParam(PAR_SELECTED_DIR)) {
-            st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR, false, params));
+            st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR).setPath(params));
             cache.put(PAR_SELECTED_DIR, st.getSelectedDir().getSelectedDirectoryStr());
         }
         SelectExerciseState finalSt = st;

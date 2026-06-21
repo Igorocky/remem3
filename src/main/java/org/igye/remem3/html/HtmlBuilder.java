@@ -285,6 +285,16 @@ public class HtmlBuilder {
         return key + ":" + value;
     }
 
+    protected HtmlElem rndErrors(List<String> errors) {
+        if (CollectionUtils.isEmpty(errors)) {
+            return null;
+        }
+        return div("color:red;",
+            h3(text("Error")),
+            ul(errors.stream().map(msg -> pre(text(msg))).toList())
+        );
+    }
+
     private <T> List<T> childrenArrayToList(T[] arr) {
         if (arr == null || arr.length == 0) {
             return null;

@@ -68,7 +68,7 @@ public class MoveCardsToDirConstructor implements StateConstructor<State> {
     }
 
     public State readStateFromParams(RequestParams params) {
-        DirSelectorCmp dirSelectorFrom = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_FROM, false, params);
+        DirSelectorCmp dirSelectorFrom = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_FROM).setPath(params);
         CardType cardType = CardType.fromCode(
             params.getParam(
                 PAR_CARD_TYPE_CODE,
@@ -85,7 +85,7 @@ public class MoveCardsToDirConstructor implements StateConstructor<State> {
                 cache.getStr(PAR_REPEAT_STRATEGY_TYPE, RepeatStrategyType.QUEUE.toString())
             )
         );
-        DirSelectorCmp dirSelectorTo = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_TO, false, params);
+        DirSelectorCmp dirSelectorTo = new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_MOVE_TO).setPath(params);
         List<Card> allCards = cardUtils.loadAllCards(dirSelectorFrom.getSelectedDirectory());
         return State.builder()
             .errors(List.of())

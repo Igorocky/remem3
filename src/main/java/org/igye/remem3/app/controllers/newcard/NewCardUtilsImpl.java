@@ -33,7 +33,9 @@ public class NewCardUtilsImpl implements NewCardUtils {
     public NewCardState readStateFromParams(RequestParams params) {
         return NewCardState.builder()
             .errors(List.of())
-            .dir(new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_SAVE_NEW_CARD_TO, false, params))
+            .dir(
+                new DirSelectorCmpImpl(settings, cache, PAR_DIR_TO_SAVE_NEW_CARD_TO).setPath(params).setAllowMkDir(true)
+            )
             .card(readCardFromParams(params))
             .build();
     }

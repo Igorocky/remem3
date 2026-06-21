@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
+import org.igye.remem3.app.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.controllers.makenewdir.State;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.state.StateUpdater;
 import org.igye.remem3.html.HtmlBuilder;
@@ -30,17 +32,25 @@ public class NewCardUpdater extends HtmlBuilder implements StateUpdater<NewCardS
 
 
     @Override
-    public NewCardState update(NewCardState state, RequestParams params) {
+    public Object update(NewCardState state, RequestParams params) {
         //todo: merge the previous and the new states instead of discarding the previous state
-        NewCardState updatedState = newCardUtils.readStateFromParams(params);
+        state = newCardUtils.readStateFromParams(params);
+        if (state.getDir().isMkDirRequest()) {
+            NewCardState finalState = state;
+            return State.builder()
+                .parentDir(((DirSelectorCmpImpl) state.getDir()).clone().setReadOnly(true))
+                .onComplete(newDir -> finalState.withDir(((DirSelectorCmpImpl) finalState.getDir()).setPath(newDir)))
+                .onCancel(state)
+                .build();
+        }
         if (params.hasParam(ACT_CREATE_CARD)) {
-            updatedState = saveCard(updatedState);
-            if (CollectionUtils.isEmpty(updatedState.getErrors())) {
-                cacheSomeSavedParams(updatedState);
-                updatedState = clearParamsAfterSave(updatedState);
+            state = saveCard(state);
+            if (CollectionUtils.isEmpty(state.getErrors())) {
+                cacheSomeSavedParams(state);
+                state = clearParamsAfterSave(state);
             }
         }
-        return updatedState;
+        return state;
     }
 
     private NewCardState saveCard(NewCardState st) {

@@ -23,36 +23,42 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
     private final Cache cache;
     private final String baseParamName;
     @Getter
-    private final boolean isReadonly;
+    private boolean isReadonly;
+    private boolean allowMkDir;
     private List<String> selectedDirectoryList;
+    private boolean isMkDirRequest;
 
-    private DirSelectorCmpImpl(Settings settings, Cache cache, String baseParamName, boolean isReadonly) {
+    public DirSelectorCmpImpl(Settings settings, Cache cache, String baseParamName) {
         this.settings = settings;
         this.cache = cache;
         this.baseParamName = baseParamName;
+        this.isReadonly = false;
+        this.allowMkDir = false;
+        this.selectedDirectoryList = List.of();
+    }
+
+    public DirSelectorCmpImpl setReadOnly(boolean isReadonly) {
         this.isReadonly = isReadonly;
+        return this;
     }
 
-    public DirSelectorCmpImpl(
-        Settings settings,
-        Cache cache,
-        String baseParamName,
-        boolean isReadonly,
-        RequestParams params
-    ) {
-        this(settings, cache, baseParamName, isReadonly);
-        this.selectedDirectoryList = getSelectedDirectoryList(params);
+    public DirSelectorCmpImpl setAllowMkDir(boolean allowMkDir) {
+        this.allowMkDir = allowMkDir;
+        return this;
     }
 
-    public DirSelectorCmpImpl(
-        Settings settings,
-        Cache cache,
-        String baseParamName,
-        boolean isReadonly,
-        File dir
-    ) {
-        this(settings, cache, baseParamName, isReadonly);
-        this.selectedDirectoryList = getSelectedDirectoryList(dir);
+    public DirSelectorCmpImpl setPath(RequestParams params) {
+        Pair<List<String>, Boolean> validDirs = getSelectedDirectoryList(params);
+        this.selectedDirectoryList = validDirs.getLeft();
+        this.isMkDirRequest = validDirs.getRight();
+        return this;
+    }
+
+    public DirSelectorCmpImpl setPath(File dir) {
+        Pair<List<String>, Boolean> validDirs = getSelectedDirectoryList(dir);
+        this.selectedDirectoryList = validDirs.getLeft();
+        this.isMkDirRequest = validDirs.getRight();
+        return this;
     }
 
     @SneakyThrows
@@ -83,16 +89,18 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
                 List<String> subDirNames = subDirs == null
                     ? List.of()
                     : Arrays.stream(subDirs)
-                      .filter(dir -> !dir.getName().startsWith("."))
-                      .map(File::getName)
-                      .map(NatOrdStringImpl::new)
-                      .sorted()
-                      .map(NatOrdStringImpl::getValue)
-                      .toList();
+                    .filter(dir -> !dir.getName().startsWith("."))
+                    .map(File::getName)
+                    .map(NatOrdStringImpl::new)
+                    .sorted()
+                    .map(NatOrdStringImpl::getValue)
+                    .toList();
                 options = new ArrayList<>();
+                if (allowMkDir) {
+                    options.add("+");
+                }
                 options.add(".");
                 options.addAll(subDirNames);
-                options.add("+");
             }
             if (i > 0) {
                 selectors.add(text("/"));
@@ -103,7 +111,21 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
         return frag(selectors);
     }
 
-    private List<String> getSelectedDirectoryList(RequestParams params) {
+    @Override
+    public boolean isMkDirRequest() {
+        return isMkDirRequest;
+    }
+
+    @Override
+    public DirSelectorCmpImpl clone() {
+        DirSelectorCmpImpl res = new DirSelectorCmpImpl(settings, cache, baseParamName)
+            .setReadOnly(this.isReadonly)
+            .setAllowMkDir(this.allowMkDir);
+        res.selectedDirectoryList = this.selectedDirectoryList;
+        return res;
+    }
+
+    private Pair<List<String>, Boolean> getSelectedDirectoryList(RequestParams params) {
         List<String> res;
         if (params.hasParam(keyValueParam(baseParamName, 0))) {
             res = new ArrayList<>();
@@ -111,19 +133,20 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
             while (params.hasParam(keyValueParam(baseParamName, i))) {
                 String curPathPart = params.getParam(keyValueParam(baseParamName, i++));
                 res.add(curPathPart);
-                if (".".equals(curPathPart)) {
+                if (".".equals(curPathPart) || "+".equals(curPathPart)) {
                     break;
                 }
             }
         } else {
-            String cachedDir = cache.getStr(baseParamName, getDefaultDir(settings));
-            res = getSelectedDirectoryList(new File(cachedDir));
+            String cachedDir = cache.getStr(baseParamName, getDefaultDir());
+            res = getSelectedDirectoryList(new File(cachedDir)).getLeft();
         }
-        return Collections.unmodifiableList(getValidDirs(res, settings));
+        Pair<List<String>, Boolean> validDirs = getValidDirs(res);
+        return Pair.of(Collections.unmodifiableList(validDirs.getLeft()), validDirs.getRight());
     }
 
     @SneakyThrows
-    private List<String> getSelectedDirectoryList(File dir) {
+    private Pair<List<String>, Boolean> getSelectedDirectoryList(File dir) {
         String dirStr = dir.getCanonicalPath();
         ArrayList<String> res = new ArrayList<>();
         for (String dirFromSettings : settings.getDirectoriesWithCards()) {
@@ -136,14 +159,20 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
                 break;
             }
         }
-        return Collections.unmodifiableList(getValidDirs(res, settings));
+        Pair<List<String>, Boolean> validDirs = getValidDirs(res);
+        return Pair.of(Collections.unmodifiableList(validDirs.getLeft()), validDirs.getRight());
     }
 
-    private List<String> getValidDirs(List<String> pathParts, Settings settings) {
+    private Pair<List<String>, Boolean> getValidDirs(List<String> pathParts) {
         ArrayList<String> validDirs = new ArrayList<>();
         String curPath = "";
+        boolean mkNewDirRequested = false;
         for (int i = 0; i < pathParts.size(); i++) {
             String curPathPart = pathParts.get(i);
+            if (curPathPart.equals("+")) {
+                mkNewDirRequested = true;
+                break;
+            }
             curPath += (i == 0 ? "" : "/") + curPathPart;
             File curDir = new File(curPath);
             if (curDir.exists() && curDir.isDirectory()) {
@@ -153,15 +182,15 @@ public class DirSelectorCmpImpl extends HtmlBuilder implements DirSelectorCmp {
             }
         }
         if (validDirs.isEmpty()) {
-            validDirs.add(getDefaultDir(settings));
+            validDirs.add(getDefaultDir());
         }
         if (!".".equals(validDirs.getLast())) {
             validDirs.add(".");
         }
-        return validDirs;
+        return Pair.of(validDirs, mkNewDirRequested);
     }
 
-    private String getDefaultDir(Settings settings) {
+    private String getDefaultDir() {
         return settings.getDirectoriesWithCards().getFirst();
     }
 

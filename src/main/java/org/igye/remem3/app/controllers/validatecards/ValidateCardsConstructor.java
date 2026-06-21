@@ -30,9 +30,7 @@ public class ValidateCardsConstructor implements StateConstructor<ValidateCardsS
     @Override
     public ValidateCardsState construct() {
         return ValidateCardsState.builder()
-            .dir(new DirSelectorCmpImpl(settings, cache, PAR_DIR, false,
-                new File(cache.getStr(PAR_DIR, ""))
-            ))
+            .dir(new DirSelectorCmpImpl(settings, cache, PAR_DIR).setPath(new File(cache.getStr(PAR_DIR, ""))))
             .build();
     }
 
