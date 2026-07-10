@@ -27,7 +27,8 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String PAR_RECURSIVE = "CardExplorer_PAR_RECURSIVE";
     public static final String PAR_FILTER = "CardExplorer_PAR_FILTER";
     public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
-    public static final String ACT_REFRESH = "CardExplorer_ACT_REFRESH";
+    public static final String ACT_REFRESH_CARD = "CardExplorer_ACT_REFRESH_CARD";
+    public static final String ACT_REFRESH_PAGE = "CardExplorer_ACT_REFRESH_PAGE";
 
     @Override
     public HtmlElem render(CardExplorerState st) {
@@ -37,7 +38,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             form(
                 rndDirSelector("Directory", st.getDir()),
                 table(List.of(List.of(
-                    inpSubmit(ACT_REFRESH, "Reload"),
+                    inpSubmit(ACT_REFRESH_PAGE, "Reload"),
                     text("%s cards".formatted(st.getCards().size())),
                     rndSortSelector(st),
                     rndFilterInput(st),
@@ -57,7 +58,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     }
 
     private HtmlTag rndFilterInput(CardExplorerState st) {
-        HtmlTag inpText = inpText(PAR_FILTER, st.getFilter(), ACT_REFRESH);
+        HtmlTag inpText = inpText(PAR_FILTER, st.getFilter(), ACT_REFRESH_PAGE);
         if (st.getScrollToId().isEmpty()) {
             inpText = inpText.autofocus();
         }
@@ -117,7 +118,8 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         }
         File file = card.getFile().get();
         return frag(
-            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getAbsolutePath()), "Edit").id(getId(file)),
+            inpSubmit(keyValueParam(ACT_REFRESH_CARD, file.getAbsolutePath()), "Reload").id(getId(file)),
+            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getAbsolutePath()), "Edit"),
             span("color:lightgrey;", text("%s Created at %s Order %s".formatted(
                 renderFullPath ? file.getAbsolutePath() : file.getName(),
                 card.getCreatedAt().map(Objects::toString).orElse("?"),

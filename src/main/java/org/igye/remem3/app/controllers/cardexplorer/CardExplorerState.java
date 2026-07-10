@@ -16,6 +16,7 @@ public class CardExplorerState {
     private final boolean sortAsc;
     private final boolean recursive;
     private final String filter;
+    @With
     private List<Card> cards;
     @With
     @Builder.Default
