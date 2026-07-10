@@ -1,6 +1,7 @@
 package org.igye.remem3.app.controllers.cardexplorer;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.components.DirSelectorCmp;
@@ -28,10 +29,10 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
     public static final String ACT_REFRESH = "CardExplorer_ACT_REFRESH";
 
-
     @Override
     public HtmlElem render(CardExplorerState st) {
         return simplePageWithTitle("Card explorer",
+            rndScrollJs(st),
             h4(text("Card explorer")),
             form(
                 rndDirSelector("Directory", st.getDir()),
@@ -39,12 +40,42 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     inpSubmit(ACT_REFRESH, "Reload"),
                     text("%s cards".formatted(st.getCards().size())),
                     rndSortSelector(st),
-                    inpText(PAR_FILTER, st.getFilter(), ACT_REFRESH).autofocus(),
+                    rndFilterInput(st),
                     rndRecursiveCheckbox(st)
                 ))),
                 rndCards(st)
             )
         );
+    }
+
+    public String getId(File file) {
+        return RegExUtils.replacePattern(
+            file.getAbsolutePath(),
+            "[^0-9a-zA-Z]+",
+            ""
+        );
+    }
+
+    private HtmlTag rndFilterInput(CardExplorerState st) {
+        HtmlTag inpText = inpText(PAR_FILTER, st.getFilter(), ACT_REFRESH);
+        if (st.getScrollToId().isEmpty()) {
+            inpText = inpText.autofocus();
+        }
+        return inpText;
+    }
+
+    private HtmlElem rndScrollJs(CardExplorerState st) {
+        return st.getScrollToId()
+            .map(id ->
+                h("script", rawText(
+                    """
+                        document.addEventListener("DOMContentLoaded", () => {
+                          document.getElementById("%s")?.scrollIntoView();
+                        });
+                        """.formatted(id)
+                ))
+            )
+            .orElse(null);
     }
 
     private HtmlElem rndRecursiveCheckbox(CardExplorerState st) {
@@ -86,7 +117,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         }
         File file = card.getFile().get();
         return frag(
-            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getAbsolutePath()), "Edit"),
+            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getAbsolutePath()), "Edit").id(getId(file)),
             span("color:lightgrey;", text("%s Created at %s Order %s".formatted(
                 renderFullPath ? file.getAbsolutePath() : file.getName(),
                 card.getCreatedAt().map(Objects::toString).orElse("?"),
@@ -182,5 +213,4 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             ).attr("class", "table-no-border vertical-align-top first-col-text-align-right")
         );
     }
-
 }

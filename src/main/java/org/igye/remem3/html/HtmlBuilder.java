@@ -23,6 +23,10 @@ public class HtmlBuilder {
         return new HtmlText(String.valueOf(obj));
     }
 
+    protected HtmlRawText rawText(String text) {
+        return new HtmlRawText(text);
+    }
+
     protected HtmlTag h(String tagName, Map<String, String> attrs, HtmlElem... children) {
         return new HtmlTag(tagName, attrs, childrenArrayToList(children));
     }
