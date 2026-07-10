@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.components.DirSelectorCmp;
+import org.igye.remem3.app.controllers.cardexplorer.CardExplorerConstructor;
 import org.igye.remem3.app.dto.CardType;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.html.HtmlBuilder;
@@ -41,6 +42,7 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
     public static final String ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE2 = "NewCard_ACT_CARD_TRANSLATE_RESTORE_PREV_EXAMPLE2";
 
     private final Settings settings;
+    private final CardExplorerConstructor cardExplorerConstructor;
 
     @Override
     public HtmlElem render(NewCardState st) {
@@ -170,7 +172,10 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
 
     private HtmlTag rndDirSelector(DirSelectorCmp dir) {
         return table(List.of(List.of(
-            text("Directory"),
+            a(
+                cardExplorerConstructor.makeUrlWithInitPath(dir.getSelectedDirectoryStr()),
+                text("Directory")
+            ),
             frag(dir.render())
         )));
     }

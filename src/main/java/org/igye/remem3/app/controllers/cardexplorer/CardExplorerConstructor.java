@@ -16,10 +16,13 @@ import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.NatOrdPath;
 import org.igye.remem3.utils.impl.NatOrdPathImpl;
 import org.igye.remem3.web.RequestParams;
+import org.igye.remem3.web.StateController;
 import org.igye.remem3.web.impl.RequestParamsImpl;
 import org.springframework.core.annotation.Order;
 
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -32,6 +35,8 @@ import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.
 @RequiredArgsConstructor
 @Order(3)
 public class CardExplorerConstructor implements StateConstructor<CardExplorerState> {
+    public static final String PAR_INIT_PATH = "initPath";
+
     private final Settings settings;
     private final Cache cache;
     private final CardUtils cardUtils;
@@ -56,9 +61,26 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
         return false;
     }
 
+    public String makeUrlWithInitPath(String initPath) {
+        return "%s/%s?%s=%s".formatted(
+            StateController.STATE_PATH,
+            getName(),
+            PAR_INIT_PATH,
+            URLEncoder.encode(initPath, StandardCharsets.UTF_8)
+        );
+    }
+
+    private DirSelectorCmp makeDirSelector(RequestParams params) {
+        if (params.hasParam(PAR_INIT_PATH)) {
+            return new DirSelectorCmpImpl(settings, cache, PAR_DIR).setPath(new File(params.getParam(PAR_INIT_PATH)));
+        } else {
+            return new DirSelectorCmpImpl(settings, cache, PAR_DIR).setPath(params);
+        }
+    }
+
     @SneakyThrows
     public CardExplorerState readStateFromParams(RequestParams params) {
-        DirSelectorCmp dirSelectorCmp = new DirSelectorCmpImpl(settings, cache, PAR_DIR).setPath(params);
+        DirSelectorCmp dirSelectorCmp = makeDirSelector(params);
         boolean sortAsc = Boolean.parseBoolean(params.getParam(PAR_SORT_ASC, String.valueOf(true)));
         boolean recursive = params.hasParam(PAR_RECURSIVE);
         String filterStr = params.getParam(PAR_FILTER, "");

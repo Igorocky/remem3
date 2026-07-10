@@ -17,8 +17,9 @@ import java.net.URI;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/state")
+@RequestMapping(StateController.STATE_PATH)
 public class StateController extends HtmlBuilder {
+    public final static String STATE_PATH = "/state";
 
     private final StateRepository stateRepository;
 
