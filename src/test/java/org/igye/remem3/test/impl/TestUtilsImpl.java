@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.html.HtmlFragment;
+import org.igye.remem3.html.HtmlRawText;
 import org.igye.remem3.html.HtmlTag;
 import org.igye.remem3.html.HtmlText;
 import org.igye.remem3.test.TestUtils;
@@ -135,17 +136,21 @@ public class TestUtilsImpl implements TestUtils {
         return switch (a) {
             case HtmlFragment aFrag -> switch (b) {
                 case HtmlFragment bFrag -> equals(aFrag.getChildren(), bFrag.getChildren());
-                case HtmlTag _, HtmlText _ -> false;
+                case HtmlTag _, HtmlText _, HtmlRawText _ -> false;
             };
             case HtmlTag aTag -> switch (b) {
                 case HtmlTag bTag -> Objects.equals(aTag.getName(), bTag.getName())
                     && Objects.equals(aTag.getAttrs(), bTag.getAttrs())
                     && equals(aTag.getChildren(), bTag.getChildren());
-                case HtmlFragment _, HtmlText _ -> false;
+                case HtmlFragment _, HtmlText _, HtmlRawText _ -> false;
             };
             case HtmlText aText -> switch (b) {
                 case HtmlText bText -> Objects.equals(aText.getText(), bText.getText());
-                case HtmlFragment _, HtmlTag _ -> false;
+                case HtmlFragment _, HtmlTag _, HtmlRawText _ -> false;
+            };
+            case HtmlRawText aText -> switch (b) {
+                case HtmlRawText bText -> Objects.equals(aText.getText(), bText.getText());
+                case HtmlFragment _, HtmlTag _, HtmlText _ -> false;
             };
         };
     }
@@ -167,7 +172,7 @@ public class TestUtilsImpl implements TestUtils {
 
     private Stream<HtmlTag> getAllTags(HtmlElem html, Predicate<HtmlTag> predicate) {
         return switch (html) {
-            case HtmlText _ -> Stream.empty();
+            case HtmlText _, HtmlRawText _ -> Stream.empty();
             case HtmlFragment frag -> getAllTags(frag.getChildren(), predicate);
             case HtmlTag tag -> {
                 if (predicate.test(tag)) {

@@ -39,13 +39,15 @@ public interface Utils {
 
     double getInRange(double min, double value, double max);
 
+    BigDecimal getInRange(BigDecimal min, BigDecimal value, BigDecimal max);
+
     <T> Optional<T> try_(Producer<T> producer);
 
     int getStreak(List<HistRec> hist);
 
     int getStreak(List<HistRec> hist, int maxStreak);
 
-    int getStreak(List<HistRec> hist, Instant startTime);
+    int getStreak(List<HistRec> hist, Instant startTime, int maxStreak);
 
     BigDecimal calOverdue(BigDecimal minDelay, BigDecimal actualDelay);
 

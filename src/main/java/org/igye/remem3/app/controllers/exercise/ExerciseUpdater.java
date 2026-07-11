@@ -196,7 +196,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
                 utils, allTasks, p.getRandomness(), p.isKeepOrder()
             );
             case RepeatStrategyParams.RepeatStrategyQueueParams p -> new RepeatStrategyQueue(
-                utils, p.getBatchSize(), p.getStep(), allTasks
+                utils, allTasks, p.getStep(), p.getStepMultFactor(), p.getBatchSize()
             );
             case RepeatStrategyParams.RepeatStrategyBucketsParams p -> new RepeatStrategyBuckets(
                 utils, clock, p.getBatchSize(), allTasks, p.getDelays()

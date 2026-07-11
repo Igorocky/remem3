@@ -44,7 +44,7 @@ public class UtilsImpl implements Utils {
         .map(e -> Pair.of(e.getValue(), e.getKey()))
         .toList();
     private static final Pattern PLACEHOLDER_PAT = Pattern.compile("\\$\\{([a-zA-Z0-9_-]+)}");
-    
+
     private final ObjectMapper objectMapper;
 
     @SneakyThrows
@@ -154,6 +154,17 @@ public class UtilsImpl implements Utils {
     }
 
     @Override
+    public BigDecimal getInRange(BigDecimal min, BigDecimal value, BigDecimal max) {
+        if (value.compareTo(min) < 0) {
+            return min;
+        }
+        if (max.compareTo(value) < 0) {
+            return max;
+        }
+        return value;
+    }
+
+    @Override
     public <T> Optional<T> try_(Producer<T> producer) {
         try {
             return Optional.of(producer.get());
@@ -164,20 +175,20 @@ public class UtilsImpl implements Utils {
 
     @Override
     public int getStreak(List<HistRec> hist) {
-        return getStreak(hist, Instant.MIN);
+        return getStreak(hist, Instant.MIN, Integer.MAX_VALUE);
     }
 
     @Override
     public int getStreak(List<HistRec> hist, int maxStreak) {
-        return Math.min(getStreak(hist), maxStreak);
+        return getStreak(hist, Instant.MIN, maxStreak);
     }
 
     @Override
-    public int getStreak(List<HistRec> hist, Instant startTime) {
+    public int getStreak(List<HistRec> hist, Instant startTime, int maxStreak) {
         int res = 0;
         for (int i = hist.size() - 1; i >= 0; i--) {
             HistRec rec = hist.get(i);
-            if (rec.getTime().isBefore(startTime) || !rec.isPassed()) {
+            if (rec.getTime().isBefore(startTime) || !rec.isPassed() || res >= maxStreak) {
                 break;
             }
             res++;

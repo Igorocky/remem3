@@ -11,6 +11,8 @@ import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Utils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,23 +24,27 @@ import static java.lang.String.format;
 
 public class RepeatStrategyQueue extends BaseRepeatStrategy {
 
-    public static final int MIN_BATCH_SIZE = 1;
-    public static final int MAX_BATCH_SIZE = 10;
     public static final int MIN_STEP = 1;
     public static final int MAX_STEP = 20;
+    public static final BigDecimal MIN_STEP_MULT_FACTOR = BigDecimal.ONE;
+    public static final BigDecimal MAX_STEP_MULT_FACTOR = new BigDecimal("100");
+    public static final int MIN_BATCH_SIZE = 1;
+    public static final int MAX_BATCH_SIZE = 10;
 
     private final Utils utils;
-    private final int batchSize;
     private final int step;
+    private final BigDecimal stepMultFactor;
+    private final int batchSize;
     private final List<Integer> bucketDelays;
-    private final int maxBucketNum;
+    private final int maxBucketIdx;
     private final Instant startTimeForParams;
 
-    public RepeatStrategyQueue(Utils utils, int batchSize, int step, List<Task> allTasks) {
+    public RepeatStrategyQueue(Utils utils, List<Task> allTasks, int step, BigDecimal stepMultFactor, int batchSize) {
         super(allTasks);
         this.utils = utils;
-        this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
         this.step = utils.getInRange(MIN_STEP, step, MAX_STEP);
+        this.stepMultFactor = utils.getInRange(MIN_STEP_MULT_FACTOR, stepMultFactor, MAX_STEP_MULT_FACTOR);
+        this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
         List<Integer> bucketDelays = new ArrayList<>();
         int maxDelay = utils.getInRange(0, allTasks.size() - batchSize, allTasks.size());
         do {
@@ -47,12 +53,15 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
             } else if (bucketDelays.size() == 1) {
                 bucketDelays.add(step);
             } else {
-                bucketDelays.add(bucketDelays.getLast() * 2);
+                bucketDelays.add(
+                    stepMultFactor.multiply(BigDecimal.valueOf(bucketDelays.getLast()))
+                        .setScale(0, RoundingMode.CEILING).intValue()
+                );
             }
         } while (bucketDelays.getLast() < maxDelay);
         bucketDelays.set(bucketDelays.size() - 1, maxDelay);
         this.bucketDelays = Collections.unmodifiableList(bucketDelays);
-        this.maxBucketNum = bucketDelays.size() - 1;
+        this.maxBucketIdx = bucketDelays.size() - 1;
         this.startTimeForParams = Instant.now();
     }
 
@@ -112,7 +121,7 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
                 .toList();
         List<TaskDto> allTasks = getTaskDtos();
         for (TaskDto task : allTasks) {
-            Pair<ArrayList<TaskDto>, ArrayList<TaskDto>> bucket = buckets.get(task.getBucketNum());
+            Pair<ArrayList<TaskDto>, ArrayList<TaskDto>> bucket = buckets.get(task.getBucketIdx());
             if (task.isActive()) {
                 bucket.getRight().add(task);
             } else {
@@ -146,6 +155,7 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
             div(text(format("Number of tasks: %s", allTasks.size()))),
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
+            div(text(format("Step multiplication factor: %s", stepMultFactor))),
             div(text(format(
                 "Session counts total|min/max : %s | %s/%s",
                 countAndStreak.getTotalCount(), countAndStreak.getMinCount(), countAndStreak.getMaxCount()
@@ -188,7 +198,7 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
     }
 
     private int compare(TaskDto a, TaskDto b) {
-        TaskDto min = min(a, b);
+        TaskDto min = strictMin(a, b);
         if (min == a) {
             return -1;
         }
@@ -198,14 +208,21 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
         return 0;
     }
 
-    private TaskDto min(TaskDto a, TaskDto b) {
-        if (a.getBucketNum() < b.getBucketNum()) {
+    private TaskDto strictMin(TaskDto a, TaskDto b) {
+        // Prefer the task from a bucket with lower index.
+        if (a.getBucketIdx() < b.getBucketIdx()) {
             return a;
         }
-        if (b.getBucketNum() < a.getBucketNum()) {
+        if (b.getBucketIdx() < a.getBucketIdx()) {
             return b;
         }
-        if (a.getBucketNum() < maxBucketNum) {
+
+        // If both tasks are not in the last bucket.
+        // The last bucket would contain either new tasks or well remembered tasks.
+        // Hence, tasks which are not in the last bucket are not new and not remembered well.
+        if (a.getBucketIdx() < maxBucketIdx) {
+            // Select the task with the longest history to concentrate on one of them first.
+            // When it becomes remembered better we can switch to another task.
             if (a.getHistLen() > b.getHistLen()) {
                 return a;
             }
@@ -214,6 +231,8 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
             }
             return null;
         }
+
+        // Among the tasks in the last bucket, select the one with the least remaining delay.
         if (a.getRemainingDelayExn() < b.getRemainingDelayExn()) {
             return a;
         }
@@ -229,16 +248,16 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
             .flatMap(task -> task.getTask().getHist().stream().map(histRec -> makeHistRecDto(task, histRec)))
             .sorted(Comparator.comparing(HistRecDto::getTime).reversed())
             .toList();
-        int checkedTasks = 0;
-        for (int i = 0; i < allHistRev.size() && checkedTasks < allTasks.size(); i++) {
+        int checkedTasksCnt = 0;
+        for (int i = 0; i < allHistRev.size() && checkedTasksCnt < allTasks.size(); i++) {
             TaskDto task = allHistRev.get(i).getTask();
             if (task.getRemainingDelay().isPresent()) {
                 continue;
             }
             task.setRemainingDelay(Optional.of(task.getBucketDelay() - i));
-            checkedTasks++;
+            checkedTasksCnt++;
         }
-        if (checkedTasks < allTasks.size()) {
+        if (checkedTasksCnt < allTasks.size()) {
             Integer remainingDelayForNewTasks = allTasks.stream()
                 .map(TaskDto::getRemainingDelay)
                 .filter(Optional::isPresent)
@@ -254,21 +273,21 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
         return allTasks;
     }
 
-    private int getBucketNum(List<HistRec> hist) {
+    private int getBucketIdx(List<HistRec> hist) {
         if (hist.isEmpty() || hist.stream().allMatch(HistRec::isPassed)) {
-            return maxBucketNum;
+            return maxBucketIdx;
         }
-        return utils.getStreak(hist, maxBucketNum);
+        return utils.getStreak(hist, maxBucketIdx);
     }
 
     private TaskDto makeTaskDto(Task task) {
         List<HistRec> hist = task.getHist();
-        int bucketNum = getBucketNum(hist);
+        int bucketIdx = getBucketIdx(hist);
         return TaskDto.builder()
             .task(task)
             .histLen(hist.size())
-            .bucketNum(bucketNum)
-            .bucketDelay(bucketDelays.get(bucketNum))
+            .bucketIdx(bucketIdx)
+            .bucketDelay(bucketDelays.get(bucketIdx))
             .build();
     }
 
@@ -285,7 +304,7 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
     protected static class TaskDto {
         private Task task;
         private int histLen;
-        private int bucketNum;
+        private int bucketIdx;
         private int bucketDelay;
         @Setter
         @Builder.Default

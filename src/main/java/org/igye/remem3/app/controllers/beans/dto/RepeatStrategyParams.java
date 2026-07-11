@@ -3,6 +3,7 @@ package org.igye.remem3.app.controllers.beans.dto;
 import lombok.Data;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -58,6 +59,7 @@ public sealed interface RepeatStrategyParams
     final class RepeatStrategyQueueParams implements RepeatStrategyParams {
         private Supplier<Instant> startTime = () -> Instant.MIN;
         private int step = 5;
+        private BigDecimal stepMultFactor = BigDecimal.TWO;
         private int batchSize = 5;
 
         @Override
