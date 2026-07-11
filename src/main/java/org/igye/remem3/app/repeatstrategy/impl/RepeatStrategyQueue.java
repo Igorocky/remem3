@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -307,21 +306,15 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
     }
 
     private List<Integer> getHistLengths(List<TaskDto> allTasks, int maxHistLen) {
-        List<Integer> counts = allTasks.stream()
-            .collect(Collectors.groupingBy(TaskDto::getHistLen))
-            .values()
-            .stream()
-            .map(List::size)
-            .sorted()
-            .toList();
-        List<Integer> res = new ArrayList<>(
-            counts.stream().limit(maxHistLen + 1).toList()
-        );
-        res.add(
-            counts.stream()
-                .skip(maxHistLen + 1)
-                .reduce(0, Integer::sum)
-        );
+        List<Integer> res = new ArrayList<>(maxHistLen + 1);
+        for (int i = 0; i <= maxHistLen; i++) {
+            res.add(0);
+        }
+        allTasks.forEach(task -> {
+            int len = task.getHistLen();
+            int idx = Math.min(len, maxHistLen);
+            res.set(idx, res.get(idx) + 1);
+        });
         return res;
     }
 

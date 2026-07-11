@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer<State> {
@@ -98,14 +99,16 @@ public class MoveCardsToDirRenderer extends HtmlBuilder implements StateRenderer
         Predicate<Card> cardFilter = constructor.makeCardFilter(st.getCardType(), st.getLang());
         Set<String> selectedBundleIds = st.getSelectedBundleIds();
         HtmlTag table = table(
-            st.getSortedBundlesToList().stream()
-                .map(bundle -> List.of(
-                    inpCheckbox(PAR_SELECTED_BUNDLE_ID, bundle.getId(), selectedBundleIds.contains(bundle.getId())),
-                    rndBundleCards(bundle.getCards().stream().filter(cardFilter).toList()),
-                    text(bundle.getRating()),
-                    rndHistory(bundle.getHistory())
-                ))
-                .toList()
+            Stream.concat(
+                Stream.of(List.of(text(""), text(""), text("streak"), text("streak history"))),
+                st.getSortedBundlesToList().stream()
+                    .map(bundle -> List.of(
+                        inpCheckbox(PAR_SELECTED_BUNDLE_ID, bundle.getId(), selectedBundleIds.contains(bundle.getId())),
+                        rndBundleCards(bundle.getCards().stream().filter(cardFilter).toList()),
+                        text(bundle.getRating()),
+                        rndHistory(bundle.getHistory())
+                    ))
+            ).toList()
         ).attr("class", "table-single-border");
         return frag(
             text("%s bundles".formatted(st.getSortedBundlesToList().size())),
