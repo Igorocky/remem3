@@ -61,6 +61,7 @@ public sealed interface RepeatStrategyParams
         private int step = 5;
         private BigDecimal stepMultFactor = BigDecimal.TWO;
         private int batchSize = 5;
+        private int maxHistLenStat = 20;
 
         @Override
         public RepeatStrategyType getRepeatStrategyType() {

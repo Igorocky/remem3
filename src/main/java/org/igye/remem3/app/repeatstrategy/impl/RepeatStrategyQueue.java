@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -35,16 +36,21 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
     private final int step;
     private final BigDecimal stepMultFactor;
     private final int batchSize;
+    private final int maxHistLenStat;
+
     private final List<Integer> bucketDelays;
     private final int maxBucketIdx;
     private final Instant startTimeForParams;
 
-    public RepeatStrategyQueue(Utils utils, List<Task> allTasks, int step, BigDecimal stepMultFactor, int batchSize) {
+    public RepeatStrategyQueue(
+        Utils utils, List<Task> allTasks, int step, BigDecimal stepMultFactor, int batchSize, int maxHistLenStat
+    ) {
         super(allTasks);
         this.utils = utils;
         this.step = utils.getInRange(MIN_STEP, step, MAX_STEP);
         this.stepMultFactor = utils.getInRange(MIN_STEP_MULT_FACTOR, stepMultFactor, MAX_STEP_MULT_FACTOR);
         this.batchSize = utils.getInRange(MIN_BATCH_SIZE, batchSize, MAX_BATCH_SIZE);
+        this.maxHistLenStat = utils.getInRange(2, maxHistLenStat, 30);
         List<Integer> bucketDelays = new ArrayList<>();
         int maxDelay = utils.getInRange(0, allTasks.size() - batchSize, allTasks.size());
         do {
@@ -164,6 +170,7 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
                 "Session min/max streak: %s/%s",
                 countAndStreak.getMinStreak(), countAndStreak.getMaxStreak()
             ))),
+            div(rndTableWithHistLenStat(getHistLengths(allTasks, maxHistLenStat))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );
     }
@@ -297,6 +304,41 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
             .time(histRec.getTime())
             .task(task)
             .build();
+    }
+
+    private List<Integer> getHistLengths(List<TaskDto> allTasks, int maxHistLen) {
+        List<Integer> counts = allTasks.stream()
+            .collect(Collectors.groupingBy(TaskDto::getHistLen))
+            .values()
+            .stream()
+            .map(List::size)
+            .sorted()
+            .toList();
+        List<Integer> res = new ArrayList<>(
+            counts.stream().limit(maxHistLen + 1).toList()
+        );
+        res.add(
+            counts.stream()
+                .skip(maxHistLen + 1)
+                .reduce(0, Integer::sum)
+        );
+        return res;
+    }
+
+    private HtmlElem rndTableWithHistLenStat(List<Integer> histLenStat) {
+        List<HtmlElem> row1 = new ArrayList<>();
+        List<HtmlElem> row2 = new ArrayList<>();
+        row1.add(text("History length"));
+        row2.add(text("Number of tasks"));
+        for (int i = 0; i < histLenStat.size(); i++) {
+            if (i < histLenStat.size() - 1) {
+                row1.add(text(i));
+            } else {
+                row1.add(text(">= " + i));
+            }
+            row2.add(text(histLenStat.get(i)));
+        }
+        return table(List.of(row1, row2)).attr("class", "table-single-border bucket-params");
     }
 
     @Getter
