@@ -3,7 +3,6 @@ package org.igye.remem3.app.controllers.cardexplorer;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.igye.remem3.app.Cache;
-import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.state.StateUpdater;
@@ -13,9 +12,7 @@ import org.springframework.core.annotation.Order;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_OPEN_CARD_IN_EDITOR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_REFRESH_CARD;
@@ -28,7 +25,6 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
     private final CardExplorerRenderer renderer;
     private final Settings settings;
     private final Cache cache;
-    private final CardUtils cardUtils;
 
     @Override
     public CardExplorerState update(CardExplorerState st, RequestParams params) {
@@ -65,19 +61,12 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
     @SneakyThrows
     private CardExplorerState actRefreshCard(CardExplorerState st, RequestParams params) {
         String filePath = params.getKeyValueParam(ACT_REFRESH_CARD);
-        AtomicReference<Optional<File>> fileOpt = new AtomicReference<>(Optional.empty());
-        List<Card> newCards = st.getCards().stream()
-            .map(card -> card.getFile().map(file -> {
-                if (file.getAbsolutePath().equals(filePath)) {
-                    fileOpt.set(Optional.of(file));
-                    return cardUtils.loadCard(file);
-                } else {
-                    return card;
-                }
-            }).orElse(card))
-            .toList();
-        return st
-            .withCards(newCards)
-            .withScrollToId(fileOpt.get().map(renderer::getId));
+        Optional<File> fileOpt = st.getCards().stream()
+            .map(Card::getFile)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(file -> file.getAbsolutePath().equals(filePath))
+            .findFirst();
+        return st.withScrollToId(fileOpt.map(renderer::getId));
     }
 }
