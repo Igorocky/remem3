@@ -264,6 +264,8 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
             checkedTasksCnt++;
         }
         if (checkedTasksCnt < allTasks.size()) {
+            // Tasks without remainingDelay don't have history.
+            // Setting for them remainingDelay to the minimal value for them to be picked by strictMin().
             Integer remainingDelayForNewTasks = allTasks.stream()
                 .map(TaskDto::getRemainingDelay)
                 .filter(Optional::isPresent)
