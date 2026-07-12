@@ -7,6 +7,7 @@ import org.igye.remem3.app.controllers.exercise.HasBaseTask;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.TaskType;
+import org.igye.remem3.app.repeatstrategy.Hist;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.RepeatStrategy;
 import org.igye.remem3.app.repeatstrategy.Task;
@@ -51,7 +52,7 @@ class RepeatStrategyCompoundTest {
         while (nextTasksOpt.isPresent() && cnt < maxCnt) {
             List<Task> nextTasks = nextTasksOpt.get();
             cnt += nextTasks.size();
-            nextTasks.forEach(t -> t.getHist().add(makeHistRec()));
+            nextTasks.forEach(t -> t.getHist().getRecords().add(makeHistRec()));
             nextTasksOpt = compound.getNextTasks();
         }
 
@@ -84,7 +85,7 @@ class RepeatStrategyCompoundTest {
             List<Task> nextTasks = nextTasksOpt.get();
             cnt += nextTasks.size();
             nextTasks.forEach(task -> {
-                task.getHist().add(makeHistRec());
+                task.getHist().getRecords().add(makeHistRec());
                 counts.computeIfAbsent(((TestTask) task).getContent(), _ -> new AtomicInteger(0)).incrementAndGet();
             });
             nextTasksOpt = compound.getNextTasks();
@@ -116,8 +117,23 @@ class RepeatStrategyCompoundTest {
         return new TestHistRec(Instant.now(), BigDecimal.ONE);
     }
 
+    @RequiredArgsConstructor
+    private static class TestHist implements Hist {
+        private final List<HistRec> hist;
+
+        @Override
+        public List<HistRec> getRecords() {
+            return hist;
+        }
+
+        @Override
+        public int getBucketIdx(int maxBucketIdx) {
+            return 0;
+        }
+    }
+
     private static class TestTask implements Task, HasBaseTask {
-        private final List<HistRec> hist = new ArrayList<>();
+        private final Hist hist = new TestHist(new ArrayList<>());
         @Getter
         private final String content;
 
@@ -126,7 +142,7 @@ class RepeatStrategyCompoundTest {
         }
 
         @Override
-        public List<HistRec> getHist() {
+        public Hist getHist() {
             return hist;
         }
 

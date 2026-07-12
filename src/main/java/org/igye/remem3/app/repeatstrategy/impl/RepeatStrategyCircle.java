@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
+import org.igye.remem3.app.repeatstrategy.Hist;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlElem;
@@ -42,6 +43,7 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
         super(allTasks);
         this.startTime = getAllTasks().stream()
             .map(Task::getHist)
+            .map(Hist::getRecords)
             .flatMap(Collection::stream)
             .map(HistRec::getTime)
             .min(Instant::compareTo)
@@ -162,7 +164,7 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
     private List<TaskDto> getTaskDtos() {
         ArrayList<TaskDto> res = getAllTasks().stream()
             .map(task -> {
-                List<HistRec> hist = task.getHist();
+                List<HistRec> hist = task.getHist().getRecords();
                 return TaskDto.builder()
                     .task(task)
                     .hist(hist)

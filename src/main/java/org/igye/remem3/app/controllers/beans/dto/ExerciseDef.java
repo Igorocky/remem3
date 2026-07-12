@@ -1,6 +1,7 @@
 package org.igye.remem3.app.controllers.beans.dto;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
@@ -22,6 +23,7 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
         private String name;
     }
 
+    @EqualsAndHashCode(callSuper = true)
     @Data
     final class SimpleExerciseDef extends BaseExerciseDef {
         private List<File> dirs;
@@ -50,7 +52,7 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
 
         public CompoundExerciseDef(List<List<Object>> exercises) {
             this.exercises = exercises.stream()
-                .map(e -> Pair.of((Integer) e.get(0), (ExerciseDef) e.get(1)))
+                .map(e -> Pair.of((Integer) e.getFirst(), (ExerciseDef) e.get(1)))
                 .toList();
         }
 

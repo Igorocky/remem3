@@ -188,7 +188,7 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
         List<List<HistRec>> sessionHist = allTasks.stream()
             .map(TaskDto::getTask)
             .map(Task::getHist)
-            .map(h -> h.stream().filter(r -> startTimeForParams.isBefore(r.getTime())).toList())
+            .map(h -> h.getRecords().stream().filter(r -> startTimeForParams.isBefore(r.getTime())).toList())
             .toList();
         Pair<Integer, Integer> count = utils.getMinMax(sessionHist, List::size, Integer::compareTo, Pair.of(0, 0));
         Pair<Integer, Integer> streak = utils.getMinMax(
@@ -251,7 +251,9 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
     private List<TaskDto> getTaskDtos() {
         List<TaskDto> allTasks = getAllTasks().stream().map(this::makeTaskDto).toList();
         List<HistRecDto> allHistRev = allTasks.stream()
-            .flatMap(task -> task.getTask().getHist().stream().map(histRec -> makeHistRecDto(task, histRec)))
+            .flatMap(task ->
+                task.getTask().getHist().getRecords().stream().map(histRec -> makeHistRecDto(task, histRec))
+            )
             .sorted(Comparator.comparing(HistRecDto::getTime).reversed())
             .toList();
         int checkedTasksCnt = 0;
@@ -289,7 +291,7 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
     }
 
     private TaskDto makeTaskDto(Task task) {
-        List<HistRec> hist = task.getHist();
+        List<HistRec> hist = task.getHist().getRecords();
         int bucketIdx = getBucketIdx(hist);
         return TaskDto.builder()
             .task(task)

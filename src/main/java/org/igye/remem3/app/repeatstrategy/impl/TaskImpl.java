@@ -3,6 +3,7 @@ package org.igye.remem3.app.repeatstrategy.impl;
 import lombok.Getter;
 import org.igye.remem3.app.controllers.exercise.HasBaseTask;
 import org.igye.remem3.app.dto.RepeatStrategyType;
+import org.igye.remem3.app.repeatstrategy.Hist;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.utils.Exn;
@@ -18,7 +19,7 @@ public class TaskImpl implements Task, HasBaseTask {
     private final RepeatStrategyType repeatStrategyType;
 
     private int allHistSize;
-    private List<HistRec> hist;
+    private Hist hist;
     private File file;
     private String dir;
 
@@ -33,20 +34,21 @@ public class TaskImpl implements Task, HasBaseTask {
     }
 
     @Override
-    public List<HistRec> getHist() {
+    public Hist getHist() {
         List<org.igye.remem3.app.dto.HistRec> allHist = baseTask.getCard().getHistory();
-        if (hist != null && allHistSize == allHist.size()) {
-            return hist;
+        if (hist == null || allHistSize != allHist.size()) {
+            allHistSize = allHist.size();
+            hist = new HistImpl(
+                allHist.stream()
+                    .filter(histRec ->
+                        histRec.getTime().compareTo(historyStartsAt) >= 0
+                            && histRec.getStrategy() == repeatStrategyType
+                            && baseTask.getTaskType().getCode().equals(histRec.getTaskType())
+                    )
+                    .map(HistRec.class::cast)
+                    .toList()
+            );
         }
-        allHistSize = allHist.size();
-        hist = allHist.stream()
-            .filter(histRec ->
-                histRec.getTime().compareTo(historyStartsAt) >= 0
-                    && histRec.getStrategy() == repeatStrategyType
-                    && baseTask.getTaskType().getCode().equals(histRec.getTaskType())
-            )
-            .map(HistRec.class::cast)
-            .toList();
         return hist;
     }
 

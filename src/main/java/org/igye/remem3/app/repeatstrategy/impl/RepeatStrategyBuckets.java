@@ -156,7 +156,7 @@ public class RepeatStrategyBuckets extends BaseRepeatStrategy {
         Instant startOfDay = Instant.now().atZone(java.time.ZoneId.systemDefault())
             .truncatedTo(java.time.temporal.ChronoUnit.DAYS).toInstant();
         long actualDailyUniqueCount = getAllTasks().stream()
-            .filter(t -> t.getHist().stream().anyMatch(h -> !h.getTime().isBefore(startOfDay)))
+            .filter(t -> t.getHist().getRecords().stream().anyMatch(h -> !h.getTime().isBefore(startOfDay)))
             .count();
         return Optional.of(Pair.of(actualDailyUniqueCount, recommDailyUniqueCount));
     }
@@ -260,7 +260,7 @@ public class RepeatStrategyBuckets extends BaseRepeatStrategy {
         AtomicBoolean emptyHistIsPresent = new AtomicBoolean(false);
         List<TaskDto> res = getAllTasks().stream()
             .map(task -> {
-                List<HistRec> hist = task.getHist();
+                List<HistRec> hist = task.getHist().getRecords();
                 if (hist.isEmpty()) {
                     emptyHistIsPresent.set(true);
                 }
@@ -284,7 +284,7 @@ public class RepeatStrategyBuckets extends BaseRepeatStrategy {
                 .map(new BigDecimal("1.01")::multiply)
                 .orElse(BigDecimal.ZERO);
             res.stream()
-                .filter(t -> t.getTask().getHist().isEmpty())
+                .filter(t -> t.getTask().getHist().getRecords().isEmpty())
                 .forEach(t -> t.setOverdue(overdueForNewTasks));
         }
         return res;

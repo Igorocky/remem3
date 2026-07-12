@@ -2,6 +2,7 @@ package org.igye.remem3.app.repeatstrategy.impl;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
+import org.igye.remem3.app.repeatstrategy.Hist;
 import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlElem;
@@ -35,6 +36,7 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
         this.randomnessFactor = randomnessFactor;
         this.startTime = allTasks.stream()
             .map(Task::getHist)
+            .map(Hist::getRecords)
             .flatMap(Collection::stream)
             .map(HistRec::getTime)
             .min(Instant::compareTo)
@@ -108,7 +110,7 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
 
     private List<Task> getNotPassedTasks(boolean preserveLastHistRec) {
         return getAllTasks().stream()
-            .filter(task -> task.getHist().isEmpty() || !task.getHist().getLast().isPassed())
+            .filter(task -> task.getHist().getRecords().isEmpty() || !task.getHist().getRecords().getLast().isPassed())
             .map(task -> truncateHist(task, preserveLastHistRec))
             .toList();
     }
@@ -118,7 +120,9 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
         return new TaskImpl(
             taskImpl.getBaseTask(),
             //we need to preserve the last history record so the Circle strategy shows tasks in consistent order
-            (task.getHist().isEmpty() || !preserveLastRec) ? Instant.now() : task.getHist().getLast().getTime(),
+            (task.getHist().getRecords().isEmpty() || !preserveLastRec)
+                ? Instant.now()
+                : task.getHist().getRecords().getLast().getTime(),
             task.getSelectedByStrategyType()
         );
     }
