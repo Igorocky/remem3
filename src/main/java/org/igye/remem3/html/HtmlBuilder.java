@@ -233,6 +233,10 @@ public class HtmlBuilder {
         return h("input", Map.of("type", "submit", "id", name, "name", name, "value", value));
     }
 
+    protected HtmlTag inpButton(String name, String value) {
+        return h("input", Map.of("type", "button", "id", name, "name", name, "value", value));
+    }
+
     protected HtmlTag inpCheckbox(String name, String value, boolean checked) {
         Map<String, String> attrs = new HashMap<>();
         attrs.put("type", "checkbox");

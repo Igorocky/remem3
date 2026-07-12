@@ -78,10 +78,15 @@ public class NewCardRenderer extends HtmlBuilder implements StateRenderer<NewCar
             List.of(
                 text("Text"),
                 table(List.of(
-                    List.of(div("color:grey;", text("[[word|translation|transcription]] or [[answer|hint|notes]]"))),
+                    List.of(div("color:grey;",
+                        text("[[word|translation|transcription]] or [[answer|hint|notes]]"),
+                        inpButton("", "Mark selected")
+                            .attr("onclick", "markSelectedText('%s')".formatted(PAR_CARD_FILL_GAPS_TEXT))
+                    )),
                     List.of(
                         textarea(PAR_CARD_FILL_GAPS_TEXT, card.getText(), 100, 5).autofocus()
                             .attr("tabindex", "2")
+                            .id(PAR_CARD_FILL_GAPS_TEXT)
                     )
                 ))
             ),
