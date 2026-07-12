@@ -283,19 +283,11 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
         return allTasks;
     }
 
-    private int getBucketIdx(List<HistRec> hist) {
-        if (hist.isEmpty() || hist.stream().allMatch(HistRec::isPassed)) {
-            return maxBucketIdx;
-        }
-        return utils.getStreak(hist, maxBucketIdx);
-    }
-
     private TaskDto makeTaskDto(Task task) {
-        List<HistRec> hist = task.getHist().getRecords();
-        int bucketIdx = getBucketIdx(hist);
+        int bucketIdx = task.getHist().getBucketIdx(maxBucketIdx);
         return TaskDto.builder()
             .task(task)
-            .histLen(hist.size())
+            .histLen(task.getHist().getRecords().size())
             .bucketIdx(bucketIdx)
             .bucketDelay(bucketDelays.get(bucketIdx))
             .build();
