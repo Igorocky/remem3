@@ -222,11 +222,14 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
         if (b.getBucketIdx() < a.getBucketIdx()) {
             return b;
         }
+        // Both tasks are in the same bucket.
 
-        // If both tasks are not in the last bucket.
-        // The last bucket would contain either new tasks or well remembered tasks.
-        // Hence, tasks which are not in the last bucket are not new and not remembered well.
         if (a.getBucketIdx() < maxBucketIdx) {
+            // Both tasks are not in the last bucket.
+
+            // The last bucket would contain either new tasks or well remembered tasks.
+            // Hence, tasks which are not in the last bucket are not new and not remembered well.
+
             // Select the task with the longest history to concentrate on one of them first.
             // When it becomes remembered better we can switch to another task.
             if (a.getHistLen() > b.getHistLen()) {
@@ -237,6 +240,7 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
             }
             return null;
         }
+        // Both tasks are in the last bucket.
 
         // Among the tasks in the last bucket, select the one with the least remaining delay.
         if (a.getRemainingDelayExn() < b.getRemainingDelayExn()) {
