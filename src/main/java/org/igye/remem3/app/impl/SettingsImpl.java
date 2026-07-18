@@ -49,7 +49,7 @@ public class SettingsImpl implements Settings {
         List<String> languages = props.getLanguages();
         checkNotEmpty(languages, PROP_LANGUAGES);
         if (languages.contains("_")) {
-            throw new Exn("The underscore symbol '_' cannot be used as a language name.");
+            throw new Exn("Language names cannot contain the underscore symbol '_'.");
         }
         for (String language : languages) {
             if (SPACE_PAT.matcher(language).find()) {

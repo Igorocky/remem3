@@ -12,6 +12,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -460,5 +461,52 @@ class CardUtilsImplTest {
         Assertions.assertEquals(new BigDecimal("2"), cardUtils.getNextOrder(new BigDecimal("0.1")));
         Assertions.assertEquals(new BigDecimal("2"), cardUtils.getNextOrder(new BigDecimal("0.99")));
         Assertions.assertEquals(new BigDecimal("2"), cardUtils.getNextOrder(new BigDecimal("0.999")));
+    }
+
+    @Test
+    void processComplexKeyForCardTranslate_parses_text1() {
+        //given
+        CardUtilsImpl cardUtils = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        HashMap<String, List<String>> props = new HashMap<>();
+
+        //when
+        String newKey = cardUtils.processComplexKeyForCardTranslate("###text1 QUESTION ~", props);
+
+        //then
+        Assertions.assertEquals(2, props.size());
+        Assertions.assertEquals(List.of("QUESTION"), props.get(CardUtilsImpl.ATTR_LANG_1));
+        Assertions.assertEquals(List.of("n"), props.get(CardUtilsImpl.ATTR_EXACT_MATCH_1));
+        Assertions.assertEquals(CardUtilsImpl.ATTR_TEXT_1, newKey);
+    }
+
+    @Test
+    void processComplexKeyForCardTranslate_parses_text2() {
+        //given
+        CardUtilsImpl cardUtils = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        HashMap<String, List<String>> props = new HashMap<>();
+
+        //when
+        String newKey = cardUtils.processComplexKeyForCardTranslate("###text2 ANSWER =", props);
+
+        //then
+        Assertions.assertEquals(2, props.size());
+        Assertions.assertEquals(List.of("ANSWER"), props.get(CardUtilsImpl.ATTR_LANG_2));
+        Assertions.assertEquals(List.of("y"), props.get(CardUtilsImpl.ATTR_EXACT_MATCH_2));
+        Assertions.assertEquals(CardUtilsImpl.ATTR_TEXT_2, newKey);
+    }
+
+    @Test
+    void processComplexKeyForCardTranslate_parses_non_text() {
+        //given
+        CardUtilsImpl cardUtils = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        HashMap<String, List<String>> props = new HashMap<>();
+        final String expectedNonTextAttrName = "###lang1";
+
+        //when
+        String newKey = cardUtils.processComplexKeyForCardTranslate(expectedNonTextAttrName, props);
+
+        //then
+        Assertions.assertEquals(0, props.size());
+        Assertions.assertEquals(expectedNonTextAttrName, newKey);
     }
 }

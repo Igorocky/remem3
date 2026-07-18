@@ -47,14 +47,14 @@ public class CardUtilsImpl implements CardUtils {
         "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\s+(\\S+)\\s+(\\S+)\\s+(\\d+(\\.\\d+)?)(\\s+(.*))?$"
     );
     private static final String ATTR_LANG = "###lang";
-    private static final String ATTR_LANG_1 = "###lang1";
-    private static final String ATTR_LANG_2 = "###lang2";
-    private static final String ATTR_EXACT_MATCH_1 = "###exact_match1";
-    private static final String ATTR_EXACT_MATCH_2 = "###exact_match2";
+    protected static final String ATTR_LANG_1 = "###lang1";
+    protected static final String ATTR_LANG_2 = "###lang2";
+    protected static final String ATTR_EXACT_MATCH_1 = "###exact_match1";
+    protected static final String ATTR_EXACT_MATCH_2 = "###exact_match2";
     private static final String ATTR_DESCR = "###descr";
     private static final String ATTR_TEXT = "###text";
-    private static final String ATTR_TEXT_1 = "###text1";
-    private static final String ATTR_TEXT_2 = "###text2";
+    protected static final String ATTR_TEXT_1 = "###text1";
+    protected static final String ATTR_TEXT_2 = "###text2";
     private static final String ATTR_EXAMPLE_1 = "###example1";
     private static final String ATTR_EXAMPLE_2 = "###example2";
     private static final String ATTR_NOTES = "###notes";
@@ -316,13 +316,12 @@ public class CardUtilsImpl implements CardUtils {
 
     protected String translateCardToString(Card.Translate card) {
         StringBuilder sb = new StringBuilder();
-        sb.append(ATTR_LANG_1).append("\n").append(card.getLang1());
-        sb.append("\n\n").append(ATTR_TEXT_1).append("\n").append(card.getText1());
-        sb.append("\n\n").append(ATTR_EXACT_MATCH_1).append("\n").append(card.isExactMatch1() ? "y" : "n");
+        sb.append(ATTR_TEXT_1).append(" ").append(card.getLang1()).append(" ").append(card.isExactMatch1() ? "=" : "~");
+        sb.append("\n").append(card.getText1());
+        sb.append("\n\n").append(ATTR_TEXT_2).append(" ").append(card.getLang2()).append(" ").append(card.isExactMatch2() ? "=" : "~");
+        sb.append("\n").append(card.getText2());
+
         sb.append("\n\n").append(ATTR_EXAMPLE_1).append("\n").append(card.getExample1());
-        sb.append("\n\n").append(ATTR_LANG_2).append("\n").append(card.getLang2());
-        sb.append("\n\n").append(ATTR_TEXT_2).append("\n").append(card.getText2());
-        sb.append("\n\n").append(ATTR_EXACT_MATCH_2).append("\n").append(card.isExactMatch2() ? "y" : "n");
         sb.append("\n\n").append(ATTR_EXAMPLE_2).append("\n").append(card.getExample2());
         sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
         saveAttrs(sb, card.getAttrs());
@@ -540,6 +539,7 @@ public class CardUtilsImpl implements CardUtils {
                 }
                 key = line.trim();
                 buf = new ArrayList<>();
+                key = processComplexKeyForCardTranslate(key, res);
             } else if (key == null) {
                 throw new Exn("key == null");
             } else {
@@ -550,6 +550,23 @@ public class CardUtilsImpl implements CardUtils {
             putKeyVal(res, key, buf);
         }
         return res;
+    }
+
+    protected String processComplexKeyForCardTranslate(String key, HashMap<String, List<String>> res) {
+        Pattern pattern = Pattern.compile("(###text[12])\\s+([^:]+)\\s+([=~])");
+        Matcher matcher = pattern.matcher(key);
+        if (!matcher.matches()) {
+            return key;
+        }
+        String newKey = matcher.group(1);
+        boolean isText1 = ATTR_TEXT_1.equals(newKey);
+        putKeyVal(res, isText1 ? ATTR_LANG_1 : ATTR_LANG_2, List.of(matcher.group(2)));
+        putKeyVal(
+            res,
+            isText1 ? ATTR_EXACT_MATCH_1 : ATTR_EXACT_MATCH_2,
+            matcher.group(3).equals("=") ? List.of("y") : List.of("n")
+        );
+        return newKey;
     }
 
     private void putKeyVal(HashMap<String, List<String>> props, String key, List<String> val) {
