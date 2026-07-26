@@ -44,7 +44,7 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
         this.keepOrder = keepOrder;
         this.round = 1;
         this.circle = new RepeatStrategyCircle(
-            utils, getNotPassedTasks(false), randomnessFactor, Optional.of(1), keepOrder
+            utils, getNotPassedTasks(true), randomnessFactor, Optional.of(1), keepOrder
         );
     }
 
