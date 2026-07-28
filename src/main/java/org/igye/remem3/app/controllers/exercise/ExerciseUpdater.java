@@ -61,6 +61,7 @@ import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELE
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_TASK_FILTER;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SHOW_DAILY_UNIQUE_COUNT;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SHOW_EXERCISE_PARAMS;
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_START_TIME;
 
 @RequiredArgsConstructor
 public class ExerciseUpdater implements StateUpdater<ExerciseState> {
@@ -93,7 +94,17 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         return st;
     }
 
+    private SelectExerciseState updateStartTime(SelectExerciseState st, RequestParams params) {
+        String startTime = params.getParam(PAR_START_TIME, cache.getStr(PAR_START_TIME, ""));
+        cache.put(PAR_START_TIME, startTime);
+        if (StringUtils.isBlank(startTime)) {
+            return st.withStartTime(Optional.empty());
+        }
+        return st.withStartTime(Optional.of(startTime));
+    }
+
     private ExerciseState updateSelectExerciseState(SelectExerciseState st, RequestParams params) {
+        st = st.withErrors(List.of());
         st = updateSelectablePart(st, params, PAR_SELECTED_EXERCISE, st::setSelectedExercise);
         if (params.hasKeyValueParam(PAR_SELECTED_DIR)) {
             st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR).setPath(params));
@@ -102,14 +113,19 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         SelectExerciseState finalSt = st;
         st = updateSelectablePart(st, params, PAR_SELECTED_TASK_FILTER, finalSt::setSelectedTaskFilter);
         st = updateSelectablePart(st, params, PAR_SELECTED_STRATEGY, st::setSelectedStrategy);
+        st = updateStartTime(st, params);
         if (params.hasParam(ACT_START_EXERCISE)) {
-            return actStartExercise(st);
+            try {
+                return actStartExercise(st);
+            } catch (Exception e) {
+                return st.withErrors(List.of(e.getMessage()));
+            }
         }
         return st;
     }
 
     private ExerciseState actStartExercise(SelectExerciseState st) {
-        Optional<ExerciseDef> exerciseToStart = st.makeSelectedExercise();
+        Optional<ExerciseDef> exerciseToStart = st.makeSelectedExercise(true);
         if (exerciseToStart.isEmpty()) {
             return st;
         }

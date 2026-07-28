@@ -22,6 +22,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     public static final String PAR_SELECTED_DIR = "Exercise_PAR_SELECTED_DIR";
     public static final String PAR_SELECTED_TASK_FILTER = "Exercise_PAR_SELECTED_TASK_FILTER";
     public static final String PAR_SELECTED_STRATEGY = "Exercise_PAR_SELECTED_STRATEGY";
+    public static final String PAR_START_TIME = "Exercise_PAR_START_TIME";
     public static final String PAR_SHOW_EXERCISE_PARAMS = "Exercise_PAR_SHOW_EXERCISE_PARAMS";
     public static final String PAR_SHOW_DAILY_UNIQUE_COUNT = "Exercise_PAR_SHOW_DAILY_UNIQUE_COUNT";
     public static final String ACT_START_EXERCISE = "Exercise_ACT_START_EXERCISE";
@@ -49,6 +50,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
 
     private HtmlElem rndSelectExerciseState(SelectExerciseState st) {
         return frag(
+            rndErrors(st.getErrors()),
             h4(text("Select exercise"), rndExerciseSelector(st)),
             rndCustomSelectors(st),
             rndSubmitButton(st)
@@ -56,7 +58,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     }
 
     private HtmlElem rndSubmitButton(SelectExerciseState st) {
-        if (st.makeSelectedExercise().isEmpty()) {
+        if (st.makeSelectedExercise(false).isEmpty()) {
             return null;
         }
         return div(
@@ -74,6 +76,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
             rndDirSelector(st),
             rndTaskFilterSelector(st),
             rndStrategySelector(st),
+            rndStartTimeField(st),
             br()
         );
     }
@@ -119,6 +122,13 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
                 st.getSelectedStrategy().map(Pair::getLeft),
                 "No repeat strategies are defined."
             )
+        )));
+    }
+
+    private HtmlElem rndStartTimeField(SelectExerciseState st) {
+        return table(List.of(List.of(
+            text("Start time"),
+            inpText(PAR_START_TIME, st.getStartTime().orElse(""), null).attr("size", "25")
         )));
     }
 

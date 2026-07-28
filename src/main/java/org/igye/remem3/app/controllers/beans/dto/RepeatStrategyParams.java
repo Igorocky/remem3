@@ -16,6 +16,8 @@ public sealed interface RepeatStrategyParams
 
     Supplier<Instant> getStartTime();
 
+    void setStartTime(Supplier<Instant> startTime);
+
     RepeatStrategyType getRepeatStrategyType();
 
     @Data

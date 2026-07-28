@@ -31,6 +31,7 @@ import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELE
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_EXERCISE;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_STRATEGY;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_TASK_FILTER;
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_START_TIME;
 
 @RequiredArgsConstructor
 @Order(2)
@@ -82,6 +83,7 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
         ));
         st = st.setSelectedTaskFilter(cache.getStr(PAR_SELECTED_TASK_FILTER, ""));
         st = st.setSelectedStrategy(cache.getStr(PAR_SELECTED_STRATEGY, ""));
+        st = st.setStartTime(cache.getStr(PAR_START_TIME, ""));
         return st;
     }
 

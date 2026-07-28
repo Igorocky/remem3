@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.With;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.components.DirSelectorCmp;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
@@ -12,6 +13,8 @@ import org.igye.remem3.app.controllers.beans.dto.TaskFilter;
 import org.igye.remem3.app.controllers.beans.dto.TaskView;
 
 import java.io.File;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -32,6 +35,10 @@ public final class SelectExerciseState implements ExerciseState {
 
     @With
     @Getter
+    @Builder.Default
+    private List<String> errors = new ArrayList<>();
+    @With
+    @Getter
     private final Optional<ExerciseDef> selectedExercise;
     @With
     @Getter
@@ -45,8 +52,11 @@ public final class SelectExerciseState implements ExerciseState {
     @With
     @Getter
     private final Optional<Pair<String, RepeatStrategyParams>> selectedStrategy;
+    @With
+    @Getter
+    private final Optional<String> startTime;
 
-    public Optional<ExerciseDef> makeSelectedExercise() {
+    public Optional<ExerciseDef> makeSelectedExercise(boolean parseStartTime) {
         if (selectedExercise.isPresent()) {
             return selectedExercise;
         }
@@ -55,7 +65,12 @@ public final class SelectExerciseState implements ExerciseState {
             exerciseDef.setName(CUSTOM_EXERCISE_NAME);
             exerciseDef.setDirs(List.of(selectedDir.getSelectedDirectory()));
             exerciseDef.setTaskFilter(selectedTaskFilter.get().getRight());
-            exerciseDef.setRepeatStrategy(selectedStrategy.get().getRight());
+            RepeatStrategyParams repeatStrategyParams = selectedStrategy.get().getRight();
+            if (parseStartTime && startTime.isPresent()) {
+                Instant startTime = Instant.parse(this.startTime.get());
+                repeatStrategyParams.setStartTime(() -> startTime);
+            }
+            exerciseDef.setRepeatStrategy(repeatStrategyParams);
             return Optional.of(exerciseDef);
         }
         return Optional.empty();
@@ -115,5 +130,10 @@ public final class SelectExerciseState implements ExerciseState {
         );
     }
 
-
+    public SelectExerciseState setStartTime(String startTime) {
+        if (StringUtils.isBlank(startTime)) {
+            return withStartTime(Optional.empty());
+        }
+        return withStartTime(Optional.of(startTime.trim()));
+    }
 }
