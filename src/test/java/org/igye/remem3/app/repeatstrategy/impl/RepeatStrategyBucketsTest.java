@@ -29,7 +29,8 @@ class RepeatStrategyBucketsTest {
             new Task(dummyCard, dummyCard.getTaskTypes().getFirst()), Instant.MIN, RepeatStrategyType.CIRCLE
         );
         RepeatStrategyBuckets strat = new RepeatStrategyBuckets(
-            new UtilsImpl(new ObjectMapper()), null, 0, List.of(dummyTask), List.of(Duration.of(1, ChronoUnit.MINUTES))
+            new UtilsImpl(new ObjectMapper()), null, 0, List.of(dummyTask), Instant.MIN,
+            List.of(Duration.of(1, ChronoUnit.MINUTES))
         );
         assertEquals(
             new BigDecimal("-0.5"),

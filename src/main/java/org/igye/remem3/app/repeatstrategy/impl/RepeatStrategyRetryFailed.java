@@ -2,15 +2,12 @@ package org.igye.remem3.app.repeatstrategy.impl;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
-import org.igye.remem3.app.repeatstrategy.Hist;
-import org.igye.remem3.app.repeatstrategy.HistRec;
 import org.igye.remem3.app.repeatstrategy.Task;
 import org.igye.remem3.html.HtmlElem;
 import org.igye.remem3.utils.Utils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +17,6 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
 
     private final Utils utils;
     private final double randomnessFactor;
-    private final Instant startTime;
     private final boolean keepOrder;
     private int round;
     private RepeatStrategyCircle circle;
@@ -28,23 +24,17 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
     public RepeatStrategyRetryFailed(
         Utils utils,
         List<Task> allTasks,
+        Instant startTime,
         double randomnessFactor,
         boolean keepOrder
     ) {
-        super(allTasks);
+        super(allTasks, startTime);
         this.utils = utils;
         this.randomnessFactor = randomnessFactor;
-        this.startTime = allTasks.stream()
-            .map(Task::getHist)
-            .map(Hist::getRecords)
-            .flatMap(Collection::stream)
-            .map(HistRec::getTime)
-            .min(Instant::compareTo)
-            .orElseGet(Instant::now);
         this.keepOrder = keepOrder;
         this.round = 1;
         this.circle = new RepeatStrategyCircle(
-            utils, getNotPassedTasks(true), randomnessFactor, Optional.of(1), keepOrder
+            utils, getNotPassedTasks(true), startTime, randomnessFactor, Optional.of(1), keepOrder
         );
     }
 
@@ -61,7 +51,7 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
             } else {
                 this.round++;
                 this.circle = new RepeatStrategyCircle(
-                    utils, notPassedTasks, randomnessFactor, Optional.of(2), keepOrder
+                    utils, notPassedTasks, startTime, randomnessFactor, Optional.of(2), keepOrder
                 );
                 return circle.getNextTasks();
             }
@@ -94,7 +84,11 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
             div(text(format("Passed: %s/%s",
                 getAllTasks().size() - getNotPassedTasks(false).size(), getAllTasks().size()
             ))),
-            div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS))))
+            div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS)))),
+            div(text(format(
+                "Min. history time: %s",
+                minHistTime.map(inst -> inst.truncatedTo(ChronoUnit.SECONDS)).map(Instant::toString).orElse("-")
+            )))
         );
     }
 

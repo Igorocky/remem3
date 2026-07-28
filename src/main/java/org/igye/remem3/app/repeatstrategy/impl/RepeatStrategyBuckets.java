@@ -18,6 +18,7 @@ import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,9 +48,10 @@ public class RepeatStrategyBuckets extends BaseRepeatStrategy {
         Clock clock,
         int batchSize,
         List<Task> allTasks,
+        Instant startTime,
         List<Duration> bucketDelays
     ) {
-        super(allTasks);
+        super(allTasks, startTime);
         if (CollectionUtils.isEmpty(bucketDelays)) {
             throw new Exn("At least one bucket must be defined.");
         }
@@ -141,6 +143,11 @@ public class RepeatStrategyBuckets extends BaseRepeatStrategy {
             div(text(format("Directories: %s", getDirectoriesStr()))),
             div(text(format("Task types: %s", getTaskTypesStr()))),
             div(text(format("Number of tasks: %s", getAllTasks().size()))),
+            div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS)))),
+            div(text(format(
+                "Min. history time: %s",
+                minHistTime.map(inst -> inst.truncatedTo(ChronoUnit.SECONDS)).map(Instant::toString).orElse("-")
+            ))),
             div(text(format("Batch size: %s", batchSize))),
             div(table(rows).attr("class", "table-single-border bucket-params"))
         );

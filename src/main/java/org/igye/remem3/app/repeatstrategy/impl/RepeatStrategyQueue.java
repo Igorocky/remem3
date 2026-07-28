@@ -14,6 +14,7 @@ import org.igye.remem3.utils.Utils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,9 +43,10 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
     private final Instant startTimeForParams;
 
     public RepeatStrategyQueue(
-        Utils utils, List<Task> allTasks, int step, BigDecimal stepMultFactor, int batchSize, int maxHistLenStat
+        Utils utils, List<Task> allTasks, Instant startTime,
+        int step, BigDecimal stepMultFactor, int batchSize, int maxHistLenStat
     ) {
-        super(allTasks);
+        super(allTasks, startTime);
         this.utils = utils;
         this.step = utils.getInRange(MIN_STEP, step, MAX_STEP);
         this.stepMultFactor = utils.getInRange(MIN_STEP_MULT_FACTOR, stepMultFactor, MAX_STEP_MULT_FACTOR);
@@ -161,6 +163,11 @@ public class RepeatStrategyQueue extends BaseRepeatStrategy {
             div(text(format("Batch size: %s", batchSize))),
             div(text(format("Step: %s", step))),
             div(text(format("Step multiplication factor: %s", stepMultFactor))),
+            div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS)))),
+            div(text(format(
+                "Min. history time: %s",
+                minHistTime.map(inst -> inst.truncatedTo(ChronoUnit.SECONDS)).map(Instant::toString).orElse("-")
+            ))),
             div(text(format(
                 "Session counts total|min/max : %s | %s/%s",
                 countAndStreak.getTotalCount(), countAndStreak.getMinCount(), countAndStreak.getMaxCount()

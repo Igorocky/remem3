@@ -206,16 +206,17 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             .toList();
         RepeatStrategy repeatStrategy = switch (simpEx.getRepeatStrategy()) {
             case RepeatStrategyParams.RepeatStrategyCircleParams p -> new RepeatStrategyCircle(
-                utils, allTasks, p.getRandomness(), p.getRounds(), p.isKeepOrder()
+                utils, allTasks, historyStartsAt, p.getRandomness(), p.getRounds(), p.isKeepOrder()
             );
             case RepeatStrategyParams.RepeatStrategyRetryFailedParams p -> new RepeatStrategyRetryFailed(
-                utils, allTasks, p.getRandomness(), p.isKeepOrder()
+                utils, allTasks, historyStartsAt, p.getRandomness(), p.isKeepOrder()
             );
             case RepeatStrategyParams.RepeatStrategyQueueParams p -> new RepeatStrategyQueue(
-                utils, allTasks, p.getStep(), p.getStepMultFactor(), p.getBatchSize(), p.getMaxHistLenStat()
+                utils, allTasks, historyStartsAt,
+                p.getStep(), p.getStepMultFactor(), p.getBatchSize(), p.getMaxHistLenStat()
             );
             case RepeatStrategyParams.RepeatStrategyBucketsParams p -> new RepeatStrategyBuckets(
-                utils, clock, p.getBatchSize(), allTasks, p.getDelays()
+                utils, clock, p.getBatchSize(), allTasks, historyStartsAt, p.getDelays()
             );
         };
         return Pair.of(allTasks, repeatStrategy);

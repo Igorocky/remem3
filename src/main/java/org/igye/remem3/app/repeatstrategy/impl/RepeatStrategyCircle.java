@@ -36,11 +36,12 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
     public RepeatStrategyCircle(
         Utils utils,
         List<Task> allTasks,
+        Instant startTime,
         double randomnessFactor,
         Optional<Integer> numOfRounds,
         boolean keepOrder
     ) {
-        super(allTasks);
+        super(allTasks, startTime);
         this.startTime = getAllTasks().stream()
             .map(Task::getHist)
             .map(Hist::getRecords)
@@ -98,13 +99,17 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
             div(text(format("Directories: %s", getDirectoriesStr()))),
             div(text(format("Task types: %s", getTaskTypesStr()))),
             div(text(format("Number of tasks: %s", getAllTasks().size()))),
+            div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS)))),
+            div(text(format(
+                "Min. history time: %s",
+                minHistTime.map(inst -> inst.truncatedTo(ChronoUnit.SECONDS)).map(Instant::toString).orElse("-")
+            ))),
             div(text(format("Keep order: %s", keepOrder))),
             div(text(format("Randomness: %s (%s %s)", randomnessFactor, numOfTasksToSelectFrom, tasksStr))),
             numOfRounds.isPresent()
                 ? div(text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get())))
                 : div(text(format("Round: %s", progressInfo.getRound()))),
-            div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), getAllTasks().size()))),
-            div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS))))
+            div(text(format("Round progress: %s/%s", progressInfo.getRoundProgress(), getAllTasks().size())))
         );
     }
 
