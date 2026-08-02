@@ -120,12 +120,44 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         return frag(
             inpSubmit(keyValueParam(ACT_REFRESH_CARD, file.getAbsolutePath()), "Reload").id(getId(file)),
             inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getAbsolutePath()), "Edit"),
+            rndPriorities(card),
             span("color:lightgrey;", text("%s Created at %s Order %s".formatted(
                 renderFullPath ? file.getAbsolutePath() : file.getName(),
                 card.getCreatedAt().map(Objects::toString).orElse("?"),
                 card.getOrder()
             )))
         );
+    }
+
+    private HtmlElem rndPriorities(Card card) {
+        return span(
+            rndPriority(1, card),
+            rndPriority(2, card),
+            rndPriority(3, card)
+        );
+    }
+
+    private HtmlElem rndPriority(int priority, Card card) {
+        StringBuilder style = new StringBuilder();
+        if (priority == 1 /*card.getPriority()*/) {
+            style.append("font-weight:bold;");
+            if (priority == 1) {
+                style.append("color:green;");
+            }
+            if (priority == 2) {
+                style.append("color:orange;");
+            }
+            if (priority == 3) {
+                style.append("color:red;");
+            }
+        } else {
+            style.append("color:lightgrey;cursor:pointer;");
+        }
+        HtmlTag spanElem = span(style.toString(), text("P" + priority));
+        if (priority != 1 /*card.getPriority()*/) {
+            return a("", spanElem).attr("style", "text-decoration:none;");
+        }
+        return spanElem;
     }
 
 
