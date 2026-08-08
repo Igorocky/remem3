@@ -141,7 +141,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
 
     private HtmlElem rndPriority(int priority, Card card) {
         StringBuilder style = new StringBuilder();
-        if (priority == 1 /*card.getPriority()*/) {
+        if (priority == card.getPriority()) {
             style.append("font-weight:bold;");
             if (priority == 1) {
                 style.append("color:green;");
@@ -156,7 +156,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             style.append("color:lightgrey;cursor:pointer;");
         }
         HtmlTag spanElem = span(style.toString(), text("P" + priority));
-        if (priority != 1 /*card.getPriority()*/) {
+        if (priority != card.getPriority()) {
             return a("#", spanElem)
                 .attr("style", "text-decoration:none;")
                 .attr("onclick", "setNewPriorityForCard(event, '%s', '%s')".formatted(

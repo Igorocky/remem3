@@ -60,6 +60,7 @@ public class CardUtilsImpl implements CardUtils {
     private static final String ATTR_NOTES = "###notes";
     private static final String ATTR_HIST = "###hist";
     private static final String ATTR_ORDER = "###order";
+    private static final String ATTR_PRIORITY = "###priority";
     private static final String ATTR_CREATED_AT = "###created_at";
     private static final String ATTR_PREFIX = "###attr__";
     public static final String CARD_EXTENSION = ".card";
@@ -129,6 +130,14 @@ public class CardUtilsImpl implements CardUtils {
                 ex
             );
         }
+    }
+
+    @Override
+    public void saveCard(Card card) {
+        if (card.getFile().isEmpty()) {
+            throw new Exn("Cannot save card because it doesn't have a file.");
+        }
+        saveCard(card.getFile().get(), card);
     }
 
     @Override
@@ -310,7 +319,9 @@ public class CardUtilsImpl implements CardUtils {
         appendText(sb, card.getText());
         sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
         saveAttrs(sb, card.getAttrs());
-        appendOrderCreatedAtAndHist(sb, card.getOrder(), card.getCreatedAt(), card.getHistory());
+        appendOrderPriorityCreatedAtAndHist(
+            sb, card.getOrder(), card.getPriority(), card.getCreatedAt(), card.getHistory()
+        );
         return sb.toString();
     }
 
@@ -325,7 +336,9 @@ public class CardUtilsImpl implements CardUtils {
         sb.append("\n\n").append(ATTR_EXAMPLE_2).append("\n").append(card.getExample2());
         sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
         saveAttrs(sb, card.getAttrs());
-        appendOrderCreatedAtAndHist(sb, card.getOrder(), card.getCreatedAt(), card.getHistory());
+        appendOrderPriorityCreatedAtAndHist(
+            sb, card.getOrder(), card.getPriority(), card.getCreatedAt(), card.getHistory()
+        );
         return sb.toString();
     }
 
@@ -335,15 +348,17 @@ public class CardUtilsImpl implements CardUtils {
             .forEach(e -> sb.append("\n\n").append(ATTR_PREFIX).append(e.getKey()).append("\n").append(e.getValue()));
     }
 
-    private void appendOrderCreatedAtAndHist(
+    private void appendOrderPriorityCreatedAtAndHist(
         StringBuilder sb,
         BigDecimal order,
+        int priority,
         Optional<Instant> createdAt,
         List<HistRec> hist
     ) {
         if (order != null) {
             sb.append("\n\n").append(ATTR_ORDER).append("\n").append(order);
         }
+        sb.append("\n\n").append(ATTR_PRIORITY).append("\n").append(priority);
         sb.append("\n\n").append(ATTR_CREATED_AT).append("\n").append(
             createdAt.map(this::instantToStr).orElse("")
         );
@@ -416,6 +431,7 @@ public class CardUtilsImpl implements CardUtils {
         return Card.Translate.builder()
             .file(file)
             .order(getBigDecimal(props, ATTR_ORDER, null))
+            .priority(getInt(props, ATTR_PRIORITY, 1))
             .createdAt(getInstantOpt(props, ATTR_CREATED_AT))
             .lang1(getStr(props, ATTR_LANG_1, "").trim())
             .text1(getStr(props, ATTR_TEXT_1, "").trim())
@@ -436,6 +452,7 @@ public class CardUtilsImpl implements CardUtils {
         return Card.FillGaps.builder()
             .file(file)
             .order(getBigDecimal(props, ATTR_ORDER, null))
+            .priority(getInt(props, ATTR_PRIORITY, 1))
             .createdAt(getInstantOpt(props, ATTR_CREATED_AT))
             .lang(getStr(props, ATTR_LANG, "").trim())
             .descr(getStr(props, ATTR_DESCR, "").trim())
@@ -467,6 +484,15 @@ public class CardUtilsImpl implements CardUtils {
         try {
             String resStr = StringUtils.join(props.get(propName), "").trim();
             return new BigDecimal(resStr);
+        } catch (Exception _) {
+            return defaultValue;
+        }
+    }
+
+    private int getInt(Map<String, List<String>> props, String propName, int defaultValue) {
+        try {
+            String resStr = StringUtils.join(props.get(propName), "").trim();
+            return Integer.parseInt(resStr);
         } catch (Exception _) {
             return defaultValue;
         }

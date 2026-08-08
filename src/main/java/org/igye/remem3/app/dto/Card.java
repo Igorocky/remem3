@@ -24,6 +24,10 @@ public sealed interface Card permits Card.BaseCard {
 
     void setOrder(BigDecimal order);
 
+    int getPriority();
+
+    void setPriority(int priority);
+
     Optional<Instant> getCreatedAt();
 
     void setCreatedAt(Optional<Instant> createdAt);
@@ -50,6 +54,8 @@ public sealed interface Card permits Card.BaseCard {
         @Setter
         private BigDecimal order;
         @Getter
+        private int priority;
+        @Getter
         @Setter
         @Builder.Default
         private Optional<Instant> createdAt = Optional.empty();
@@ -62,6 +68,10 @@ public sealed interface Card permits Card.BaseCard {
 
         private List<TaskType> taskTypes;
         private List<Task> tasks;
+
+        abstract protected void childCopyFrom(Card other);
+
+        abstract protected List<TaskType> makeTaskTypes();
 
         @Override
         public void copyFrom(Card other) {
@@ -92,9 +102,10 @@ public sealed interface Card permits Card.BaseCard {
             return tasks;
         }
 
-        abstract protected void childCopyFrom(Card other);
-
-        abstract protected List<TaskType> makeTaskTypes();
+        @Override
+        public void setPriority(int priority) {
+            this.priority = Math.clamp(priority, 1, 3);
+        }
     }
 
     @SuperBuilder

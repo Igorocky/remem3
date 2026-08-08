@@ -162,6 +162,7 @@ class CardUtilsImplTest {
         CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Card.FillGaps card = Card.FillGaps.builder()
             .order(new BigDecimal("17.5"))
+            .priority(3)
             .createdAt(Optional.of(Instant.now().truncatedTo(ChronoUnit.SECONDS)))
             .lang("Lang1")
             .descr("Description")
@@ -220,6 +221,7 @@ class CardUtilsImplTest {
         CardUtilsImpl cards = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
         Card.Translate card = Card.Translate.builder()
             .order(new BigDecimal("23.1"))
+            .priority(2)
             .createdAt(Optional.of(Instant.now().truncatedTo(ChronoUnit.SECONDS)))
             .lang1("Lang1")
             .text1("Text1")

@@ -17,6 +17,8 @@ public interface CardUtils {
 
     void saveCard(File file, Card card);
 
+    void saveCard(Card card);
+
     List<String> validateCard(Card card);
 
     List<String> getReferencedCards(Card card);

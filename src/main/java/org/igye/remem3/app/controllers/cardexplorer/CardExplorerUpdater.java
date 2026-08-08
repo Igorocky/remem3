@@ -3,6 +3,7 @@ package org.igye.remem3.app.controllers.cardexplorer;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.igye.remem3.app.Cache;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.state.StateUpdater;
@@ -27,6 +28,7 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
     private final CardExplorerRenderer renderer;
     private final Settings settings;
     private final Cache cache;
+    private final CardUtils cardUtils;
 
     @Override
     public CardExplorerState update(CardExplorerState st, RequestParams params) {
@@ -82,10 +84,8 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
             .filter(card -> card.getFile().map(file -> filePath.equals(file.getAbsolutePath())).orElse(false))
             .findFirst();
         cardOpt.ifPresent(card -> {
-            System.out.println("Setting new priority %s for card %s".formatted(
-                params.getParam(ACT_SET_PRIORITY),
-                filePath
-            ));
+            card.setPriority(Integer.parseInt(params.getParam(ACT_SET_PRIORITY)));
+            cardUtils.saveCard(card);
         });
         return st.withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
     }
