@@ -3,6 +3,7 @@ package org.igye.remem3.app.state.impl;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.state.StateCache;
 import org.igye.remem3.app.state.StateConstructor;
+import org.igye.remem3.app.state.StateIdAware;
 import org.igye.remem3.app.state.StateLookup;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.app.state.StateRepository;
@@ -65,6 +66,9 @@ public class StateRepositoryImpl implements StateRepository, StateLookup {
         Object newState = stateUpdater.update(state, params);
         if (newState == null) {
             throw new Exn("%s returned null new state.".formatted(stateUpdater));
+        }
+        if (newState instanceof StateIdAware stateIdAware) {
+            stateIdAware.setStateId(actualStateId);
         }
         stateCache.putState(actualStateId, newState);
     }

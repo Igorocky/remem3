@@ -26,9 +26,11 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String PAR_SORT_ASC = "CardExplorer_PAR_SORT_ASC";
     public static final String PAR_RECURSIVE = "CardExplorer_PAR_RECURSIVE";
     public static final String PAR_FILTER = "CardExplorer_PAR_FILTER";
+    public static final String PAR_CARD_PATH = "CardExplorer_PAR_CARD_PATH";
     public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
     public static final String ACT_REFRESH_CARD = "CardExplorer_ACT_REFRESH_CARD";
     public static final String ACT_REFRESH_PAGE = "CardExplorer_ACT_REFRESH_PAGE";
+    public static final String ACT_SET_PRIORITY = "CardExplorer_ACT_SET_PRIORITY";
 
     @Override
     public HtmlElem render(CardExplorerState st) {
@@ -155,7 +157,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         }
         HtmlTag spanElem = span(style.toString(), text("P" + priority));
         if (priority != 1 /*card.getPriority()*/) {
-            return a("", spanElem).attr("style", "text-decoration:none;");
+            return a("#", spanElem).attr("style", "text-decoration:none;");
         }
         return spanElem;
     }

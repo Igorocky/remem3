@@ -44,7 +44,7 @@ function markSelectedText(textAreaId) {
     let rangeEnd = end;
 
     if (start === end) {
-        const isNotPartOfWord = (ch) => /[\s\\.,!?:;]/.test(ch);
+        const isNotPartOfWord = (ch) => /[\s.,!?:;()]/.test(ch);
         let left = start;
         let right = start;
 
