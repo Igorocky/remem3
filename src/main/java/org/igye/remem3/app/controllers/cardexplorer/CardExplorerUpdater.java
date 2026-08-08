@@ -16,6 +16,8 @@ import java.util.Optional;
 
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_OPEN_CARD_IN_EDITOR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_REFRESH_CARD;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SET_PRIORITY;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_CARD_PATH;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
 
 @RequiredArgsConstructor
@@ -35,6 +37,9 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         }
         if (params.hasKeyValueParam(ACT_REFRESH_CARD)) {
             st = actRefreshCard(st, params);
+        }
+        if (params.hasParam(ACT_SET_PRIORITY)) {
+            st = actChangePriorityForCard(st, params);
         }
         return st;
     }
@@ -68,5 +73,20 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
             .filter(file -> file.getAbsolutePath().equals(filePath))
             .findFirst();
         return st.withScrollToId(fileOpt.map(renderer::getId));
+    }
+
+    @SneakyThrows
+    private CardExplorerState actChangePriorityForCard(CardExplorerState st, RequestParams params) {
+        String filePath = params.getParam(PAR_CARD_PATH, "");
+        Optional<Card> cardOpt = st.getCards().stream()
+            .filter(card -> card.getFile().map(file -> filePath.equals(file.getAbsolutePath())).orElse(false))
+            .findFirst();
+        cardOpt.ifPresent(card -> {
+            System.out.println("Setting new priority %s for card %s".formatted(
+                params.getParam(ACT_SET_PRIORITY),
+                filePath
+            ));
+        });
+        return st.withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
     }
 }
