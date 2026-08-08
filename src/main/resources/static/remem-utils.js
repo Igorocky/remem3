@@ -15,6 +15,28 @@ function clickBtn(btnIdToClick) {
     }
 }
 
+function setNewPriorityForCard(event, cardPath, newPriority) {
+    event.preventDefault();
+
+    const form = event.currentTarget.closest('form');
+
+    if (!form) return;
+
+    const cardPathInp = document.createElement('input');
+    cardPathInp.type = 'hidden';
+    cardPathInp.name = 'CardExplorer_PAR_CARD_PATH';
+    cardPathInp.value = cardPath;
+
+    const newPriorityInp = document.createElement('input');
+    newPriorityInp.type = 'hidden';
+    newPriorityInp.name = 'CardExplorer_ACT_SET_PRIORITY';
+    newPriorityInp.value = newPriority;
+
+    form.append(cardPathInp, newPriorityInp);
+
+    form.submit();
+}
+
 function selectNextOption(selId) {
     const sel = document.getElementById(selId)
     const selIdx = sel.options.selectedIndex

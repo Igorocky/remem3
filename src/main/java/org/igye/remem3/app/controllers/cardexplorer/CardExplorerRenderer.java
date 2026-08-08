@@ -157,7 +157,13 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         }
         HtmlTag spanElem = span(style.toString(), text("P" + priority));
         if (priority != 1 /*card.getPriority()*/) {
-            return a("#", spanElem).attr("style", "text-decoration:none;");
+            return a("#", spanElem)
+                .attr("style", "text-decoration:none;")
+                .attr("onclick", "setNewPriorityForCard(event, '%s', '%s')".formatted(
+                    card.getFile().map(File::getAbsolutePath)
+                        .orElseThrow(() -> new Exn("cannot determine file path for a card.")),
+                    priority
+                ));
         }
         return spanElem;
     }
