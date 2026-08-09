@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class PrioritySelectorCmpImpl extends HtmlBuilder implements PrioritySelectorCmp {
     private static int NUM_OF_PRIORITIES = 3;
@@ -19,32 +18,33 @@ public class PrioritySelectorCmpImpl extends HtmlBuilder implements PrioritySele
 
     public PrioritySelectorCmpImpl(String baseParamName) {
         paramNames = new ArrayList<>();
-        for (int i = 0; i < NUM_OF_PRIORITIES; i++) {
+        for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
             paramNames.add(baseParamName + "_P" + i);
         }
         this.selectedPriorities = Set.of();
     }
 
-    public void setSelectedPriorities(RequestParams params) {
+    public PrioritySelectorCmpImpl setSelectedPriorities(RequestParams params) {
         selectedPriorities = new HashSet<>();
-        for (int i = 0; i < NUM_OF_PRIORITIES; i++) {
-            if (params.hasParam(paramNames.get(i))) {
+        for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
+            if (params.hasParam(paramNames.get(i - 1))) {
                 selectedPriorities.add(i);
             }
         }
+        return this;
     }
 
     @Override
     public Set<Integer> getSelectedPriorities() {
-        return selectedPriorities.stream().map(i -> i + 1).collect(Collectors.toSet());
+        return selectedPriorities;
     }
 
     @Override
     public HtmlElem render() {
         List<HtmlElem> elems = new ArrayList<>();
-        for (int i = 0; i < NUM_OF_PRIORITIES; i++) {
-            elems.add(text("P" + (i + 1)));
-            String name = paramNames.get(i);
+        for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
+            elems.add(text("P" + i));
+            String name = paramNames.get(i - 1);
             elems.add(inpCheckbox(name, name, selectedPriorities.contains(i)).submitOnChange());
         }
         return frag(elems);

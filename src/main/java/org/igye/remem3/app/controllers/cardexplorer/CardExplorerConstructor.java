@@ -8,7 +8,9 @@ import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.components.DirSelectorCmp;
+import org.igye.remem3.app.components.PrioritySelectorCmp;
 import org.igye.remem3.app.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.components.impl.PrioritySelectorCmpImpl;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
 import org.igye.remem3.app.state.StateConstructor;
@@ -25,10 +27,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_FILTER;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_PRIORITY;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_RECURSIVE;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_SORT_ASC;
 
@@ -81,6 +85,8 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
     @SneakyThrows
     public CardExplorerState readStateFromParams(RequestParams params) {
         DirSelectorCmp dirSelectorCmp = makeDirSelector(params);
+        PrioritySelectorCmp prioritySelectorCmp = new PrioritySelectorCmpImpl(PAR_PRIORITY)
+            .setSelectedPriorities(params);
         boolean sortAsc = Boolean.parseBoolean(params.getParam(PAR_SORT_ASC, String.valueOf(true)));
         boolean recursive = params.hasParam(PAR_RECURSIVE);
         String filterStr = params.getParam(PAR_FILTER, "");
@@ -96,7 +102,10 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
             comparator = comparator.reversed();
         }
         File dir = dirSelectorCmp.getSelectedDirectory();
+        Set<Integer> selectedPriorities = prioritySelectorCmp.getSelectedPriorities();
+        boolean selectAllPr = selectedPriorities.isEmpty();
         List<Card> cards = (recursive ? cardUtils.loadAllCards(dir) : cardUtils.loadCardsNonRec(dir)).stream()
+            .filter(card -> selectAllPr || selectedPriorities.contains(card.getPriority()))
             .filter(filter)
             .map(card -> Pair.of(((NatOrdPath) new NatOrdPathImpl(card.getFile().get().getParentFile())), card))
             .sorted(comparator)
@@ -104,6 +113,7 @@ public class CardExplorerConstructor implements StateConstructor<CardExplorerSta
             .toList();
         return CardExplorerState.builder()
             .dir(dirSelectorCmp)
+            .priorities(prioritySelectorCmp)
             .sortAsc(sortAsc)
             .recursive(recursive)
             .filter(filterStr)

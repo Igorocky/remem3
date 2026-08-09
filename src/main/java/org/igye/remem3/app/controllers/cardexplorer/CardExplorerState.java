@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.With;
 import org.igye.remem3.app.components.DirSelectorCmp;
+import org.igye.remem3.app.components.PrioritySelectorCmp;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.state.StateIdAware;
 
@@ -17,6 +18,7 @@ public class CardExplorerState implements StateIdAware {
     @Setter
     private String stateId;
     private final DirSelectorCmp dir;
+    private final PrioritySelectorCmp priorities;
     private final boolean sortAsc;
     private final boolean recursive;
     private final String filter;

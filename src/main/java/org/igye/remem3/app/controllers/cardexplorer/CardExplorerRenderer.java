@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<CardExplorerState> {
     public static final String PAR_DIR = "CardExplorer_PAR_DIR";
+    public static final String PAR_PRIORITY = "CardExplorer_PAR_PRIORITY";
     public static final String PAR_SORT_ASC = "CardExplorer_PAR_SORT_ASC";
     public static final String PAR_RECURSIVE = "CardExplorer_PAR_RECURSIVE";
     public static final String PAR_FILTER = "CardExplorer_PAR_FILTER";
@@ -43,12 +44,17 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     inpSubmit(ACT_REFRESH_PAGE, "Reload"),
                     text("%s cards".formatted(st.getCards().size())),
                     rndSortSelector(st),
+                    rndPrioritySelector(st),
                     rndFilterInput(st),
                     rndRecursiveCheckbox(st)
                 ))),
                 rndCards(st)
             )
         );
+    }
+
+    private HtmlElem rndPrioritySelector(CardExplorerState st) {
+        return st.getPriorities().render();
     }
 
     public String getId(File file) {
