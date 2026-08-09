@@ -3,6 +3,7 @@ package org.igye.remem3.app.controllers.exercise;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
+import org.igye.remem3.app.controllers.cardexplorer.CardExplorerConstructor;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.app.taskstate.TaskState;
 import org.igye.remem3.html.HtmlBuilder;
@@ -36,6 +37,8 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     public static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "Exercise_ACT_COPY_CARD_PATH_TO_CLIPBOARD";
     public static final String ACT_OPEN_CARD = "Exercise_ACT_OPEN_CARD";
     public static final String CUSTOM_EXERCISE_NAME = "CUSTOM";
+
+    private final CardExplorerConstructor cardExplorerConstructor;
 
     @Override
     public HtmlElem render(ExerciseState st) {
@@ -97,7 +100,10 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
 
     private HtmlElem rndDirSelector(SelectExerciseState st) {
         return table(List.of(List.of(
-            text("Directory"),
+            a(
+                cardExplorerConstructor.makeUrlWithInitPath(st.getSelectedDir().getSelectedDirectoryStr()),
+                text("Directory")
+            ),
             st.getSelectedDir().render()
         )));
     }
