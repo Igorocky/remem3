@@ -7,6 +7,7 @@ import lombok.With;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.components.DirSelectorCmp;
+import org.igye.remem3.app.components.PrioritySelectorCmp;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
 import org.igye.remem3.app.controllers.beans.dto.TaskFilter;
@@ -17,9 +18,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static org.igye.remem3.app.components.impl.PrioritySelectorCmpImpl.NUM_OF_PRIORITIES;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.CUSTOM_EXERCISE_NAME;
 
 @AllArgsConstructor
@@ -45,10 +48,13 @@ public final class SelectExerciseState implements ExerciseState {
     private final DirSelectorCmp selectedDir;
     @With
     @Getter
+    private final PrioritySelectorCmp prioritySelector;
+    @With
+    @Getter
     private final Optional<Pair<String, TaskFilter>> selectedTaskFilter;
     //numberOfTasks depends on the selected dir and task filter
     @Builder.Default
-    private Optional<Pair<Pair<String, String>, Integer>> numberOfTasks = Optional.empty();
+    private Optional<Pair<List<String>, Integer>> numberOfTasks = Optional.empty();
     @With
     @Getter
     private final Optional<Pair<String, RepeatStrategyParams>> selectedStrategy;
@@ -64,7 +70,12 @@ public final class SelectExerciseState implements ExerciseState {
             ExerciseDef.SimpleExerciseDef exerciseDef = new ExerciseDef.SimpleExerciseDef();
             exerciseDef.setName(CUSTOM_EXERCISE_NAME);
             exerciseDef.setDirs(List.of(selectedDir.getSelectedDirectory()));
-            exerciseDef.setTaskFilter(selectedTaskFilter.get().getRight());
+            Set<Integer> selectedPriorities = prioritySelector.getSelectedPriorities();
+            boolean selectAllPriorities = selectedPriorities.isEmpty();
+            exerciseDef.setTaskFilter(
+                selectedTaskFilter.get().getRight()
+                    .and(task -> selectAllPriorities || selectedPriorities.contains(task.getPriority()))
+            );
             RepeatStrategyParams repeatStrategyParams = selectedStrategy.get().getRight();
             if (parseStartTime && startTime.isPresent()) {
                 Instant startTime = Instant.parse(this.startTime.get());
@@ -105,20 +116,41 @@ public final class SelectExerciseState implements ExerciseState {
             numberOfTasks = calcNumberOfTasks();
             return numberOfTasks.map(Pair::getRight);
         }
-        Pair<String, String> calculatedFor = numberOfTasks.get().getLeft();
-        boolean numOfTasksIsStale = !selectedDir.getSelectedDirectoryStr().equals(calculatedFor.getLeft())
-            || selectedTaskFilter.map(tf -> !tf.getLeft().equals(calculatedFor.getRight())).orElse(false);
+        List<String> calculatedFor = numberOfTasks.get().getLeft();
+        boolean numOfTasksIsStale = !selectedDir.getSelectedDirectoryStr().equals(calculatedFor.get(0))
+            || !getSelectedPrioritiesStr(prioritySelector.getSelectedPriorities()).equals(calculatedFor.get(1))
+            || selectedTaskFilter.map(tf -> !tf.getLeft().equals(calculatedFor.get(2))).orElse(false);
         if (numOfTasksIsStale) {
             numberOfTasks = calcNumberOfTasks();
         }
         return numberOfTasks.map(Pair::getRight);
     }
 
-    private Optional<Pair<Pair<String, String>, Integer>> calcNumberOfTasks() {
+    private Optional<Pair<List<String>, Integer>> calcNumberOfTasks() {
         return selectedTaskFilter.map(tf -> {
-            long count = taskLoader.apply(selectedDir.getSelectedDirectory()).filter(tf.getRight()::match).count();
-            return Pair.of(Pair.of(selectedDir.getSelectedDirectoryStr(), tf.getLeft()), (int) count);
+            Set<Integer> selectedPriorities = prioritySelector.getSelectedPriorities();
+            boolean selectAllPriorities = selectedPriorities.isEmpty();
+            long count = taskLoader.apply(selectedDir.getSelectedDirectory())
+                .filter(task -> selectAllPriorities || selectedPriorities.contains(task.getPriority()))
+                .filter(tf.getRight()::match)
+                .count();
+            return Pair.of(
+                List.of(
+                    selectedDir.getSelectedDirectoryStr(),
+                    getSelectedPrioritiesStr(selectedPriorities),
+                    tf.getLeft()
+                ),
+                (int) count
+            );
         });
+    }
+
+    private String getSelectedPrioritiesStr(Set<Integer> selectedPriorities) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
+            sb.append(selectedPriorities.contains(i) ? 1 : 0);
+        }
+        return sb.toString();
     }
 
     public SelectExerciseState setSelectedStrategy(String id) {

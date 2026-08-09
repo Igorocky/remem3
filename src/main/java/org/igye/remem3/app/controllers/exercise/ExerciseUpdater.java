@@ -8,6 +8,7 @@ import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.components.impl.PrioritySelectorCmpImpl;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
 import org.igye.remem3.app.controllers.beans.dto.TaskViewImpl;
@@ -57,6 +58,7 @@ import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_TOGG
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_DIR;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_EXERCISE;
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_PRIORITIES;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_STRATEGY;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_TASK_FILTER;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SHOW_DAILY_UNIQUE_COUNT;
@@ -110,6 +112,9 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR).setPath(params));
             cache.put(PAR_SELECTED_DIR, st.getSelectedDir().getSelectedDirectoryStr());
         }
+        st = st.withPrioritySelector(
+            new PrioritySelectorCmpImpl(PAR_SELECTED_PRIORITIES).setSelectedPriorities(params)
+        );
         SelectExerciseState finalSt = st;
         st = updateSelectablePart(st, params, PAR_SELECTED_TASK_FILTER, finalSt::setSelectedTaskFilter);
         st = updateSelectablePart(st, params, PAR_SELECTED_STRATEGY, st::setSelectedStrategy);

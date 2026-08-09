@@ -7,6 +7,7 @@ import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.components.impl.DirSelectorCmpImpl;
+import org.igye.remem3.app.components.impl.PrioritySelectorCmpImpl;
 import org.igye.remem3.app.controllers.beans.BeansState;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 import static org.igye.remem3.app.controllers.beans.BeansConstructor.BEANS;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_DIR;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_EXERCISE;
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_PRIORITIES;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_STRATEGY;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_TASK_FILTER;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_START_TIME;
@@ -81,6 +83,7 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
         st = st.withSelectedDir(new DirSelectorCmpImpl(settings, cache, PAR_SELECTED_DIR).setPath(
             new File(cache.getStr(PAR_SELECTED_DIR, ""))
         ));
+        st = st.withPrioritySelector(new PrioritySelectorCmpImpl(PAR_SELECTED_PRIORITIES));
         st = st.setSelectedTaskFilter(cache.getStr(PAR_SELECTED_TASK_FILTER, ""));
         st = st.setSelectedStrategy(cache.getStr(PAR_SELECTED_STRATEGY, ""));
         st = st.setStartTime(cache.getStr(PAR_START_TIME, ""));
@@ -105,6 +108,7 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
             .task(task)
             .type(task.getTaskType())
             .file(card.getFile().orElseThrow(() -> new Exn("No file set for card %s".formatted(card))))
+            .priority(card.getPriority())
             .createdAt(card.getCreatedAt())
             .build();
     }

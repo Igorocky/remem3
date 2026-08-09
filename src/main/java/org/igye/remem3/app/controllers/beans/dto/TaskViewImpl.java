@@ -17,5 +17,6 @@ public class TaskViewImpl implements TaskView {
     private final Task task;
     private final TaskType type;
     private final File file;
+    private final int priority;
     private final Optional<Instant> createdAt;
 }

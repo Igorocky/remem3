@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 public class PrioritySelectorCmpImpl extends HtmlBuilder implements PrioritySelectorCmp {
-    private static int NUM_OF_PRIORITIES = 3;
+    public static int NUM_OF_PRIORITIES = 3;
 
     private final List<String> paramNames;
     private Set<Integer> selectedPriorities;

@@ -11,5 +11,7 @@ public interface TaskView {
 
     File getFile();
 
+    int getPriority();
+
     Optional<Instant> getCreatedAt();
 }

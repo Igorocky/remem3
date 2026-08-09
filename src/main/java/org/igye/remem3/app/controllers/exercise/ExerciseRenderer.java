@@ -21,6 +21,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     public static final String PAR_SELECTED_EXERCISE = "Exercise_PAR_SELECTED_EXERCISE";
     public static final String PAR_SELECTED_DIR = "Exercise_PAR_SELECTED_DIR";
     public static final String PAR_SELECTED_TASK_FILTER = "Exercise_PAR_SELECTED_TASK_FILTER";
+    public static final String PAR_SELECTED_PRIORITIES = "Exercise_PAR_SELECTED_PRIORITIES";
     public static final String PAR_SELECTED_STRATEGY = "Exercise_PAR_SELECTED_STRATEGY";
     public static final String PAR_START_TIME = "Exercise_PAR_START_TIME";
     public static final String PAR_SHOW_EXERCISE_PARAMS = "Exercise_PAR_SHOW_EXERCISE_PARAMS";
@@ -74,6 +75,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         }
         return frag(
             rndDirSelector(st),
+            rndPrioritySelector(st),
             rndTaskFilterSelector(st),
             rndStrategySelector(st),
             rndStartTimeField(st),
@@ -110,6 +112,13 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
                 "No task filters are defined."
             ),
             text(st.getNumberOfTasks().map("%s tasks"::formatted).orElse(""))
+        )));
+    }
+
+    private HtmlElem rndPrioritySelector(SelectExerciseState st) {
+        return table(List.of(List.of(
+            text("Priority"),
+            st.getPrioritySelector().render()
         )));
     }
 
