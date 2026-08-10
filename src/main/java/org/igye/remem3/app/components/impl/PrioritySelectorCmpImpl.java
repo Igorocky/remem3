@@ -45,7 +45,11 @@ public class PrioritySelectorCmpImpl extends HtmlBuilder implements PrioritySele
         for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
             elems.add(text("P" + i));
             String name = paramNames.get(i - 1);
-            elems.add(inpCheckbox(name, name, selectedPriorities.contains(i)).submitOnChange());
+            elems.add(
+                inpCheckbox(name, name, selectedPriorities.contains(i))
+                    .submitOnChange()
+                    .attr("style", "margin-left:-6px")
+            );
         }
         return frag(elems);
     }
