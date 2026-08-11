@@ -7,8 +7,10 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
     String getName();
@@ -29,6 +31,7 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
         private List<File> dirs;
         private TaskFilter taskFilter;
         private RepeatStrategyParams repeatStrategy;
+        private Optional<Instant> startTime = Optional.empty();
 
         @Override
         public List<String> getDirectories() {
@@ -43,6 +46,14 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
         @SneakyThrows
         private String getCanonicalPath(File file) {
             return file.getCanonicalPath();
+        }
+
+        public Instant getStartTime() {
+            return startTime.orElseGet(() -> repeatStrategy.getStartTime().get());
+        }
+
+        public void setStartTime(Instant startTime) {
+            this.startTime = Optional.of(startTime);
         }
     }
 

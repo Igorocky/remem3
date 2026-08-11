@@ -188,7 +188,7 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
     ) {
         validateDirs(simpEx.getDirectories());
         RepeatStrategyType repeatStrategyType = simpEx.getRepeatStrategy().getRepeatStrategyType();
-        Instant historyStartsAt = simpEx.getRepeatStrategy().getStartTime().get();
+        Instant historyStartsAt = simpEx.getStartTime();
         Comparator<Pair<NatOrdPath, Card>> comparator = Comparator.comparing((Pair<NatOrdPath, Card> pair) ->
             pair.getLeft()
         ).thenComparing((Pair<NatOrdPath, Card> pair) ->

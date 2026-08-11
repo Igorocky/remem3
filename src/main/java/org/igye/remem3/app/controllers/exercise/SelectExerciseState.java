@@ -76,12 +76,10 @@ public final class SelectExerciseState implements ExerciseState {
                 selectedTaskFilter.get().getRight()
                     .and(task -> selectAllPriorities || selectedPriorities.contains(task.getPriority()))
             );
-            RepeatStrategyParams repeatStrategyParams = selectedStrategy.get().getRight();
+            exerciseDef.setRepeatStrategy(selectedStrategy.get().getRight());
             if (parseStartTime && startTime.isPresent()) {
-                Instant startTime = Instant.parse(this.startTime.get());
-                repeatStrategyParams.setStartTime(() -> startTime);
+                exerciseDef.setStartTime(Instant.parse(this.startTime.get()));
             }
-            exerciseDef.setRepeatStrategy(repeatStrategyParams);
             return Optional.of(exerciseDef);
         }
         return Optional.empty();
