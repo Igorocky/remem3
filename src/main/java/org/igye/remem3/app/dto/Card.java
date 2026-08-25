@@ -54,7 +54,8 @@ public sealed interface Card permits Card.BaseCard {
         @Setter
         private BigDecimal order;
         @Getter
-        private int priority;
+        @Builder.Default
+        private int priority = 1;
         @Getter
         @Setter
         @Builder.Default
