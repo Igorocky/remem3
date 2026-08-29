@@ -14,7 +14,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +29,6 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
     private final Instant startTime;
     private final double randomnessFactor;
     private final Optional<Integer> numOfRounds;
-    private final boolean keepOrder;
     private final Random rnd;
 
     public RepeatStrategyCircle(
@@ -38,8 +36,7 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
         List<Task> allTasks,
         Instant startTime,
         double randomnessFactor,
-        Optional<Integer> numOfRounds,
-        boolean keepOrder
+        Optional<Integer> numOfRounds
     ) {
         super(allTasks, startTime);
         this.startTime = getAllTasks().stream()
@@ -51,7 +48,6 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
             .orElseGet(Instant::now);
         this.randomnessFactor = utils.getInRange(0, randomnessFactor, 1);
         this.numOfRounds = numOfRounds.map(n -> Math.clamp(n, 1, MAX_NUM_OF_ROUNDS));
-        this.keepOrder = keepOrder;
         rnd = new Random();
     }
 
@@ -62,9 +58,7 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
         }
         Stats stats = getStats();
         ArrayList<TaskDto> taskDtosToSelectFrom = new ArrayList<>(stats.getTasksWithMinHistLen());
-        if (!keepOrder) {
-            taskDtosToSelectFrom.sort(Comparator.comparing(TaskDto::getLastTime));
-        }
+        taskDtosToSelectFrom.sort(Comparator.comparing(TaskDto::getLastTime));
         List<Task> tasksToSelectFrom = taskDtosToSelectFrom.stream()
             .limit(stats.getNumOfTasksToSelectFrom())
             .map(TaskDto::getTask)
@@ -104,7 +98,6 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
                 "Min. history time: %s",
                 minHistTime.map(inst -> inst.truncatedTo(ChronoUnit.SECONDS)).map(Instant::toString).orElse("-")
             ))),
-            div(text(format("Keep order: %s", keepOrder))),
             div(text(format("Randomness: %s (%s %s)", randomnessFactor, numOfTasksToSelectFrom, tasksStr))),
             numOfRounds.isPresent()
                 ? div(text(format("Round: %s/%s", progressInfo.getRound(), numOfRounds.get())))
@@ -158,11 +151,7 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
                     })
                     .toList()
             )
-            .numOfTasksToSelectFrom(
-                keepOrder
-                    ? 1
-                    : Math.max(1L, Math.round(getAllTasks().size() * randomnessFactor))
-            )
+            .numOfTasksToSelectFrom(Math.max(1L, Math.round(getAllTasks().size() * randomnessFactor)))
             .build();
     }
 
@@ -177,9 +166,6 @@ public class RepeatStrategyCircle extends BaseRepeatStrategy {
                     .build();
             })
             .collect(Collectors.toCollection(ArrayList::new));
-        if (!keepOrder) {
-            Collections.shuffle(res);
-        }
         return res;
     }
 

@@ -211,10 +211,10 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             .toList();
         RepeatStrategy repeatStrategy = switch (simpEx.getRepeatStrategy()) {
             case RepeatStrategyParams.RepeatStrategyCircleParams p -> new RepeatStrategyCircle(
-                utils, allTasks, historyStartsAt, p.getRandomness(), p.getRounds(), p.isKeepOrder()
+                utils, allTasks, historyStartsAt, p.getRandomness(), p.getRounds()
             );
             case RepeatStrategyParams.RepeatStrategyRetryFailedParams p -> new RepeatStrategyRetryFailed(
-                utils, allTasks, historyStartsAt, p.getRandomness(), p.isKeepOrder()
+                utils, allTasks, historyStartsAt, p.getRandomness()
             );
             case RepeatStrategyParams.RepeatStrategyQueueParams p -> new RepeatStrategyQueue(
                 utils, allTasks, historyStartsAt,

@@ -17,7 +17,6 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
 
     private final Utils utils;
     private final double randomnessFactor;
-    private final boolean keepOrder;
     private int round;
     private RepeatStrategyCircle circle;
 
@@ -25,16 +24,14 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
         Utils utils,
         List<Task> allTasks,
         Instant startTime,
-        double randomnessFactor,
-        boolean keepOrder
+        double randomnessFactor
     ) {
         super(allTasks, startTime);
         this.utils = utils;
         this.randomnessFactor = randomnessFactor;
-        this.keepOrder = keepOrder;
         this.round = 1;
         this.circle = new RepeatStrategyCircle(
-            utils, getNotPassedTasks(true), startTime, randomnessFactor, Optional.of(1), keepOrder
+            utils, getNotPassedTasks(true), startTime, randomnessFactor, Optional.of(1)
         );
     }
 
@@ -51,7 +48,7 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
             } else {
                 this.round++;
                 this.circle = new RepeatStrategyCircle(
-                    utils, notPassedTasks, startTime, randomnessFactor, Optional.of(2), keepOrder
+                    utils, notPassedTasks, startTime, randomnessFactor, Optional.of(2)
                 );
                 return circle.getNextTasks();
             }
@@ -78,7 +75,6 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
             div(text(format("Directories: %s", getDirectoriesStr()))),
             div(text(format("Task types: %s", getTaskTypesStr()))),
             div(text(format("Number of tasks: %s", getAllTasks().size()))),
-            div(text(format("Keep order: %s", keepOrder))),
             div(text(format("Randomness: %s", randomnessFactor))),
             div(text(format("Round: %s", round))),
             div(text(format("Passed: %s/%s",

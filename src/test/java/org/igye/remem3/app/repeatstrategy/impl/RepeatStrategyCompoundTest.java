@@ -33,13 +33,13 @@ class RepeatStrategyCompoundTest {
     void getNextTasks_returns_empty_if_all_strategies_return_empty() {
         //given
         RepeatStrategy str1 = new RepeatStrategyCircle(
-            utils, makeTasks(5, "1"), Instant.MIN, 0.3, Optional.of(1), false
+            utils, makeTasks(5, "1"), Instant.MIN, 0.3, Optional.of(1)
         );
         RepeatStrategy str2 = new RepeatStrategyCircle(
-            utils, makeTasks(2, "2"), Instant.MIN, 0.3, Optional.of(1), false
+            utils, makeTasks(2, "2"), Instant.MIN, 0.3, Optional.of(1)
         );
         RepeatStrategy str3 = new RepeatStrategyCircle(
-            utils, makeTasks(3, "3"), Instant.MIN, 0.3, Optional.of(1), false
+            utils, makeTasks(3, "3"), Instant.MIN, 0.3, Optional.of(1)
         );
         RepeatStrategyCompound compound = new RepeatStrategyCompound(List.of(
             Pair.of(1, str1), Pair.of(1, str2), Pair.of(1, str3)
@@ -64,13 +64,13 @@ class RepeatStrategyCompoundTest {
     void getNextTasks_returns_tasks_with_specified_probability() {
         //given
         RepeatStrategy str1 = new RepeatStrategyCircle(
-            utils, makeTasks(5, "1"), Instant.MIN, 0.3, Optional.empty(), false
+            utils, makeTasks(5, "1"), Instant.MIN, 0.3, Optional.empty()
         );
         RepeatStrategy str2 = new RepeatStrategyCircle(
-            utils, makeTasks(2, "2"), Instant.MIN, 0.3, Optional.empty(), false
+            utils, makeTasks(2, "2"), Instant.MIN, 0.3, Optional.empty()
         );
         RepeatStrategy str3 = new RepeatStrategyCircle(
-            utils, makeTasks(3, "3"), Instant.MIN, 0.3, Optional.empty(), false
+            utils, makeTasks(3, "3"), Instant.MIN, 0.3, Optional.empty()
         );
         RepeatStrategyCompound compound = new RepeatStrategyCompound(List.of(
             Pair.of(10, str1), Pair.of(30, str2), Pair.of(60, str3)
