@@ -40,6 +40,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
     private final List<String> cardErrors;
     private final String textToTranslate;
     private final String example;
+    private final String example2;
     private final String expAnswer;
     private final boolean exactMatch;
 
@@ -65,6 +66,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         if (CollectionUtils.isNotEmpty(cardErrors)) {
             textToTranslate = null;
             example = null;
+            example2 = null;
             expAnswer = null;
             exactMatch = false;
             return;
@@ -72,11 +74,13 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
         if (card.getLang1().equals(taskType.getLangFrom()) && card.getLang2().equals(taskType.getLangTo())) {
             textToTranslate = card.getText1();
             example = card.getExample1();
+            example2 = card.getExample2();
             expAnswer = card.getText2().replace("\r", "");
             exactMatch = card.isExactMatch2();
         } else if (card.getLang2().equals(taskType.getLangFrom()) && card.getLang1().equals(taskType.getLangTo())) {
             textToTranslate = card.getText2();
             example = card.getExample2();
+            example2 = card.getExample1();
             expAnswer = card.getText1().replace("\r", "");
             exactMatch = card.isExactMatch1();
         } else {
@@ -86,6 +90,7 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             ));
             textToTranslate = null;
             example = null;
+            example2 = null;
             expAnswer = null;
             exactMatch = false;
         }
@@ -229,9 +234,15 @@ public class TaskStateTranslate extends HtmlBuilder implements TaskState {
             content.add(h4(text("Answer")));
             content.add(pre(text(expAnswer)));
         }
-        if ((showAnswer || showExample) && StringUtils.isNotBlank(example)) {
-            content.add(h4(text("Example")));
-            content.add(pre(text(example)));
+        if (showAnswer || showExample) {
+            if (StringUtils.isNotBlank(example)) {
+                content.add(h4(text("Example")));
+                content.add(pre(text(example)));
+            }
+            if (StringUtils.isNotBlank(example2)) {
+                content.add(h4(text("Example")));
+                content.add(pre(text(example2)));
+            }
         }
         if (showAnswer && StringUtils.isNotBlank(card.getNotes())) {
             content.add(h4(text("Notes")));
