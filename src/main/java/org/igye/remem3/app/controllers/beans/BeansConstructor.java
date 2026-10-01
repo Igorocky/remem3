@@ -1,16 +1,23 @@
 package org.igye.remem3.app.controllers.beans;
 
 import lombok.RequiredArgsConstructor;
+import org.devtoolsgroup.simplespelshell.SpelEvaluator;
 import org.igye.remem3.app.Settings;
-import org.igye.remem3.app.controllers.beans.spel.CustomBeanExpressionResolver;
+import org.igye.remem3.app.controllers.beans.converter.InstantConverter;
+import org.igye.remem3.app.controllers.beans.converter.TaskTypeMatcherConverter;
+import org.igye.remem3.app.controllers.beans.spel.OperatorOverloaderImpl;
+import org.igye.remem3.app.impl.ShellImpl;
 import org.igye.remem3.app.state.StateConstructor;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.MutablePropertySources;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RequiredArgsConstructor
 @Order(1000)
@@ -31,17 +38,24 @@ public class BeansConstructor implements StateConstructor<BeansState> {
 
     @Override
     public BeansState construct() {
-        CustomApplicationContext ctx = new CustomApplicationContext(new CustomBeanExpressionResolver());
-        MutablePropertySources sources = ctx.getEnvironment().getPropertySources();
+        Path appBaseDir = Path.of(Objects.requireNonNull(environment.getProperty("app.base-dir")));
+        ShellImpl sh = new ShellImpl(appBaseDir);
+
+        SpelEvaluator spelEvaluator = sh.getSpelEvaluator();
+        List<Converter<?, ?>> typeConverters = new ArrayList<>(spelEvaluator.getTypeConverters());
+        typeConverters.add(new InstantConverter());
+        typeConverters.add(new TaskTypeMatcherConverter());
+        spelEvaluator.setTypeConverters(typeConverters);
+        spelEvaluator.setOperatorOverloader(new OperatorOverloaderImpl(spelEvaluator.getConversionService()));
+
         Map<String, Object> propsToPassToBeans = new HashMap<>();
-        propsToPassToBeans.put("app.beans-file", settings.getBeansFile());
         for (String propToPassToBeans : settings.getPropsToPassToBeans()) {
             propsToPassToBeans.put(propToPassToBeans, environment.getProperty(propToPassToBeans, Object.class));
         }
-        sources.addLast(new MapPropertySource("props-from-main-context", propsToPassToBeans));
-        ctx.register(CustomBeansConfig.class);
-        ctx.refresh();
-        return new BeansState(ctx);
+        sh.var("env", propsToPassToBeans);
+
+        sh.runScript(Path.of(settings.getBeansFile()));
+        return new BeansState(sh);
     }
 
     @Override
