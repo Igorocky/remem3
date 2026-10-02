@@ -45,7 +45,7 @@ public class BeansConstructor implements StateConstructor<BeansState> {
     @Override
     public BeansState construct() {
         Path appBaseDir = Path.of(Objects.requireNonNull(environment.getProperty("app.base-dir")));
-        ShellImpl sh = new ShellImpl(appBaseDir, cardUtils);
+        ShellImpl sh = new ShellImpl(appBaseDir);
 
         SpelEvaluator spelEvaluator = sh.getSpelEvaluator();
         List<Converter<?, ?>> typeConverters = new ArrayList<>(spelEvaluator.getTypeConverters());

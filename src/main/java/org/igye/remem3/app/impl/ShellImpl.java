@@ -29,7 +29,7 @@ public class ShellImpl extends FileSystemAwareSpelShellImpl implements Shell {
     @Override
     public List<Pair<String, Object>> getBeans() {
         return getSpelEvaluator().getAllVariables().entrySet().stream()
-            .filter(entry -> !"$".equals(entry.getKey()))
+            .filter(entry -> !getLastEvalResultVarName().equals(entry.getKey()))
             .map(entry -> Pair.of(entry.getKey(), entry.getValue()))
             .toList();
     }
@@ -37,7 +37,7 @@ public class ShellImpl extends FileSystemAwareSpelShellImpl implements Shell {
     @Override
     public <T> List<Pair<String, T>> getBeans(Class<T> type) {
         return getSpelEvaluator().getAllVariables().entrySet().stream()
-            .filter(entry -> !"$".equals(entry.getKey()))
+            .filter(entry -> !getLastEvalResultVarName().equals(entry.getKey()))
             .filter(entry -> type.isAssignableFrom(entry.getValue().getClass()))
             .map(entry -> Pair.of(entry.getKey(), (T) entry.getValue()))
             .toList();
