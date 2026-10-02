@@ -19,8 +19,4 @@ public class BeansState {
     public <T> List<Pair<String, T>> getBeans(Class<T> type) {
         return sh.getBeans(type);
     }
-
-    public <T> Pair<String, T> getBean(Class<T> type) {
-        return sh.getBean(type);
-    }
 }

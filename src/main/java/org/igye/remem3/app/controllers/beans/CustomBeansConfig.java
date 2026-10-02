@@ -2,7 +2,6 @@ package org.igye.remem3.app.controllers.beans;
 
 import org.igye.remem3.app.controllers.beans.converter.DurationConverter;
 import org.igye.remem3.app.controllers.beans.converter.InstantConverter;
-import org.igye.remem3.app.controllers.beans.converter.TaskFilterConverter;
 import org.igye.remem3.app.controllers.beans.converter.TaskTypeMatcherConverter;
 import org.igye.remem3.app.controllers.beans.spel.SpelEvaluator;
 import org.igye.remem3.app.controllers.beans.spel.SpelEvaluatorImpl;
@@ -41,10 +40,10 @@ public class CustomBeansConfig {
         return new SpelEvaluatorImpl();
     }
 
-    @Bean("__taskFilterConverter")
-    public TaskFilterConverter taskFilterConverter() {
-        return new TaskFilterConverter(spelEvaluator());
-    }
+//    @Bean("__taskFilterConverter")
+//    public TaskFilterConverter taskFilterConverter() {
+//        return new TaskFilterConverter(spelEvaluator());
+//    }
 
     @Bean("__taskTypeMatcherConverter")
     public TaskTypeMatcherConverter taskTypeMatcherConverter() {
@@ -67,7 +66,7 @@ public class CustomBeansConfig {
             ((SpelEvaluatorImpl) spelEvaluator())::setConversionService
         );
         factoryBean.setConverters(Set.of(
-            taskFilterConverter(),
+//            taskFilterConverter(),
             taskTypeMatcherConverter(),
             durationConverter(),
             instantConverter()

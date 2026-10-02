@@ -67,20 +67,24 @@ public final class SelectExerciseState implements ExerciseState {
             return selectedExercise;
         }
         if (selectedTaskFilter.isPresent() && selectedStrategy.isPresent()) {
-            ExerciseDef.SimpleExerciseDef exerciseDef = new ExerciseDef.SimpleExerciseDef();
-            exerciseDef.setName(CUSTOM_EXERCISE_NAME);
-            exerciseDef.setDirs(List.of(selectedDir.getSelectedDirectory()));
             Set<Integer> selectedPriorities = prioritySelector.getSelectedPriorities();
             boolean selectAllPriorities = selectedPriorities.isEmpty();
-            exerciseDef.setTaskFilter(
-                selectedTaskFilter.get().getRight()
-                    .and(task -> selectAllPriorities || selectedPriorities.contains(task.getPriority()))
+            return Optional.of(
+                ExerciseDef.SimpleExerciseDef.builder()
+                    .name(CUSTOM_EXERCISE_NAME)
+                    .dirs(List.of(selectedDir.getSelectedDirectory()))
+                    .taskFilter(
+                        selectedTaskFilter.get().getRight()
+                            .and(task -> selectAllPriorities || selectedPriorities.contains(task.getPriority()))
+                    )
+                    .repeatStrategy(selectedStrategy.get().getRight())
+                    .startTime(
+                        parseStartTime && startTime.isPresent()
+                            ? Optional.of(Instant.parse(this.startTime.get()))
+                            : Optional.empty()
+                    )
+                    .build()
             );
-            exerciseDef.setRepeatStrategy(selectedStrategy.get().getRight());
-            if (parseStartTime && startTime.isPresent()) {
-                exerciseDef.setStartTime(Instant.parse(this.startTime.get()));
-            }
-            return Optional.of(exerciseDef);
         }
         return Optional.empty();
     }

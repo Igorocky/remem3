@@ -1,9 +1,11 @@
 package org.igye.remem3.app.controllers.beans.dto;
 
-import lombok.Data;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.experimental.SuperBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
@@ -20,18 +22,22 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
     List<String> getRepeatStrategyTypes();
 
 
-    @Data
+    @Getter
+    @RequiredArgsConstructor
+    @SuperBuilder
     sealed abstract class BaseExerciseDef implements ExerciseDef permits SimpleExerciseDef, CompoundExerciseDef {
-        private String name;
+        private final String name;
     }
 
     @EqualsAndHashCode(callSuper = true)
-    @Data
+    @Getter
+    @SuperBuilder
     final class SimpleExerciseDef extends BaseExerciseDef {
-        private List<File> dirs;
-        private TaskFilter taskFilter;
-        private RepeatStrategyParams repeatStrategy;
-        private Optional<Instant> startTime = Optional.empty();
+        private final List<File> dirs;
+        private final TaskFilter taskFilter;
+        private final RepeatStrategyParams repeatStrategy;
+        @Builder.Default
+        private final Optional<Instant> startTime = Optional.empty();
 
         @Override
         public List<String> getDirectories() {
@@ -51,21 +57,13 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
         public Instant getStartTime() {
             return startTime.orElseGet(() -> repeatStrategy.getStartTime().get());
         }
-
-        public void setStartTime(Instant startTime) {
-            this.startTime = Optional.of(startTime);
-        }
     }
 
+    @EqualsAndHashCode(callSuper = true)
     @Getter
+    @SuperBuilder
     final class CompoundExerciseDef extends BaseExerciseDef {
         private final List<Pair<Integer, ExerciseDef>> exercises;
-
-        public CompoundExerciseDef(List<List<Object>> exercises) {
-            this.exercises = exercises.stream()
-                .map(e -> Pair.of((Integer) e.getFirst(), (ExerciseDef) e.get(1)))
-                .toList();
-        }
 
         @Override
         public List<String> getDirectories() {

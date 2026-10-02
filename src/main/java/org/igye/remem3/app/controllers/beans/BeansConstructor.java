@@ -2,12 +2,16 @@ package org.igye.remem3.app.controllers.beans;
 
 import lombok.RequiredArgsConstructor;
 import org.devtoolsgroup.simplespelshell.SpelEvaluator;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.controllers.beans.converter.DurationConverter;
 import org.igye.remem3.app.controllers.beans.converter.InstantConverter;
+import org.igye.remem3.app.controllers.beans.converter.TaskFilterConverter;
 import org.igye.remem3.app.controllers.beans.converter.TaskTypeMatcherConverter;
 import org.igye.remem3.app.controllers.beans.spel.OperatorOverloaderImpl;
 import org.igye.remem3.app.impl.ShellImpl;
 import org.igye.remem3.app.state.StateConstructor;
+import org.igye.remem3.utils.Utils;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.env.Environment;
@@ -25,6 +29,8 @@ public class BeansConstructor implements StateConstructor<BeansState> {
     public static final String BEANS = "beans";
     private final Settings settings;
     private final Environment environment;
+    private final Utils utils;
+    private final CardUtils cardUtils;
 
     @Override
     public String getName() {
@@ -39,12 +45,14 @@ public class BeansConstructor implements StateConstructor<BeansState> {
     @Override
     public BeansState construct() {
         Path appBaseDir = Path.of(Objects.requireNonNull(environment.getProperty("app.base-dir")));
-        ShellImpl sh = new ShellImpl(appBaseDir);
+        ShellImpl sh = new ShellImpl(appBaseDir, cardUtils);
 
         SpelEvaluator spelEvaluator = sh.getSpelEvaluator();
         List<Converter<?, ?>> typeConverters = new ArrayList<>(spelEvaluator.getTypeConverters());
         typeConverters.add(new InstantConverter());
         typeConverters.add(new TaskTypeMatcherConverter());
+        typeConverters.add(new TaskFilterConverter(sh));
+        typeConverters.add(new DurationConverter(utils));
         spelEvaluator.setTypeConverters(typeConverters);
         spelEvaluator.setOperatorOverloader(new OperatorOverloaderImpl(spelEvaluator.getConversionService()));
 
