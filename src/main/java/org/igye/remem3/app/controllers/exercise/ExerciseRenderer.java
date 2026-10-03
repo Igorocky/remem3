@@ -74,7 +74,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
 
     private HtmlElem rndSelectedExerciseDetails(SelectExerciseState st) {
         if (st.getSelectedExercise().isPresent()) {
-            return pre(text(st.getSelectedExercise().get().toString()));
+            return div("margin-bottom:20px", text(st.getSelectedExercise().get().toString()));
         }
         return frag(
             rndDirSelector(st),

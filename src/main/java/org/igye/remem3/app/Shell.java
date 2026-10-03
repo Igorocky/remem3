@@ -6,7 +6,9 @@ import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
 import org.igye.remem3.app.controllers.beans.dto.TaskFilter;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.function.Supplier;
 
 public interface Shell extends FileSystemAwareSpelShell {
     List<Pair<String, Object>> getBeans();
@@ -17,6 +19,10 @@ public interface Shell extends FileSystemAwareSpelShell {
 
     TaskFilter taskFilter(TaskFilter taskFilter);
 
+    Instant instant(Instant instant);
+
+    <T> Supplier<T> supplier(T obj);
+
     RepeatStrategyParams.RepeatStrategyBucketsParams.RepeatStrategyBucketsParamsBuilder repeatStrategyBuckets();
 
     RepeatStrategyParams.RepeatStrategyCircleParams.RepeatStrategyCircleParamsBuilder repeatStrategyCircle();
@@ -25,7 +31,7 @@ public interface Shell extends FileSystemAwareSpelShell {
 
     RepeatStrategyParams.RepeatStrategyQueueParams.RepeatStrategyQueueParamsBuilder repeatStrategyQueue();
 
-    ExerciseDef.SimpleExerciseDef.SimpleExerciseDefBuilder exercise();
+    ExerciseDef.SimpleExerciseDef.SimpleExerciseDefBuilder exercise(String name);
 
     ExerciseDef.CompoundExerciseDef.CompoundExerciseDefBuilder compoundExercise();
 }

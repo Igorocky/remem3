@@ -9,7 +9,9 @@ import org.igye.remem3.app.controllers.beans.dto.TaskFilter;
 import org.igye.remem3.utils.Exn;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ShellImpl extends FileSystemAwareSpelShellImpl implements Shell {
 
@@ -58,6 +60,16 @@ public class ShellImpl extends FileSystemAwareSpelShellImpl implements Shell {
     }
 
     @Override
+    public Instant instant(Instant instant) {
+        return instant;
+    }
+
+    @Override
+    public <T> Supplier<T> supplier(T obj) {
+        return () -> obj;
+    }
+
+    @Override
     public RepeatStrategyParams.RepeatStrategyBucketsParams.RepeatStrategyBucketsParamsBuilder repeatStrategyBuckets() {
         return RepeatStrategyParams.RepeatStrategyBucketsParams.builder();
     }
@@ -78,8 +90,8 @@ public class ShellImpl extends FileSystemAwareSpelShellImpl implements Shell {
     }
 
     @Override
-    public ExerciseDef.SimpleExerciseDef.SimpleExerciseDefBuilder exercise() {
-        return ExerciseDef.SimpleExerciseDef.builder();
+    public ExerciseDef.SimpleExerciseDef.SimpleExerciseDefBuilder exercise(String name) {
+        return ExerciseDef.SimpleExerciseDef.builder().name(name);
     }
 
     @Override
