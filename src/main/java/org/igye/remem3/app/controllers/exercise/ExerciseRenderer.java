@@ -27,6 +27,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     public static final String PAR_START_TIME = "Exercise_PAR_START_TIME";
     public static final String PAR_SHOW_EXERCISE_PARAMS = "Exercise_PAR_SHOW_EXERCISE_PARAMS";
     public static final String PAR_SHOW_DAILY_UNIQUE_COUNT = "Exercise_PAR_SHOW_DAILY_UNIQUE_COUNT";
+    public static final String ACT_SET_CURR_TIME = "Exercise_ACT_SET_CURR_TIME";
     public static final String ACT_START_EXERCISE = "Exercise_ACT_START_EXERCISE";
     public static final String ACT_CANCEL_EXERCISE = "Exercise_ACT_CANCEL_EXERCISE";
     public static final String ACT_REFRESH_EXERCISE = "Exercise_ACT_REFRESH_EXERCISE";
@@ -56,7 +57,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         return frag(
             rndErrors(st.getErrors()),
             h4(text("Select exercise"), rndExerciseSelector(st)),
-            rndCustomSelectors(st),
+            rndSelectedExerciseDetails(st),
             rndSubmitButton(st)
         );
     }
@@ -72,9 +73,9 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         );
     }
 
-    private HtmlElem rndCustomSelectors(SelectExerciseState st) {
+    private HtmlElem rndSelectedExerciseDetails(SelectExerciseState st) {
         if (st.getSelectedExercise().isPresent()) {
-            return null;
+            return div("margin-bottom:20px", text(st.getSelectedExercise().get().toString()));
         }
         return frag(
             rndDirSelector(st),
@@ -143,7 +144,8 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     private HtmlElem rndStartTimeField(SelectExerciseState st) {
         return table(List.of(List.of(
             text("Start time"),
-            inpText(PAR_START_TIME, st.getStartTime().orElse(""), null).attr("size", "25")
+            inpText(PAR_START_TIME, st.getStartTime().orElse(""), null).attr("size", "25"),
+            inpSubmit(ACT_SET_CURR_TIME, "Set current time")
         )));
     }
 

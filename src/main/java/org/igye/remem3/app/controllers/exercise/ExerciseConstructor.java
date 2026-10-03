@@ -58,12 +58,7 @@ public class ExerciseConstructor implements StateConstructor<ExerciseState> {
     public ExerciseState construct() {
         BeansState beans = stateLookup.getState(BEANS);
         List<ExerciseDef> allExercises = beans.getBeans(ExerciseDef.class).stream()
-            .map(pair -> {
-                switch (pair.getRight()) {
-                    case ExerciseDef.BaseExerciseDef ex -> ex.setName(pair.getLeft());
-                }
-                return pair.getRight();
-            })
+            .map(Pair::getRight)
             .sorted(Comparator.comparing(ExerciseDef::getName))
             .toList();
         List<Pair<String, TaskFilter>> allTaskFilters = beans.getBeans(TaskFilter.class).stream()
