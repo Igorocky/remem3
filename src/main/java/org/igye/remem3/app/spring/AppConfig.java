@@ -3,7 +3,6 @@ package org.igye.remem3.app.spring;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.beans.BeansConfig;
-import org.igye.remem3.app.controllers.beans.CustomBeansConfig;
 import org.igye.remem3.app.controllers.cardexplorer.CardExplorerConfig;
 import org.igye.remem3.app.controllers.convertfillgapstotrnaslate.ConvertFillGapsToTranslateConfig;
 import org.igye.remem3.app.controllers.exercise.ExerciseConfig;
@@ -39,7 +38,6 @@ import java.util.List;
 @EnableConfigurationProperties(AppProps.class)
 @ComponentScan(
     basePackages = "org.igye.remem3",
-    excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = CustomBeansConfig.class),
     includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
         UtilsImpl.class,
         CardUtilsImpl.class,
