@@ -2,8 +2,10 @@ package org.igye.remem3.app.controllers.beans.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
 import org.igye.remem3.app.dto.RepeatStrategyType;
+import org.igye.remem3.utils.Utils;
+import org.igye.remem3.utils.impl.UtilsImpl;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -16,32 +18,57 @@ public sealed interface RepeatStrategyParams
     permits RepeatStrategyParams.RepeatStrategyBucketsParams, RepeatStrategyParams.RepeatStrategyCircleParams,
     RepeatStrategyParams.RepeatStrategyRetryFailedParams, RepeatStrategyParams.RepeatStrategyQueueParams {
 
+    Supplier<Instant> INSTANT_SUPPLIER_NOW = Instant::now;
+    Supplier<Instant> INSTANT_SUPPLIER_MIN = () -> Instant.MIN;
+
     Supplier<Instant> getStartTime();
 
     RepeatStrategyType getRepeatStrategyType();
 
-    @Getter
-    @Builder
-    @ToString
-    final class RepeatStrategyBucketsParams implements RepeatStrategyParams {
-        @Builder.Default
-        private final Supplier<Instant> startTime = () -> Instant.MIN;
-        private final List<Duration> delays;
-        @Builder.Default
-        private final int batchSize = 5;
-
-        @Override
-        public RepeatStrategyType getRepeatStrategyType() {
-            return RepeatStrategyType.BUCKETS;
+    default String startTimeToString() {
+        if (getStartTime() == RepeatStrategyParams.INSTANT_SUPPLIER_MIN) {
+            return "MIN";
+        } else if (getStartTime() == RepeatStrategyParams.INSTANT_SUPPLIER_NOW) {
+            return "NOW";
+        } else {
+            return getStartTime().get().toString();
         }
     }
 
     @Getter
     @Builder
-    @ToString
+    final class RepeatStrategyBucketsParams implements RepeatStrategyParams {
+        @Builder.Default
+        private final Supplier<Instant> startTime = INSTANT_SUPPLIER_MIN;
+        private final List<Duration> delays;
+        @Builder.Default
+        private final int batchSize = 5;
+
+        private static Utils utils;
+
+        @Override
+        public RepeatStrategyType getRepeatStrategyType() {
+            return RepeatStrategyType.BUCKETS;
+        }
+
+        @Override
+        public String toString() {
+            if (utils == null) {
+                utils = new UtilsImpl(new ObjectMapper());
+            }
+            return "Buckets{" +
+                "startTime=" + startTimeToString() +
+                ", delays=" + delays.stream().map(utils::durationToStr).toList() +
+                ", batchSize=" + batchSize +
+                '}';
+        }
+    }
+
+    @Getter
+    @Builder
     final class RepeatStrategyCircleParams implements RepeatStrategyParams {
         @Builder.Default
-        private final Supplier<Instant> startTime = Instant::now;
+        private final Supplier<Instant> startTime = INSTANT_SUPPLIER_NOW;
         @Builder.Default
         private final Optional<Integer> rounds = Optional.empty();
         @Builder.Default
@@ -51,14 +78,22 @@ public sealed interface RepeatStrategyParams
         public RepeatStrategyType getRepeatStrategyType() {
             return RepeatStrategyType.CIRCLE;
         }
+
+        @Override
+        public String toString() {
+            return "Circle{" +
+                "startTime=" + startTimeToString() +
+                ", rounds=" + rounds +
+                ", randomness=" + randomness +
+                '}';
+        }
     }
 
     @Getter
     @Builder
-    @ToString
     final class RepeatStrategyRetryFailedParams implements RepeatStrategyParams {
         @Builder.Default
-        private final Supplier<Instant> startTime = Instant::now;
+        private final Supplier<Instant> startTime = INSTANT_SUPPLIER_NOW;
         @Builder.Default
         private final double randomness = 0.3;
 
@@ -66,14 +101,21 @@ public sealed interface RepeatStrategyParams
         public RepeatStrategyType getRepeatStrategyType() {
             return RepeatStrategyType.RETRY_FAILED;
         }
+
+        @Override
+        public String toString() {
+            return "RetryFailed{" +
+                "startTime=" + startTimeToString() +
+                ", randomness=" + randomness +
+                '}';
+        }
     }
 
     @Getter
     @Builder
-    @ToString
     final class RepeatStrategyQueueParams implements RepeatStrategyParams {
         @Builder.Default
-        private final Supplier<Instant> startTime = () -> Instant.MIN;
+        private final Supplier<Instant> startTime = INSTANT_SUPPLIER_MIN;
         @Builder.Default
         private final int step = 5;
         @Builder.Default
@@ -86,6 +128,17 @@ public sealed interface RepeatStrategyParams
         @Override
         public RepeatStrategyType getRepeatStrategyType() {
             return RepeatStrategyType.QUEUE;
+        }
+
+        @Override
+        public String toString() {
+            return "Queue{" +
+                "startTime=" + startTimeToString() +
+                ", step=" + step +
+                ", stepMultFactor=" + stepMultFactor +
+                ", batchSize=" + batchSize +
+                ", maxHistLenStat=" + maxHistLenStat +
+                '}';
         }
     }
 }

@@ -57,6 +57,18 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
         public Instant getStartTime() {
             return startTime.orElseGet(() -> repeatStrategy.getStartTime().get());
         }
+
+        @Override
+        public String toString() {
+            String startTime = this.startTime.map(Instant::toString).orElseGet(repeatStrategy::startTimeToString);
+            return "Exercise{" +
+                "name='" + getName() + '\'' +
+                ", dirs=" + dirs +
+                ", taskFilter={" + taskFilter + "}" +
+                ", startTime=" + startTime +
+                ", repeatStrategy=" + repeatStrategy +
+                '}';
+        }
     }
 
     @EqualsAndHashCode(callSuper = true)
@@ -85,6 +97,14 @@ public sealed interface ExerciseDef permits ExerciseDef.BaseExerciseDef {
                 .distinct()
                 .sorted()
                 .toList();
+        }
+
+        @Override
+        public String toString() {
+            return "CompoundExerciseDef{" +
+                "exercises=" + exercises +
+                ", name='" + getName() + '\'' +
+                '}';
         }
     }
 }

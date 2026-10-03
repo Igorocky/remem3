@@ -56,7 +56,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         return frag(
             rndErrors(st.getErrors()),
             h4(text("Select exercise"), rndExerciseSelector(st)),
-            rndCustomSelectors(st),
+            rndSelectedExerciseDetails(st),
             rndSubmitButton(st)
         );
     }
@@ -72,9 +72,9 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
         );
     }
 
-    private HtmlElem rndCustomSelectors(SelectExerciseState st) {
+    private HtmlElem rndSelectedExerciseDetails(SelectExerciseState st) {
         if (st.getSelectedExercise().isPresent()) {
-            return null;
+            return pre(text(st.getSelectedExercise().get().toString()));
         }
         return frag(
             rndDirSelector(st),
