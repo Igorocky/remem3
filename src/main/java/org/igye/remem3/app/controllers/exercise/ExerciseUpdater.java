@@ -40,6 +40,7 @@ import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -51,6 +52,7 @@ import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_CANC
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_COPY_CARD_PATH_TO_CLIPBOARD;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_OPEN_CARD;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_REFRESH_EXERCISE;
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_SET_CURR_TIME;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_SKIP_TASK;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_START_EXERCISE;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT;
@@ -97,7 +99,9 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
     }
 
     private SelectExerciseState updateStartTime(SelectExerciseState st, RequestParams params) {
-        String startTime = params.getParam(PAR_START_TIME, cache.getStr(PAR_START_TIME, ""));
+        String startTime = params.hasParam(ACT_SET_CURR_TIME)
+            ? Instant.now().truncatedTo(ChronoUnit.SECONDS).toString()
+            : params.getParam(PAR_START_TIME, cache.getStr(PAR_START_TIME, ""));
         cache.put(PAR_START_TIME, startTime);
         if (StringUtils.isBlank(startTime)) {
             return st.withStartTime(Optional.empty());
