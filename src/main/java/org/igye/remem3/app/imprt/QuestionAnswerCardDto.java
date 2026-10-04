@@ -13,4 +13,5 @@ public class QuestionAnswerCardDto implements CardDto {
     private final CardType type = CardType.QUESTION_ANSWER;
     private final String question;
     private final String answer;
+    private final String notes;
 }

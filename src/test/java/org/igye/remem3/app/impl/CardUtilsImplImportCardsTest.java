@@ -44,7 +44,7 @@ class CardUtilsImplImportCardsTest {
                     ChapterDto.builder().chapterName("child 2").build()
                 ))
                 .cards(List.of(
-                    QuestionAnswerCardDto.builder().question("question1").answer("answer1").build(),
+                    QuestionAnswerCardDto.builder().question("question1").answer("answer1").notes(" notes1 ").build(),
                     translation("LANG2", "text3", "LANG1", "text4")
                 ))
                 .build())
@@ -66,6 +66,7 @@ class CardUtilsImplImportCardsTest {
         Assertions.assertEquals("answer1", qa.getText2());
         Assertions.assertFalse(qa.isExactMatch2());
         Assertions.assertTrue(qa.getCreatedAt().isPresent());
+        Assertions.assertEquals("notes1", qa.getNotes());
         Assertions.assertEquals(Map.of("generatedBy", "test"), qa.getAttrs());
         Card.Translate tr = rootCards.get(1);
         Assertions.assertEquals(new BigDecimal("2"), tr.getOrder());
@@ -209,6 +210,7 @@ class CardUtilsImplImportCardsTest {
         return TranslationCardDto.builder()
             .fromLanguage(fromLang).textToTranslate(text)
             .toLanguage(toLang).translatedText(translatedText)
+            .notes("notes for " + text)
             .build();
     }
 

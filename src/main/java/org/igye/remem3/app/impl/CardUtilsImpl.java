@@ -393,6 +393,7 @@ public class CardUtilsImpl implements CardUtils {
             .lang2(settings.getAnswerLanguage())
             .text2(StringUtils.defaultString(dto.getAnswer()).trim())
             .exactMatch2(false)
+            .notes(StringUtils.defaultString(dto.getNotes()).trim())
             .attrs(new HashMap<>(attrs))
             .build();
     }
@@ -407,6 +408,7 @@ public class CardUtilsImpl implements CardUtils {
             .lang2(StringUtils.defaultString(dto.getToLanguage()).trim())
             .text2(StringUtils.defaultString(dto.getTranslatedText()).trim())
             .exactMatch2(false)
+            .notes(StringUtils.defaultString(dto.getNotes()).trim())
             .attrs(new HashMap<>(attrs))
             .build();
     }

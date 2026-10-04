@@ -15,4 +15,5 @@ public class TranslationCardDto implements CardDto {
     private final String textToTranslate;
     private final String toLanguage;
     private final String translatedText;
+    private final String notes;
 }

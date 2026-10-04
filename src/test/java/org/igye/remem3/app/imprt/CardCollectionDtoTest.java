@@ -42,13 +42,14 @@ class CardCollectionDtoTest {
                   {"chapterName": "child-2"}
                 ],
                 "cards": [
-                  {"type": "QUESTION_ANSWER", "question": "Capital of France?", "answer": "Paris"},
+                  {"type": "QUESTION_ANSWER", "question": "Capital of France?", "answer": "Paris", "notes": "notes1"},
                   {
                     "type": "TRANSLATE",
                     "fromLanguage": "L3",
                     "textToTranslate": "text3",
                     "toLanguage": "L4",
-                    "translatedText": "text4"
+                    "translatedText": "text4",
+                    "notes": "notes4"
                   }
                 ]
               }
@@ -63,12 +64,15 @@ class CardCollectionDtoTest {
         Assertions.assertEquals(2, root.getChapters().size());
         Assertions.assertEquals(2, root.getCards().size());
         assertQuestionAnswer(root.getCards().get(0), "Capital of France?", "Paris");
+        Assertions.assertEquals("notes1", root.getCards().get(0).getNotes());
         assertTranslation(root.getCards().get(1), "L3", "text3", "L4", "text4");
+        Assertions.assertEquals("notes4", root.getCards().get(1).getNotes());
 
         ChapterDto child1 = root.getChapters().get(0);
         Assertions.assertEquals("child-1", child1.getChapterName());
         Assertions.assertEquals(1, child1.getCards().size());
         assertTranslation(child1.getCards().get(0), "L1", "text1", "L2", "text2");
+        Assertions.assertNull(child1.getCards().get(0).getNotes());
 
         Assertions.assertEquals(1, child1.getChapters().size());
         ChapterDto grandchild = child1.getChapters().get(0);
@@ -91,7 +95,7 @@ class CardCollectionDtoTest {
                 .chapterName("root")
                 .chapters(List.of())
                 .cards(List.of(
-                    QuestionAnswerCardDto.builder().question("q").answer("a").build(),
+                    QuestionAnswerCardDto.builder().question("q").answer("a").notes("n").build(),
                     TranslationCardDto.builder()
                         .fromLanguage("L1").textToTranslate("text1")
                         .toLanguage("L2").translatedText("text2")
@@ -107,6 +111,7 @@ class CardCollectionDtoTest {
         Assertions.assertEquals("gen", parsed.getGeneratedBy());
         Assertions.assertEquals(2, parsed.getCards().getCards().size());
         assertQuestionAnswer(parsed.getCards().getCards().get(0), "q", "a");
+        Assertions.assertEquals("n", parsed.getCards().getCards().get(0).getNotes());
         assertTranslation(parsed.getCards().getCards().get(1), "L1", "text1", "L2", "text2");
     }
 

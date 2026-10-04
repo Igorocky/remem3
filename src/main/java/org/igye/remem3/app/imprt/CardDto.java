@@ -10,4 +10,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 })
 public interface CardDto {
     CardType getType();
+
+    String getNotes();
 }
