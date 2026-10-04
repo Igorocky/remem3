@@ -13,8 +13,12 @@ import org.springframework.core.annotation.Order;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Optional;
 
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD_CANCELED;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD_CONFIRMED;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_OPEN_CARD_IN_EDITOR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_REFRESH_CARD;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SET_PRIORITY;
@@ -43,18 +47,20 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         if (params.hasParam(ACT_SET_PRIORITY)) {
             st = actChangePriorityForCard(st, params);
         }
+        if (
+            params.hasKeyValueParam(ACT_DELETE_CARD)
+                || params.hasKeyValueParam(ACT_DELETE_CARD_CANCELED)
+                || params.hasKeyValueParam(ACT_DELETE_CARD_CONFIRMED)
+        ) {
+            st = actDeleteCard(st, params);
+        }
         return st;
     }
 
     @SneakyThrows
     private CardExplorerState actOpenCard(CardExplorerState st, RequestParams params) {
         String filePath = params.getKeyValueParam(ACT_OPEN_CARD_IN_EDITOR);
-        Optional<File> fileOpt = st.getCards().stream()
-            .map(Card::getFile)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .filter(file -> file.getAbsolutePath().equals(filePath))
-            .findFirst();
+        Optional<File> fileOpt = findCardByPath(st, filePath).flatMap(Card::getFile);
         fileOpt.ifPresent(file -> {
             try {
                 new ProcessBuilder(settings.getCardEditor(), file.getAbsolutePath()).start();
@@ -66,14 +72,44 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
     }
 
     @SneakyThrows
+    private CardExplorerState actDeleteCard(CardExplorerState st, RequestParams params) {
+        if (params.hasKeyValueParam(ACT_DELETE_CARD)) {
+            Optional<Card> cardOpt = findCardByPath(st, params.getKeyValueParam(ACT_DELETE_CARD));
+            return st.withDeleteCard(cardOpt);
+        }
+        if (params.hasKeyValueParam(ACT_DELETE_CARD_CANCELED)) {
+            Optional<Card> cardOpt = findCardByPath(st, params.getKeyValueParam(ACT_DELETE_CARD_CANCELED));
+            return st.withDeleteCard(Optional.empty())
+                .withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
+        }
+        if (params.hasKeyValueParam(ACT_DELETE_CARD_CONFIRMED)) {
+            Card cardToDelete = findCardByPath(st, params.getKeyValueParam(ACT_DELETE_CARD_CONFIRMED)).get();
+            Card prevCard = null;
+            for (int i = 0; i < st.getCards().size(); i++) {
+                if (st.getCards().get(i) == cardToDelete) {
+                    if (i != 0) {
+                        prevCard = st.getCards().get(i - 1);
+                    }
+                    break;
+                }
+            }
+            Files.delete(cardToDelete.getFile().get().toPath());
+            return st.withDeleteCard(Optional.empty())
+                .withScrollToId(Optional.ofNullable(prevCard).flatMap(Card::getFile).map(renderer::getId));
+        }
+        return st.withDeleteCard(Optional.empty());
+    }
+
+    private static Optional<Card> findCardByPath(CardExplorerState st, String filePath) {
+        return st.getCards().stream()
+            .filter(card -> card.getFile().map(file -> filePath.equals(file.getAbsolutePath())).orElse(false))
+            .findFirst();
+    }
+
+    @SneakyThrows
     private CardExplorerState actRefreshCard(CardExplorerState st, RequestParams params) {
         String filePath = params.getKeyValueParam(ACT_REFRESH_CARD);
-        Optional<File> fileOpt = st.getCards().stream()
-            .map(Card::getFile)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .filter(file -> file.getAbsolutePath().equals(filePath))
-            .findFirst();
+        Optional<File> fileOpt = findCardByPath(st, filePath).flatMap(Card::getFile);
         return st.withScrollToId(fileOpt.map(renderer::getId));
     }
 

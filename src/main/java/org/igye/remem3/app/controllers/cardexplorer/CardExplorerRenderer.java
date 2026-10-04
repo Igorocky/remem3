@@ -32,23 +32,43 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String ACT_REFRESH_CARD = "CardExplorer_ACT_REFRESH_CARD";
     public static final String ACT_REFRESH_PAGE = "CardExplorer_ACT_REFRESH_PAGE";
     public static final String ACT_SET_PRIORITY = "CardExplorer_ACT_SET_PRIORITY";
+    public static final String ACT_DELETE_CARD = "CardExplorer_ACT_DELETE_CARD";
+    public static final String ACT_DELETE_CARD_CONFIRMED = "CardExplorer_ACT_DELETE_CARD_CONFIRMED";
+    public static final String ACT_DELETE_CARD_CANCELED = "CardExplorer_ACT_DELETE_CARD_CANCELED";
 
     @Override
     public HtmlElem render(CardExplorerState st) {
-        return simplePageWithTitle("Card explorer",
-            rndScrollJs(st),
-            h4(text("Card explorer")),
-            form(
-                rndDirSelector("Directory", st.getDir()),
-                table(List.of(List.of(
-                    inpSubmit(ACT_REFRESH_PAGE, "Reload"),
-                    text("%s cards".formatted(st.getCards().size())),
-                    rndSortSelector(st),
-                    rndPrioritySelector(st),
-                    rndFilterInput(st),
-                    rndRecursiveCheckbox(st)
-                ))),
-                rndCards(st)
+        if (st.getDeleteCard().isPresent()) {
+            return rndConfirmCardDelete(st.getDeleteCard().get());
+        } else {
+            return simplePageWithTitle("Card explorer",
+                rndScrollJs(st),
+                h4(text("Card explorer")),
+                form(
+                    rndDirSelector("Directory", st.getDir()),
+                    table(List.of(List.of(
+                        inpSubmit(ACT_REFRESH_PAGE, "Reload"),
+                        text("%s cards".formatted(st.getCards().size())),
+                        rndSortSelector(st),
+                        rndPrioritySelector(st),
+                        rndFilterInput(st),
+                        rndRecursiveCheckbox(st)
+                    ))),
+                    rndCards(st)
+                )
+            );
+        }
+    }
+
+    private HtmlElem rndConfirmCardDelete(Card card) {
+        File file = card.getFile().get();
+        return form(
+            h4(text("Delete this card?")),
+            span("color:lightgrey;", text(file.getAbsolutePath())),
+            rndCard(card),
+            div(
+                inpSubmit(keyValueParam(ACT_DELETE_CARD_CONFIRMED, file.getAbsolutePath()), "Delete"),
+                inpSubmit(keyValueParam(ACT_DELETE_CARD_CANCELED, file.getAbsolutePath()), "Cancel")
             )
         );
     }
@@ -125,12 +145,14 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             return null;
         }
         File file = card.getFile().get();
+        String fileAbsPath = file.getAbsolutePath();
         return frag(
-            inpSubmit(keyValueParam(ACT_REFRESH_CARD, file.getAbsolutePath()), "Reload").id(getId(file)),
-            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, file.getAbsolutePath()), "Edit"),
+            inpSubmit(keyValueParam(ACT_REFRESH_CARD, fileAbsPath), "Reload").id(getId(file)),
+            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, fileAbsPath), "Edit"),
+            inpSubmit(keyValueParam(ACT_DELETE_CARD, fileAbsPath), "Delete"),
             rndPriorities(card),
             span("color:lightgrey;", text("%s Created at %s Order %s".formatted(
-                renderFullPath ? file.getAbsolutePath() : file.getName(),
+                renderFullPath ? fileAbsPath : file.getName(),
                 card.getCreatedAt().map(Objects::toString).orElse("?"),
                 card.getOrder()
             )))

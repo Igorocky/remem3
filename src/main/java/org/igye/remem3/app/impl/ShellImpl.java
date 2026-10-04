@@ -23,7 +23,9 @@ import java.io.File;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class ShellImpl extends FileSystemAwareSpelShellImpl implements Shell {
@@ -47,6 +49,11 @@ public class ShellImpl extends FileSystemAwareSpelShellImpl implements Shell {
     @Override
     public Shell shell() {
         return this;
+    }
+
+    @Override
+    public HashMap<?, ?> hashMap(Map<?, ?> map) {
+        return new HashMap<>(map);
     }
 
     @Override

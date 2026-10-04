@@ -10,12 +10,26 @@ import org.igye.remem3.app.dto.Card;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public interface Shell extends FileSystemAwareSpelShell {
 
     Shell shell();
+
+    HashMap<?, ?> hashMap(Map<?, ?> map);
+
+    CardDto.FillGaps.FillGapsBuilder cardDtoFillGaps();
+
+    CardDto.Translate.TranslateBuilder cardDtoTranslate();
+
+    Object parseJson(String jsonStr);
+
+    Card makeCard(CardDto cardDto);
+
+    void saveCardInNewFile(File dir, Card card);
 
     List<Pair<String, Object>> getBeans();
 
@@ -40,14 +54,4 @@ public interface Shell extends FileSystemAwareSpelShell {
     ExerciseDef.SimpleExerciseDef.SimpleExerciseDefBuilder exercise(String name);
 
     ExerciseDef.CompoundExerciseDef.CompoundExerciseDefBuilder compoundExercise();
-
-    CardDto.FillGaps.FillGapsBuilder cardDtoFillGaps();
-
-    CardDto.Translate.TranslateBuilder cardDtoTranslate();
-
-    Object parseJson(String jsonStr);
-
-    Card makeCard(CardDto cardDto);
-
-    void saveCardInNewFile(File dir, Card card);
 }
