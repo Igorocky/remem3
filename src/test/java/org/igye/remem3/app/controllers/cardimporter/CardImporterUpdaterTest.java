@@ -103,7 +103,7 @@ class CardImporterUpdaterTest {
         Assertions.assertEquals(Map.of(CardType.QUESTION_ANSWER, 2L), root.getChapters().get(0).getCardCounts());
         Assertions.assertEquals(Map.of(), root.getChapters().get(1).getCardCounts());
         String html = renderer.render(st).toString();
-        Assertions.assertTrue(html.contains("QUESTION_ANSWER: 2"));
+        Assertions.assertTrue(html.contains("Q/A: 2"));
         Assertions.assertTrue(html.contains("Import 3 cards"));
         Assertions.assertEquals(0, baseDir.list().length);
     }

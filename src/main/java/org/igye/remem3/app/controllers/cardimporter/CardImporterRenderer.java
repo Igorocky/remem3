@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.igye.remem3.app.controllers.cardexplorer.CardExplorerConstructor;
 import org.igye.remem3.app.imprt.CardCollectionDto;
+import org.igye.remem3.app.imprt.CardType;
 import org.igye.remem3.app.state.StateRenderer;
 import org.igye.remem3.html.HtmlBuilder;
 import org.igye.remem3.html.HtmlElem;
@@ -153,9 +154,17 @@ public class CardImporterRenderer extends HtmlBuilder implements StateRenderer<C
         }
         return text(
             chapter.getCardCounts().entrySet().stream()
-                .map(typeAndCount -> "%s: %s".formatted(typeAndCount.getKey(), typeAndCount.getValue()))
+                .map(typeAndCount -> "%s: %s".formatted(rndCardType(typeAndCount.getKey()), typeAndCount.getValue()))
                 .collect(Collectors.joining(", "))
         );
+    }
+
+    private String rndCardType(CardType cardType) {
+        return switch (cardType) {
+            case QUESTION_ANSWER -> "Q/A";
+            case TRANSLATE -> "Translate";
+            case FILL_GAPS -> "Fill Gaps";
+        };
     }
 
     private String rndNumOfCards(long numOfCards) {
