@@ -311,6 +311,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     .map(entry -> List.of(text(entry.getKey() + ":"), text(entry.getValue())))
                     .toList()
             ).attr("class", "table-no-border vertical-align-top first-col-text-align-right")
+                .attr("style", "font-size:70%;")
         );
     }
 }
