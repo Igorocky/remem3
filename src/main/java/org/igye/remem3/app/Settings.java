@@ -9,6 +9,10 @@ public interface Settings {
 
     List<String> getLanguages();
 
+    String getQuestionLanguage();
+
+    String getAnswerLanguage();
+
     List<String> getDirectoriesWithCards();
 
     String getCardEditor();

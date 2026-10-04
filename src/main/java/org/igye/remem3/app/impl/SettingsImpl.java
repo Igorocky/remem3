@@ -35,6 +35,10 @@ public class SettingsImpl implements Settings {
     @Builder.Default
     private List<String> languages = Collections.emptyList();
     @Builder.Default
+    private String questionLanguage = "";
+    @Builder.Default
+    private String answerLanguage = "";
+    @Builder.Default
     private List<String> directoriesWithCards = Collections.emptyList();
     @Builder.Default
     private String cacheFile = "";
@@ -68,6 +72,8 @@ public class SettingsImpl implements Settings {
         }
         return SettingsImpl.builder()
             .languages(languages)
+            .questionLanguage(StringUtils.defaultString(props.getQuestionLanguage()).trim())
+            .answerLanguage(StringUtils.defaultString(props.getAnswerLanguage()).trim())
             .directoriesWithCards(directoriesWithCards)
             .cacheFile(checkNotBlank(props.getCacheFile(), PROP_CACHE_FILE))
             .beansFile(checkNotBlank(props.getBeansFile(), PROP_BEANS_FILE))

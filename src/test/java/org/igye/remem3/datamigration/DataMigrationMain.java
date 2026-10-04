@@ -244,6 +244,16 @@ public class DataMigrationMain {
             }
 
             @Override
+            public String getQuestionLanguage() {
+                return "";
+            }
+
+            @Override
+            public String getAnswerLanguage() {
+                return "";
+            }
+
+            @Override
             public List<String> getDirectoriesWithCards() {
                 throw new Exn("not implemented");
             }

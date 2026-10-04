@@ -13,6 +13,8 @@ import java.util.List;
 @Builder
 public class AppProps {
     private final List<String> languages;
+    private final String questionLanguage;
+    private final String answerLanguage;
     private final List<String> directoriesWithCards;
     private final String cacheFile;
     private final String beansFile;

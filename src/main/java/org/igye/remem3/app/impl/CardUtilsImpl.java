@@ -3,7 +3,9 @@ package org.igye.remem3.app.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.newcard.CardDto;
@@ -11,6 +13,10 @@ import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
+import org.igye.remem3.app.imprt.CardCollectionDto;
+import org.igye.remem3.app.imprt.ChapterDto;
+import org.igye.remem3.app.imprt.QuestionAnswerCardDto;
+import org.igye.remem3.app.imprt.TranslationCardDto;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.Func;
 import org.igye.remem3.utils.Utils;
@@ -212,12 +218,10 @@ public class CardUtilsImpl implements CardUtils {
 
     @Override
     public String makeFileNameForCard(Card card) {
-        String baseName = UUID.randomUUID().toString().replace("-", "_");
-        String extension = switch (card) {
+        return makeFileNameForCard(switch (card) {
             case Card.FillGaps _ -> CARD_FILL_GAPS_FILE_EXTENSION;
             case Card.Translate _ -> CARD_TRANSLATE_FILE_EXTENSION;
-        };
-        return baseName + extension;
+        });
     }
 
     @Override
@@ -250,6 +254,115 @@ public class CardUtilsImpl implements CardUtils {
             res.add(TextPart.Text.builder().text(str.substring(lastIdx).trim()).build());
         }
         return res;
+    }
+
+    @Override
+    public void importCards(File baseDir, CardCollectionDto cards) {
+        if (cards.getCards() == null) {
+            throw new Exn("The card collection doesn't have the root chapter.");
+        }
+        List<Pair<File, String>> dirsToCreate = new ArrayList<>();
+        List<Card> cardsToSave = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        prepareChapterForImport(baseDir, "", cards.getCards(), dirsToCreate, cardsToSave, errors);
+        if (!errors.isEmpty()) {
+            throw new Exn("Cannot import cards:\n" + String.join(";\n", errors));
+        }
+        dirsToCreate.forEach(parentDirAndName -> {
+            File parentDir = parentDirAndName.getLeft();
+            String dirName = parentDirAndName.getRight();
+            if (!new File(parentDir, dirName).isDirectory()) {
+                utils.createNewDir(parentDir, dirName);
+            }
+        });
+        cardsToSave.forEach(this::saveCard);
+    }
+
+    private void prepareChapterForImport(
+        File parentDir,
+        String parentPath,
+        ChapterDto chapter,
+        List<Pair<File, String>> dirsToCreate,
+        List<Card> cardsToSave,
+        List<String> errors
+    ) {
+        String chapterPath = parentPath + "/" + chapter.getChapterName();
+        String dirName;
+        try {
+            dirName = utils.sanitizeDirName(chapter.getChapterName());
+        } catch (Exn ex) {
+            errors.add("Chapter %s: %s".formatted(chapterPath, ex.getMessage()));
+            return;
+        }
+        File dir = new File(parentDir, dirName);
+        if (dir.exists() && !dir.isDirectory()) {
+            errors.add("Chapter %s: '%s' already exists and it is not a directory.".formatted(chapterPath, dir));
+            return;
+        }
+        dirsToCreate.add(Pair.of(parentDir, dirName));
+        List<org.igye.remem3.app.imprt.CardDto> cardDtos = ListUtils.emptyIfNull(chapter.getCards());
+        for (int i = 0; i < cardDtos.size(); i++) {
+            String cardPath = "Chapter %s, card #%s: ".formatted(chapterPath, i + 1);
+            Card card;
+            try {
+                card = switch (cardDtos.get(i)) {
+                    case QuestionAnswerCardDto dto -> makeCardForImport(dir, dto);
+                    case TranslationCardDto dto -> makeCardForImport(dir, dto);
+                    case null, default -> throw new Exn("Unsupported type of card.");
+                };
+            } catch (Exn ex) {
+                errors.add(cardPath + ex.getMessage());
+                continue;
+            }
+            List<String> cardErrors = validateCard(card);
+            cardErrors.forEach(error -> errors.add(cardPath + error));
+            if (cardErrors.isEmpty()) {
+                cardsToSave.add(card);
+            }
+        }
+        for (ChapterDto subChapter : ListUtils.emptyIfNull(chapter.getChapters())) {
+            if (subChapter == null) {
+                errors.add("Chapter %s: A sub-chapter cannot be null.".formatted(chapterPath));
+            } else {
+                prepareChapterForImport(dir, chapterPath, subChapter, dirsToCreate, cardsToSave, errors);
+            }
+        }
+    }
+
+    private Card makeCardForImport(File dir, QuestionAnswerCardDto dto) {
+        if (StringUtils.isBlank(settings.getQuestionLanguage()) || StringUtils.isBlank(settings.getAnswerLanguage())) {
+            throw new Exn(
+                "The question language and the answer language must be set in the settings"
+                    + " to import question-answer cards."
+            );
+        }
+        return Card.Translate.builder()
+            .file(Optional.of(new File(dir, makeFileNameForCard(CARD_TRANSLATE_FILE_EXTENSION))))
+            .createdAt(Optional.of(Instant.now()))
+            .lang1(settings.getQuestionLanguage())
+            .text1(StringUtils.defaultString(dto.getQuestion()).trim())
+            .exactMatch1(false)
+            .lang2(settings.getAnswerLanguage())
+            .text2(StringUtils.defaultString(dto.getAnswer()).trim())
+            .exactMatch2(false)
+            .build();
+    }
+
+    private Card makeCardForImport(File dir, TranslationCardDto dto) {
+        return Card.Translate.builder()
+            .file(Optional.of(new File(dir, makeFileNameForCard(CARD_TRANSLATE_FILE_EXTENSION))))
+            .createdAt(Optional.of(Instant.now()))
+            .lang1(StringUtils.defaultString(dto.getFromLanguage()).trim())
+            .text1(StringUtils.defaultString(dto.getTextToTranslate()).trim())
+            .exactMatch1(false)
+            .lang2(StringUtils.defaultString(dto.getToLanguage()).trim())
+            .text2(StringUtils.defaultString(dto.getTranslatedText()).trim())
+            .exactMatch2(false)
+            .build();
+    }
+
+    private String makeFileNameForCard(String extension) {
+        return UUID.randomUUID().toString().replace("-", "_") + extension;
     }
 
     private List<String> validateFillGapsCard(Card.FillGaps card) {

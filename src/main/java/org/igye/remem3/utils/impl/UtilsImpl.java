@@ -59,6 +59,42 @@ public class UtilsImpl implements Utils {
         FileUtils.writeStringToFile(file, str, StandardCharsets.UTF_8);
     }
 
+    @Override
+    public String sanitizeDirName(String dirName) {
+        String sanitizedName = StringUtils.defaultString(dirName).trim()
+            .replaceAll("\\s+", " ")
+            .replaceAll("[^a-zA-Z0-9-_.\\s]", "");
+        if (StringUtils.isBlank(sanitizedName)) {
+            throw new Exn("Directory name cannot be blank.");
+        }
+        if (".".equals(sanitizedName)) {
+            throw new Exn("Directory name cannot be '.'");
+        }
+        if ("..".equals(sanitizedName)) {
+            throw new Exn("Directory name cannot be '..'");
+        }
+        return sanitizedName;
+    }
+
+    @Override
+    public File createNewDir(File parentDir, String newDirName) {
+        if (!parentDir.exists()) {
+            if (!parentDir.mkdirs()) {
+                throw new Exn("Cannot create the parent directory '%s'.".formatted(parentDir));
+            }
+        }
+        newDirName = sanitizeDirName(newDirName);
+        String[] existingDirs = parentDir.list();
+        if ((existingDirs == null ? List.of() : Arrays.asList(existingDirs)).contains(newDirName)) {
+            throw new Exn("A directory with name '%s' already exists.".formatted(newDirName));
+        }
+        File newDir = new File(parentDir, newDirName);
+        if (!newDir.mkdirs()) {
+            throw new Exn("Cannot create a new directory '%s'.".formatted(newDirName));
+        }
+        return newDir;
+    }
+
     @SneakyThrows
     @Override
     public <T> T parseJson(String jsonStr, Class<T> clazz) {

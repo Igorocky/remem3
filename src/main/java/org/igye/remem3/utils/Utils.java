@@ -17,6 +17,10 @@ public interface Utils {
 
     void writeStringToFile(String str, File file);
 
+    String sanitizeDirName(String dirName);
+
+    File createNewDir(File parentDir, String newDirName);
+
     <T> T parseJson(String jsonStr, Class<T> clazz);
 
     String objToJson(Object obj);

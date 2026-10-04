@@ -4,6 +4,7 @@ import org.igye.remem3.app.controllers.newcard.CardDto;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
+import org.igye.remem3.app.imprt.CardCollectionDto;
 
 import java.io.File;
 import java.util.List;
@@ -30,4 +31,6 @@ public interface CardUtils {
     String makeFileNameForCard(Card card);
 
     List<TextPart> parseText(String str);
+
+    void importCards(File baseDir, CardCollectionDto cards);
 }
