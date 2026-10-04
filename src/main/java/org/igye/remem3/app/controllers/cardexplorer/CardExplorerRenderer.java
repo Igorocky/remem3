@@ -32,6 +32,8 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String ACT_REFRESH_CARD = "CardExplorer_ACT_REFRESH_CARD";
     public static final String ACT_REFRESH_PAGE = "CardExplorer_ACT_REFRESH_PAGE";
     public static final String ACT_SET_PRIORITY = "CardExplorer_ACT_SET_PRIORITY";
+    public static final String PAR_EXACT_MATCH_SIDE = "CardExplorer_PAR_EXACT_MATCH_SIDE";
+    public static final String ACT_SET_EXACT_MATCH = "CardExplorer_ACT_SET_EXACT_MATCH";
     public static final String ACT_DELETE_CARD = "CardExplorer_ACT_DELETE_CARD";
     public static final String ACT_DELETE_CARD_CONFIRMED = "CardExplorer_ACT_DELETE_CARD_CONFIRMED";
     public static final String ACT_DELETE_CARD_CANCELED = "CardExplorer_ACT_DELETE_CARD_CANCELED";
@@ -65,7 +67,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         return form(
             h4(text("Delete this card?")),
             span("color:lightgrey;", text(file.getAbsolutePath())),
-            rndCard(card),
+            rndCard(card, false),
             div(
                 inpSubmit(keyValueParam(ACT_DELETE_CARD_CONFIRMED, file.getAbsolutePath()), "Delete"),
                 inpSubmit(keyValueParam(ACT_DELETE_CARD_CANCELED, file.getAbsolutePath()), "Cancel")
@@ -134,7 +136,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             st.getCards().stream()
                 .map(card -> List.of(frag(
                     rndCardFile(card, st.isRecursive()),
-                    rndCard(card)
+                    rndCard(card, true)
                 )))
                 .toList()
         ).attr("class", "table-single-border list-of-cards");
@@ -197,23 +199,29 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     }
 
 
-    private HtmlElem rndCard(Card card) {
+    private HtmlElem rndCard(Card card, boolean editable) {
         return switch (card) {
             case Card.FillGaps c -> rndFillGapsCard(c);
-            case Card.Translate c -> rndTranslateCard(c);
+            case Card.Translate c -> rndTranslateCard(c, editable);
         };
     }
 
-    private HtmlElem rndTranslateCard(Card.Translate card) {
+    private HtmlElem rndTranslateCard(Card.Translate card, boolean editable) {
         List<List<HtmlElem>> elems = new ArrayList<>();
         elems.add(
-            rndCardSection(card.getLang1() + " " + (card.isExactMatch1() ? "=" : "~"), pre(text(card.getText1())))
+            rndCardSection(
+                rndLangAndExactMatch(card, 1, card.getLang1(), card.isExactMatch1(), editable),
+                pre(text(card.getText1()))
+            )
         );
         if (StringUtils.isNotBlank(card.getExample1())) {
             elems.add(rndCardSection("Example", pre(text(card.getExample1()))));
         }
         elems.add(
-            rndCardSection(card.getLang2() + " " + (card.isExactMatch2() ? "=" : "~"), pre(text(card.getText2())))
+            rndCardSection(
+                rndLangAndExactMatch(card, 2, card.getLang2(), card.isExactMatch2(), editable),
+                pre(text(card.getText2()))
+            )
         );
         if (StringUtils.isNotBlank(card.getExample2())) {
             elems.add(rndCardSection("Example", pre(text(card.getExample2()))));
@@ -244,9 +252,31 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         );
     }
 
+    private HtmlElem rndLangAndExactMatch(
+        Card.Translate card, int side, String lang, boolean exactMatch, boolean editable
+    ) {
+        String sign = exactMatch ? "=" : "~";
+        if (!editable || card.getFile().isEmpty()) {
+            return text(lang + " " + sign);
+        }
+        return frag(
+            text(lang),
+            text(" "),
+            a("#", span("cursor:pointer;", text(sign)))
+                .attr("style", "text-decoration:none;color:inherit;")
+                .attr("onclick", "setExactMatchForCard(event, '%s', '%s', '%s')".formatted(
+                    card.getFile().get().getAbsolutePath(), side, !exactMatch
+                ))
+        );
+    }
+
     private List<HtmlElem> rndCardSection(String name, HtmlElem content) {
+        return rndCardSection(text(name), content);
+    }
+
+    private List<HtmlElem> rndCardSection(HtmlElem name, HtmlElem content) {
         return List.of(
-            div("font-weight:bold;", text(name)),
+            div("font-weight:bold;", name),
             div("margin-left:5px;", content)
         );
     }

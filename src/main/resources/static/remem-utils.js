@@ -37,6 +37,33 @@ function setNewPriorityForCard(event, cardPath, newPriority) {
     form.submit();
 }
 
+function setExactMatchForCard(event, cardPath, side, exactMatch) {
+    event.preventDefault();
+
+    const form = event.currentTarget.closest('form');
+
+    if (!form) return;
+
+    const cardPathInp = document.createElement('input');
+    cardPathInp.type = 'hidden';
+    cardPathInp.name = 'CardExplorer_PAR_CARD_PATH';
+    cardPathInp.value = cardPath;
+
+    const sideInp = document.createElement('input');
+    sideInp.type = 'hidden';
+    sideInp.name = 'CardExplorer_PAR_EXACT_MATCH_SIDE';
+    sideInp.value = side;
+
+    const exactMatchInp = document.createElement('input');
+    exactMatchInp.type = 'hidden';
+    exactMatchInp.name = 'CardExplorer_ACT_SET_EXACT_MATCH';
+    exactMatchInp.value = exactMatch;
+
+    form.append(cardPathInp, sideInp, exactMatchInp);
+
+    form.submit();
+}
+
 function selectNextOption(selId) {
     const sel = document.getElementById(selId)
     const selIdx = sel.options.selectedIndex

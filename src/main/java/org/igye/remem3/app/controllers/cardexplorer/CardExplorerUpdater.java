@@ -21,9 +21,11 @@ import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD_CONFIRMED;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_OPEN_CARD_IN_EDITOR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_REFRESH_CARD;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SET_EXACT_MATCH;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SET_PRIORITY;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_CARD_PATH;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EXACT_MATCH_SIDE;
 
 @RequiredArgsConstructor
 @Order(3)
@@ -46,6 +48,9 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         }
         if (params.hasParam(ACT_SET_PRIORITY)) {
             st = actChangePriorityForCard(st, params);
+        }
+        if (params.hasParam(ACT_SET_EXACT_MATCH)) {
+            st = actSetExactMatchForCard(st, params);
         }
         if (
             params.hasKeyValueParam(ACT_DELETE_CARD)
@@ -111,6 +116,22 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         String filePath = params.getKeyValueParam(ACT_REFRESH_CARD);
         Optional<File> fileOpt = findCardByPath(st, filePath).flatMap(Card::getFile);
         return st.withScrollToId(fileOpt.map(renderer::getId));
+    }
+
+    private CardExplorerState actSetExactMatchForCard(CardExplorerState st, RequestParams params) {
+        Optional<Card> cardOpt = findCardByPath(st, params.getParam(PAR_CARD_PATH, ""));
+        cardOpt.ifPresent(card -> {
+            if (card instanceof Card.Translate translateCard) {
+                boolean exactMatch = Boolean.parseBoolean(params.getParam(ACT_SET_EXACT_MATCH));
+                if ("1".equals(params.getParam(PAR_EXACT_MATCH_SIDE, ""))) {
+                    translateCard.setExactMatch1(exactMatch);
+                } else {
+                    translateCard.setExactMatch2(exactMatch);
+                }
+                cardUtils.saveCard(card);
+            }
+        });
+        return st.withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
     }
 
     @SneakyThrows

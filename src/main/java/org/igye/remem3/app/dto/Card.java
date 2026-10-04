@@ -152,6 +152,7 @@ public sealed interface Card permits Card.BaseCard {
         @Builder.Default
         private String text1 = "";
         @Getter
+        @Setter
         @Builder.Default
         private boolean exactMatch1 = true;
         @Getter
@@ -165,6 +166,7 @@ public sealed interface Card permits Card.BaseCard {
         @Builder.Default
         private String text2 = "";
         @Getter
+        @Setter
         @Builder.Default
         private boolean exactMatch2 = true;
         @Getter
