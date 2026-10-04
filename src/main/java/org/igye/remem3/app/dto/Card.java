@@ -149,6 +149,7 @@ public sealed interface Card permits Card.BaseCard {
         @Builder.Default
         private String lang1 = "";
         @Getter
+        @Setter
         @Builder.Default
         private String text1 = "";
         @Getter

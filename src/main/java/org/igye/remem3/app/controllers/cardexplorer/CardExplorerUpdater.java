@@ -14,17 +14,24 @@ import org.springframework.core.annotation.Order;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Optional;
 
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_CANCEL_EDIT_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD_CANCELED;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD_CONFIRMED;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_EDIT_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_OPEN_CARD_IN_EDITOR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_REFRESH_CARD;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SAVE_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SET_EXACT_MATCH;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SET_PRIORITY;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_CARD_PATH;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EDITED_CARD_PATH;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EDITED_PROP;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EDITED_TEXT;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EXACT_MATCH_SIDE;
 
 @RequiredArgsConstructor
@@ -51,6 +58,15 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         }
         if (params.hasParam(ACT_SET_EXACT_MATCH)) {
             st = actSetExactMatchForCard(st, params);
+        }
+        if (params.hasParam(ACT_EDIT_PROP)) {
+            st = actEditProp(st, params);
+        }
+        if (params.hasParam(ACT_SAVE_PROP)) {
+            st = actSaveProp(st, params);
+        }
+        if (params.hasParam(ACT_CANCEL_EDIT_PROP)) {
+            st = actCancelEditProp(st, params);
         }
         if (
             params.hasKeyValueParam(ACT_DELETE_CARD)
@@ -131,6 +147,48 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
                 cardUtils.saveCard(card);
             }
         });
+        return st.withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
+    }
+
+    private CardExplorerState actEditProp(CardExplorerState st, RequestParams params) {
+        EditableProp prop = EditableProp.valueOf(params.getParam(ACT_EDIT_PROP));
+        Optional<Card> cardOpt = findCardByPath(st, params.getParam(PAR_CARD_PATH, ""))
+            .filter(prop::isApplicableTo);
+        return st
+            .withPropEdit(cardOpt.map(card -> new CardPropEdit(
+                card.getFile().get().getAbsolutePath(), prop, prop.get(card), List.of()
+            )))
+            .withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
+    }
+
+    private CardExplorerState actSaveProp(CardExplorerState st, RequestParams params) {
+        String filePath = params.getParam(PAR_EDITED_CARD_PATH, "");
+        EditableProp prop = EditableProp.valueOf(params.getParam(PAR_EDITED_PROP));
+        String newValue = params.getParam(PAR_EDITED_TEXT, "");
+        Optional<Card> cardOpt = findCardByPath(st, filePath).filter(prop::isApplicableTo);
+        if (cardOpt.isEmpty()) {
+            return st;
+        }
+        Card card = cardOpt.get();
+        String oldValue = prop.get(card);
+        List<String> errors;
+        try {
+            prop.set(card, newValue);
+            errors = cardUtils.validateCard(card);
+        } catch (Exn ex) {
+            errors = List.of(ex.getMessage());
+        }
+        st = st.withScrollToId(card.getFile().map(renderer::getId));
+        if (!errors.isEmpty()) {
+            prop.set(card, oldValue);
+            return st.withPropEdit(Optional.of(new CardPropEdit(filePath, prop, newValue, errors)));
+        }
+        cardUtils.saveCard(card);
+        return st;
+    }
+
+    private CardExplorerState actCancelEditProp(CardExplorerState st, RequestParams params) {
+        Optional<Card> cardOpt = findCardByPath(st, params.getParam(PAR_EDITED_CARD_PATH, ""));
         return st.withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
     }
 

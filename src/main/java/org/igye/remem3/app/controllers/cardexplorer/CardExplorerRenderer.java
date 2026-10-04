@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -34,6 +35,12 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String ACT_SET_PRIORITY = "CardExplorer_ACT_SET_PRIORITY";
     public static final String PAR_EXACT_MATCH_SIDE = "CardExplorer_PAR_EXACT_MATCH_SIDE";
     public static final String ACT_SET_EXACT_MATCH = "CardExplorer_ACT_SET_EXACT_MATCH";
+    public static final String ACT_EDIT_PROP = "CardExplorer_ACT_EDIT_PROP";
+    public static final String ACT_SAVE_PROP = "CardExplorer_ACT_SAVE_PROP";
+    public static final String ACT_CANCEL_EDIT_PROP = "CardExplorer_ACT_CANCEL_EDIT_PROP";
+    public static final String PAR_EDITED_CARD_PATH = "CardExplorer_PAR_EDITED_CARD_PATH";
+    public static final String PAR_EDITED_PROP = "CardExplorer_PAR_EDITED_PROP";
+    public static final String PAR_EDITED_TEXT = "CardExplorer_PAR_EDITED_TEXT";
     public static final String ACT_DELETE_CARD = "CardExplorer_ACT_DELETE_CARD";
     public static final String ACT_DELETE_CARD_CONFIRMED = "CardExplorer_ACT_DELETE_CARD_CONFIRMED";
     public static final String ACT_DELETE_CARD_CANCELED = "CardExplorer_ACT_DELETE_CARD_CANCELED";
@@ -67,7 +74,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         return form(
             h4(text("Delete this card?")),
             span("color:lightgrey;", text(file.getAbsolutePath())),
-            rndCard(card, false),
+            rndCard(card, false, Optional.empty()),
             div(
                 inpSubmit(keyValueParam(ACT_DELETE_CARD_CONFIRMED, file.getAbsolutePath()), "Delete"),
                 inpSubmit(keyValueParam(ACT_DELETE_CARD_CANCELED, file.getAbsolutePath()), "Cancel")
@@ -136,7 +143,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             st.getCards().stream()
                 .map(card -> List.of(frag(
                     rndCardFile(card, st.isRecursive()),
-                    rndCard(card, true)
+                    rndCard(card, true, st.getPropEdit())
                 )))
                 .toList()
         ).attr("class", "table-single-border list-of-cards");
@@ -199,19 +206,22 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     }
 
 
-    private HtmlElem rndCard(Card card, boolean editable) {
+    private HtmlElem rndCard(Card card, boolean editable, Optional<CardPropEdit> propEdit) {
         return switch (card) {
             case Card.FillGaps c -> rndFillGapsCard(c);
-            case Card.Translate c -> rndTranslateCard(c, editable);
+            case Card.Translate c -> rndTranslateCard(c, editable, propEdit);
         };
     }
 
-    private HtmlElem rndTranslateCard(Card.Translate card, boolean editable) {
+    private HtmlElem rndTranslateCard(Card.Translate card, boolean editable, Optional<CardPropEdit> propEdit) {
         List<List<HtmlElem>> elems = new ArrayList<>();
         elems.add(
             rndCardSection(
-                rndLangAndExactMatch(card, 1, card.getLang1(), card.isExactMatch1(), editable),
-                pre(text(card.getText1()))
+                rndLangAndExactMatch(
+                    card, 1, rndPropName(card, EditableProp.TRANSLATE_TEXT1, card.getLang1(), editable, propEdit),
+                    card.isExactMatch1(), editable
+                ),
+                rndPropValue(card, EditableProp.TRANSLATE_TEXT1, pre(text(card.getText1())), editable, propEdit)
             )
         );
         if (StringUtils.isNotBlank(card.getExample1())) {
@@ -219,7 +229,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         }
         elems.add(
             rndCardSection(
-                rndLangAndExactMatch(card, 2, card.getLang2(), card.isExactMatch2(), editable),
+                rndLangAndExactMatch(card, 2, text(card.getLang2()), card.isExactMatch2(), editable),
                 pre(text(card.getText2()))
             )
         );
@@ -253,20 +263,56 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     }
 
     private HtmlElem rndLangAndExactMatch(
-        Card.Translate card, int side, String lang, boolean exactMatch, boolean editable
+        Card.Translate card, int side, HtmlElem lang, boolean exactMatch, boolean editable
     ) {
         String sign = exactMatch ? "=" : "~";
         if (!editable || card.getFile().isEmpty()) {
-            return text(lang + " " + sign);
+            return frag(lang, text(" " + sign));
         }
         return frag(
-            text(lang),
+            lang,
             text(" "),
             a("#", span("cursor:pointer;", text(sign)))
                 .attr("style", "text-decoration:none;color:inherit;")
                 .attr("onclick", "setExactMatchForCard(event, '%s', '%s', '%s')".formatted(
                     card.getFile().get().getAbsolutePath(), side, !exactMatch
                 ))
+        );
+    }
+
+    private boolean isBeingEdited(Card card, EditableProp prop, boolean editable, Optional<CardPropEdit> propEdit) {
+        return editable && propEdit.isPresent() && propEdit.get().getProp() == prop
+            && card.getFile().map(file -> file.getAbsolutePath().equals(propEdit.get().getCardPath())).orElse(false);
+    }
+
+    private HtmlElem rndPropName(
+        Card card, EditableProp prop, String name, boolean editable, Optional<CardPropEdit> propEdit
+    ) {
+        if (!editable || card.getFile().isEmpty() || isBeingEdited(card, prop, editable, propEdit)) {
+            return text(name);
+        }
+        return span("cursor:pointer;", text(name))
+            .attr("onclick", "editCardProp(event, '%s', '%s')".formatted(
+                card.getFile().get().getAbsolutePath(), prop.name()
+            ));
+    }
+
+    private HtmlElem rndPropValue(
+        Card card, EditableProp prop, HtmlElem content, boolean editable, Optional<CardPropEdit> propEdit
+    ) {
+        if (!isBeingEdited(card, prop, editable, propEdit)) {
+            return content;
+        }
+        CardPropEdit edit = propEdit.get();
+        return frag(
+            rndErrors(edit.getErrors()),
+            inpHidden(PAR_EDITED_CARD_PATH, edit.getCardPath()),
+            inpHidden(PAR_EDITED_PROP, edit.getProp().name()),
+            div(textarea(PAR_EDITED_TEXT, edit.getText(), 100, 5).autofocus()),
+            div(
+                inpSubmit(ACT_SAVE_PROP, "save"),
+                inpSubmit(ACT_CANCEL_EDIT_PROP, "cancel")
+            )
         );
     }
 
