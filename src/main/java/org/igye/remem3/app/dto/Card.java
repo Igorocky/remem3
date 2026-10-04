@@ -120,9 +120,11 @@ public sealed interface Card permits Card.BaseCard {
         @Builder.Default
         private String descr = "";
         @Getter
+        @Setter
         @Builder.Default
         private List<TextPart> text = List.of();
         @Getter
+        @Setter
         @Builder.Default
         private String notes = "";
 
@@ -164,6 +166,7 @@ public sealed interface Card permits Card.BaseCard {
         @Builder.Default
         private String lang2 = "";
         @Getter
+        @Setter
         @Builder.Default
         private String text2 = "";
         @Getter
@@ -171,6 +174,7 @@ public sealed interface Card permits Card.BaseCard {
         @Builder.Default
         private boolean exactMatch2 = true;
         @Getter
+        @Setter
         @Builder.Default
         private String example2 = "";
         @Getter

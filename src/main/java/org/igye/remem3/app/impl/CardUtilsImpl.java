@@ -258,6 +258,13 @@ public class CardUtilsImpl implements CardUtils {
     }
 
     @Override
+    public String textToString(List<TextPart> text) {
+        StringBuilder sb = new StringBuilder();
+        appendText(sb, text);
+        return sb.toString();
+    }
+
+    @Override
     public List<String> validateCardsForImport(File baseDir, CardCollectionDto cards, boolean skipRootDir) {
         return prepareCardsForImport(baseDir, cards, skipRootDir, new ArrayList<>(), new ArrayList<>());
     }

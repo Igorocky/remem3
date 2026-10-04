@@ -156,7 +156,7 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
             .filter(prop::isApplicableTo);
         return st
             .withPropEdit(cardOpt.map(card -> new CardPropEdit(
-                card.getFile().get().getAbsolutePath(), prop, prop.get(card), List.of()
+                card.getFile().get().getAbsolutePath(), prop, prop.get(cardUtils, card), List.of()
             )))
             .withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
     }
@@ -170,17 +170,17 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
             return st;
         }
         Card card = cardOpt.get();
-        String oldValue = prop.get(card);
+        String oldValue = prop.get(cardUtils, card);
         List<String> errors;
         try {
-            prop.set(card, newValue);
+            prop.set(cardUtils, card, newValue);
             errors = cardUtils.validateCard(card);
         } catch (Exn ex) {
             errors = List.of(ex.getMessage());
         }
         st = st.withScrollToId(card.getFile().map(renderer::getId));
         if (!errors.isEmpty()) {
-            prop.set(card, oldValue);
+            prop.set(cardUtils, card, oldValue);
             return st.withPropEdit(Optional.of(new CardPropEdit(filePath, prop, newValue, errors)));
         }
         cardUtils.saveCard(card);

@@ -208,7 +208,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
 
     private HtmlElem rndCard(Card card, boolean editable, Optional<CardPropEdit> propEdit) {
         return switch (card) {
-            case Card.FillGaps c -> rndFillGapsCard(c);
+            case Card.FillGaps c -> rndFillGapsCard(c, editable, propEdit);
             case Card.Translate c -> rndTranslateCard(c, editable, propEdit);
         };
     }
@@ -225,19 +225,28 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             )
         );
         if (StringUtils.isNotBlank(card.getExample1())) {
-            elems.add(rndCardSection("Example", pre(text(card.getExample1()))));
+            elems.add(rndEditableCardSection(
+                card, EditableProp.TRANSLATE_EXAMPLE1, "Example", pre(text(card.getExample1())), editable, propEdit
+            ));
         }
         elems.add(
             rndCardSection(
-                rndLangAndExactMatch(card, 2, text(card.getLang2()), card.isExactMatch2(), editable),
-                pre(text(card.getText2()))
+                rndLangAndExactMatch(
+                    card, 2, rndPropName(card, EditableProp.TRANSLATE_TEXT2, card.getLang2(), editable, propEdit),
+                    card.isExactMatch2(), editable
+                ),
+                rndPropValue(card, EditableProp.TRANSLATE_TEXT2, pre(text(card.getText2())), editable, propEdit)
             )
         );
         if (StringUtils.isNotBlank(card.getExample2())) {
-            elems.add(rndCardSection("Example", pre(text(card.getExample2()))));
+            elems.add(rndEditableCardSection(
+                card, EditableProp.TRANSLATE_EXAMPLE2, "Example", pre(text(card.getExample2())), editable, propEdit
+            ));
         }
         if (StringUtils.isNotBlank(card.getNotes())) {
-            elems.add(rndCardSection("Notes", pre(text(card.getNotes()))));
+            elems.add(rndEditableCardSection(
+                card, EditableProp.TRANSLATE_NOTES, "Notes", pre(text(card.getNotes())), editable, propEdit
+            ));
         }
         elems.add(rndAttrsIfPresent(card));
         return div(
@@ -246,14 +255,18 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         );
     }
 
-    private HtmlElem rndFillGapsCard(Card.FillGaps card) {
+    private HtmlElem rndFillGapsCard(Card.FillGaps card, boolean editable, Optional<CardPropEdit> propEdit) {
         List<List<HtmlElem>> elems = new ArrayList<>();
         if (StringUtils.isNotBlank(card.getDescr())) {
             elems.add(rndCardSection("Description", pre(text(card.getDescr()))));
         }
-        elems.add(rndCardSection(card.getLang(), rndText(card.getText())));
+        elems.add(rndEditableCardSection(
+            card, EditableProp.FILL_GAPS_TEXT, card.getLang(), rndText(card.getText()), editable, propEdit
+        ));
         if (StringUtils.isNotBlank(card.getNotes())) {
-            elems.add(rndCardSection("Notes", pre(text(card.getNotes()))));
+            elems.add(rndEditableCardSection(
+                card, EditableProp.FILL_GAPS_NOTES, "Notes", pre(text(card.getNotes())), editable, propEdit
+            ));
         }
         elems.add(rndAttrsIfPresent(card));
         return div(
@@ -313,6 +326,15 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                 inpSubmit(ACT_SAVE_PROP, "save"),
                 inpSubmit(ACT_CANCEL_EDIT_PROP, "cancel")
             )
+        );
+    }
+
+    private List<HtmlElem> rndEditableCardSection(
+        Card card, EditableProp prop, String name, HtmlElem content, boolean editable, Optional<CardPropEdit> propEdit
+    ) {
+        return rndCardSection(
+            rndPropName(card, prop, name, editable, propEdit),
+            rndPropValue(card, prop, content, editable, propEdit)
         );
     }
 

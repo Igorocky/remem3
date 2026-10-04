@@ -32,6 +32,8 @@ public interface CardUtils {
 
     List<TextPart> parseText(String str);
 
+    String textToString(List<TextPart> text);
+
     List<String> validateCardsForImport(File baseDir, CardCollectionDto cards, boolean skipRootDir);
 
     List<String> importCards(File baseDir, CardCollectionDto cards, boolean skipRootDir);
