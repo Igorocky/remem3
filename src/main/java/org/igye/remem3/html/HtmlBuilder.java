@@ -213,6 +213,16 @@ public class HtmlBuilder {
         return form(childrenArrayToList(children));
     }
 
+    protected HtmlTag multipartForm(HtmlElem... children) {
+        return h(
+            "form", Map.of("method", "post", "enctype", "multipart/form-data"), childrenArrayToList(children)
+        );
+    }
+
+    protected HtmlTag inpFile(String name) {
+        return h("input", Map.of("type", "file", "id", name, "name", name));
+    }
+
     protected HtmlTag inpHidden(String name, String value) {
         return h("input", Map.of("type", "hidden", "name", name, "value", value));
     }

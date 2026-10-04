@@ -1,10 +1,14 @@
 package org.igye.remem3.web.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.CollectionUtils;
 import org.igye.remem3.utils.Exn;
 import org.igye.remem3.web.RequestParams;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +18,7 @@ import java.util.Optional;
 public class RequestParamsImpl implements RequestParams {
     private final Map<String, String[]> params = new HashMap<>();
     private final Map<String, List<String>> keyValueParams = new HashMap<>();
+    private final Map<String, String> fileContents = new HashMap<>();
 
     public RequestParamsImpl(HttpServletRequest req) {
         if (req == null) {
@@ -29,6 +34,13 @@ public class RequestParamsImpl implements RequestParams {
                 ).add(param.substring(colonIdx + 1));
             }
         });
+        if (req instanceof MultipartHttpServletRequest multipartReq) {
+            multipartReq.getFileMap().forEach((param, file) -> {
+                if (!file.isEmpty()) {
+                    fileContents.put(param, readFileContent(file));
+                }
+            });
+        }
     }
 
     public static RequestParamsImpl empty() {
@@ -136,7 +148,17 @@ public class RequestParamsImpl implements RequestParams {
     }
 
     @Override
+    public Optional<String> getFileContent(String paramName) {
+        return Optional.ofNullable(fileContents.get(paramName));
+    }
+
+    @Override
     public boolean isEmpty() {
-        return params.isEmpty();
+        return params.isEmpty() && fileContents.isEmpty();
+    }
+
+    @SneakyThrows
+    private String readFileContent(MultipartFile file) {
+        return new String(file.getBytes(), StandardCharsets.UTF_8);
     }
 }

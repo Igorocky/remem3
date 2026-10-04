@@ -47,7 +47,7 @@ class CardUtilsImplImportCardsTest {
                     translation("LANG2", "text3", "LANG1", "text4")
                 ))
                 .build())
-            .build());
+            .build(), false);
 
         Assertions.assertEquals(List.of(), errors);
         File rootDir = new File(baseDir, "Root chapter");
@@ -89,12 +89,65 @@ class CardUtilsImplImportCardsTest {
                 .build())
             .build();
 
-        Assertions.assertEquals(List.of(), cards.importCards(baseDir, collection));
-        Assertions.assertEquals(List.of(), cards.importCards(baseDir, collection));
+        Assertions.assertEquals(List.of(), cards.importCards(baseDir, collection, false));
+        Assertions.assertEquals(List.of(), cards.importCards(baseDir, collection, false));
 
         List<Card.Translate> rootCards = loadCards(new File(baseDir, "root"));
         Assertions.assertEquals(2, rootCards.size());
         Assertions.assertEquals(new BigDecimal("2"), rootCards.get(1).getOrder());
+    }
+
+    @Test
+    void importCards_puts_content_of_root_chapter_to_base_dir_when_root_dir_is_skipped() {
+        CardCollectionDto collection = CardCollectionDto.builder()
+            .cards(ChapterDto.builder()
+                .chapterName("???")
+                .chapters(List.of(
+                    ChapterDto.builder()
+                        .chapterName("child")
+                        .cards(List.of(translation("LANG1", "text1", "LANG2", "text2")))
+                        .build()
+                ))
+                .cards(List.of(translation("LANG1", "text3", "LANG2", "text4")))
+                .build())
+            .build();
+
+        Assertions.assertEquals(List.of(), cards.importCards(baseDir, collection, true));
+
+        Assertions.assertEquals(2, baseDir.list().length);
+        List<Card.Translate> rootCards = loadCards(baseDir);
+        Assertions.assertEquals(1, rootCards.size());
+        Assertions.assertEquals("text3", rootCards.get(0).getText1());
+        List<Card.Translate> childCards = loadCards(new File(baseDir, "child"));
+        Assertions.assertEquals(1, childCards.size());
+        Assertions.assertEquals("text1", childCards.get(0).getText1());
+    }
+
+    @Test
+    void validateCardsForImport_returns_errors_and_writes_nothing() {
+        CardCollectionDto validCollection = CardCollectionDto.builder()
+            .cards(ChapterDto.builder()
+                .chapterName("root")
+                .cards(List.of(translation("LANG1", "text1", "LANG2", "text2")))
+                .build())
+            .build();
+        CardCollectionDto invalidCollection = CardCollectionDto.builder()
+            .cards(ChapterDto.builder()
+                .chapterName("root")
+                .cards(List.of(translation("LANG1", "text1", "LANG3", "text2")))
+                .build())
+            .build();
+
+        Assertions.assertEquals(List.of(), cards.validateCardsForImport(baseDir, validCollection, false));
+        Assertions.assertEquals(
+            List.of("Chapter /root, card #1: Language2 'LANG3' is not registered."),
+            cards.validateCardsForImport(baseDir, invalidCollection, false)
+        );
+        Assertions.assertEquals(
+            List.of("The card collection doesn't have the root chapter."),
+            cards.validateCardsForImport(baseDir, CardCollectionDto.builder().build(), false)
+        );
+        Assertions.assertEquals(0, baseDir.list().length);
     }
 
     @Test
@@ -116,7 +169,7 @@ class CardUtilsImplImportCardsTest {
                 .build())
             .build();
 
-        List<String> errors = cards.importCards(baseDir, collection);
+        List<String> errors = cards.importCards(baseDir, collection, false);
 
         Assertions.assertEquals(
             List.of(
@@ -141,7 +194,7 @@ class CardUtilsImplImportCardsTest {
                 .build())
             .build();
 
-        List<String> errors = cards.importCards(baseDir, collection);
+        List<String> errors = cards.importCards(baseDir, collection, false);
 
         Assertions.assertEquals(1, errors.size());
         Assertions.assertTrue(errors.get(0).startsWith("Chapter /root, card #1: The question language"));

@@ -28,5 +28,7 @@ public interface RequestParams {
 
     Long getKeyValueParamLong(String key);
 
+    Optional<String> getFileContent(String paramName);
+
     boolean isEmpty();
 }

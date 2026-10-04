@@ -257,14 +257,15 @@ public class CardUtilsImpl implements CardUtils {
     }
 
     @Override
-    public List<String> importCards(File baseDir, CardCollectionDto cards) {
-        if (cards.getCards() == null) {
-            return List.of("The card collection doesn't have the root chapter.");
-        }
+    public List<String> validateCardsForImport(File baseDir, CardCollectionDto cards, boolean skipRootDir) {
+        return prepareCardsForImport(baseDir, cards, skipRootDir, new ArrayList<>(), new ArrayList<>());
+    }
+
+    @Override
+    public List<String> importCards(File baseDir, CardCollectionDto cards, boolean skipRootDir) {
         List<Pair<File, String>> dirsToCreate = new ArrayList<>();
         List<Card> cardsToSave = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        prepareChapterForImport(baseDir, "", cards.getCards(), dirsToCreate, cardsToSave, errors);
+        List<String> errors = prepareCardsForImport(baseDir, cards, skipRootDir, dirsToCreate, cardsToSave);
         if (!errors.isEmpty()) {
             return errors;
         }
@@ -277,6 +278,28 @@ public class CardUtilsImpl implements CardUtils {
         });
         cardsToSave.forEach(this::saveCard);
         return List.of();
+    }
+
+    private List<String> prepareCardsForImport(
+        File baseDir,
+        CardCollectionDto cards,
+        boolean skipRootDir,
+        List<Pair<File, String>> dirsToCreate,
+        List<Card> cardsToSave
+    ) {
+        ChapterDto rootChapter = cards.getCards();
+        if (rootChapter == null) {
+            return List.of("The card collection doesn't have the root chapter.");
+        }
+        List<String> errors = new ArrayList<>();
+        if (skipRootDir) {
+            prepareChapterContentForImport(
+                baseDir, "/" + rootChapter.getChapterName(), rootChapter, dirsToCreate, cardsToSave, errors
+            );
+        } else {
+            prepareChapterForImport(baseDir, "", rootChapter, dirsToCreate, cardsToSave, errors);
+        }
+        return errors;
     }
 
     private void prepareChapterForImport(
@@ -301,6 +324,17 @@ public class CardUtilsImpl implements CardUtils {
             return;
         }
         dirsToCreate.add(Pair.of(parentDir, dirName));
+        prepareChapterContentForImport(dir, chapterPath, chapter, dirsToCreate, cardsToSave, errors);
+    }
+
+    private void prepareChapterContentForImport(
+        File dir,
+        String chapterPath,
+        ChapterDto chapter,
+        List<Pair<File, String>> dirsToCreate,
+        List<Card> cardsToSave,
+        List<String> errors
+    ) {
         List<org.igye.remem3.app.imprt.CardDto> cardDtos = ListUtils.emptyIfNull(chapter.getCards());
         for (int i = 0; i < cardDtos.size(); i++) {
             String cardPath = "Chapter %s, card #%s: ".formatted(chapterPath, i + 1);
