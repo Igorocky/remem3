@@ -1,31 +1,39 @@
 package org.igye.remem3.app.impl;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.devtoolsgroup.simplespelshell.SpelEvaluator;
 import org.devtoolsgroup.simplespelshell.impl.FileSystemAwareSpelShellImpl;
 import org.igye.remem3.app.Shell;
+import org.igye.remem3.app.controllers.beans.converter.DurationConverter;
+import org.igye.remem3.app.controllers.beans.converter.InstantConverter;
+import org.igye.remem3.app.controllers.beans.converter.OperatorOverloaderImpl;
+import org.igye.remem3.app.controllers.beans.converter.TaskFilterConverter;
+import org.igye.remem3.app.controllers.beans.converter.TaskTypeMatcherConverter;
 import org.igye.remem3.app.controllers.beans.dto.ExerciseDef;
 import org.igye.remem3.app.controllers.beans.dto.RepeatStrategyParams;
 import org.igye.remem3.app.controllers.beans.dto.TaskFilter;
 import org.igye.remem3.utils.Exn;
+import org.igye.remem3.utils.Utils;
+import org.springframework.core.convert.converter.Converter;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 public class ShellImpl extends FileSystemAwareSpelShellImpl implements Shell {
 
-    public ShellImpl(Path initDir) {
+    public ShellImpl(Path initDir, Utils utils) {
         super(initDir);
-        getWorkingDirectory().setCurrentDirectoryValidator(initDir, newDir -> {
-            if (!initDir.toAbsolutePath().normalize().equals(newDir.toAbsolutePath().normalize())) {
-                throw new Exn(
-                    "Cannot change current directory to %s. The only allowed working directory is %s.".formatted(
-                        newDir, initDir
-                    )
-                );
-            }
-        });
+        SpelEvaluator spelEvaluator = getSpelEvaluator();
+        List<Converter<?, ?>> typeConverters = new ArrayList<>(spelEvaluator.getTypeConverters());
+        typeConverters.add(new InstantConverter());
+        typeConverters.add(new TaskTypeMatcherConverter());
+        typeConverters.add(new TaskFilterConverter(this));
+        typeConverters.add(new DurationConverter(utils));
+        spelEvaluator.setTypeConverters(typeConverters);
+        spelEvaluator.setOperatorOverloader(new OperatorOverloaderImpl(spelEvaluator.getConversionService()));
     }
 
     @Override
