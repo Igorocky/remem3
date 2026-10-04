@@ -15,6 +15,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 class CardUtilsImplImportCardsTest {
     @TempDir
@@ -65,6 +66,7 @@ class CardUtilsImplImportCardsTest {
         Assertions.assertEquals("answer1", qa.getText2());
         Assertions.assertFalse(qa.isExactMatch2());
         Assertions.assertTrue(qa.getCreatedAt().isPresent());
+        Assertions.assertEquals(Map.of("generatedBy", "test"), qa.getAttrs());
         Card.Translate tr = rootCards.get(1);
         Assertions.assertEquals(new BigDecimal("2"), tr.getOrder());
         Assertions.assertEquals("LANG2", tr.getLang1());
@@ -73,6 +75,7 @@ class CardUtilsImplImportCardsTest {
         Assertions.assertEquals("LANG1", tr.getLang2());
         Assertions.assertEquals("text4", tr.getText2());
         Assertions.assertFalse(tr.isExactMatch2());
+        Assertions.assertEquals(Map.of("generatedBy", "test"), tr.getAttrs());
 
         List<Card.Translate> childCards = loadCards(new File(rootDir, "child 1"));
         Assertions.assertEquals(1, childCards.size());
@@ -95,6 +98,7 @@ class CardUtilsImplImportCardsTest {
         List<Card.Translate> rootCards = loadCards(new File(baseDir, "root"));
         Assertions.assertEquals(2, rootCards.size());
         Assertions.assertEquals(new BigDecimal("2"), rootCards.get(1).getOrder());
+        Assertions.assertEquals(Map.of(), rootCards.get(1).getAttrs());
     }
 
     @Test

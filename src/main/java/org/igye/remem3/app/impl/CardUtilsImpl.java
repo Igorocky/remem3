@@ -69,6 +69,7 @@ public class CardUtilsImpl implements CardUtils {
     private static final String ATTR_PRIORITY = "###priority";
     private static final String ATTR_CREATED_AT = "###created_at";
     private static final String ATTR_PREFIX = "###attr__";
+    public static final String ATTR_GENERATED_BY = "generatedBy";
     public static final String CARD_EXTENSION = ".card";
     public static final String CARD_FILL_GAPS_FILE_EXTENSION = ".fg" + CARD_EXTENSION;
     public static final String CARD_TRANSLATE_FILE_EXTENSION = ".tr" + CARD_EXTENSION;
@@ -292,12 +293,15 @@ public class CardUtilsImpl implements CardUtils {
             return List.of("The card collection doesn't have the root chapter.");
         }
         List<String> errors = new ArrayList<>();
+        Map<String, String> attrs = StringUtils.isBlank(cards.getGeneratedBy())
+            ? Map.of()
+            : Map.of(ATTR_GENERATED_BY, cards.getGeneratedBy().trim());
         if (skipRootDir) {
             prepareChapterContentForImport(
-                baseDir, "/" + rootChapter.getChapterName(), rootChapter, dirsToCreate, cardsToSave, errors
+                baseDir, "/" + rootChapter.getChapterName(), rootChapter, attrs, dirsToCreate, cardsToSave, errors
             );
         } else {
-            prepareChapterForImport(baseDir, "", rootChapter, dirsToCreate, cardsToSave, errors);
+            prepareChapterForImport(baseDir, "", rootChapter, attrs, dirsToCreate, cardsToSave, errors);
         }
         return errors;
     }
@@ -306,6 +310,7 @@ public class CardUtilsImpl implements CardUtils {
         File parentDir,
         String parentPath,
         ChapterDto chapter,
+        Map<String, String> attrs,
         List<Pair<File, String>> dirsToCreate,
         List<Card> cardsToSave,
         List<String> errors
@@ -324,13 +329,14 @@ public class CardUtilsImpl implements CardUtils {
             return;
         }
         dirsToCreate.add(Pair.of(parentDir, dirName));
-        prepareChapterContentForImport(dir, chapterPath, chapter, dirsToCreate, cardsToSave, errors);
+        prepareChapterContentForImport(dir, chapterPath, chapter, attrs, dirsToCreate, cardsToSave, errors);
     }
 
     private void prepareChapterContentForImport(
         File dir,
         String chapterPath,
         ChapterDto chapter,
+        Map<String, String> attrs,
         List<Pair<File, String>> dirsToCreate,
         List<Card> cardsToSave,
         List<String> errors
@@ -341,8 +347,8 @@ public class CardUtilsImpl implements CardUtils {
             Card card;
             try {
                 card = switch (cardDtos.get(i)) {
-                    case QuestionAnswerCardDto dto -> makeCardForImport(dir, dto);
-                    case TranslationCardDto dto -> makeCardForImport(dir, dto);
+                    case QuestionAnswerCardDto dto -> makeCardForImport(dir, dto, attrs);
+                    case TranslationCardDto dto -> makeCardForImport(dir, dto, attrs);
                     case null, default -> throw new Exn("Unsupported type of card.");
                 };
             } catch (Exn ex) {
@@ -359,12 +365,12 @@ public class CardUtilsImpl implements CardUtils {
             if (subChapter == null) {
                 errors.add("Chapter %s: A sub-chapter cannot be null.".formatted(chapterPath));
             } else {
-                prepareChapterForImport(dir, chapterPath, subChapter, dirsToCreate, cardsToSave, errors);
+                prepareChapterForImport(dir, chapterPath, subChapter, attrs, dirsToCreate, cardsToSave, errors);
             }
         }
     }
 
-    private Card makeCardForImport(File dir, QuestionAnswerCardDto dto) {
+    private Card makeCardForImport(File dir, QuestionAnswerCardDto dto, Map<String, String> attrs) {
         if (StringUtils.isBlank(settings.getQuestionLanguage()) || StringUtils.isBlank(settings.getAnswerLanguage())) {
             throw new Exn(
                 "The question language and the answer language must be set in the settings"
@@ -380,10 +386,11 @@ public class CardUtilsImpl implements CardUtils {
             .lang2(settings.getAnswerLanguage())
             .text2(StringUtils.defaultString(dto.getAnswer()).trim())
             .exactMatch2(false)
+            .attrs(new HashMap<>(attrs))
             .build();
     }
 
-    private Card makeCardForImport(File dir, TranslationCardDto dto) {
+    private Card makeCardForImport(File dir, TranslationCardDto dto, Map<String, String> attrs) {
         return Card.Translate.builder()
             .file(Optional.of(new File(dir, makeFileNameForCard(CARD_TRANSLATE_FILE_EXTENSION))))
             .createdAt(Optional.of(Instant.now()))
@@ -393,6 +400,7 @@ public class CardUtilsImpl implements CardUtils {
             .lang2(StringUtils.defaultString(dto.getToLanguage()).trim())
             .text2(StringUtils.defaultString(dto.getTranslatedText()).trim())
             .exactMatch2(false)
+            .attrs(new HashMap<>(attrs))
             .build();
     }
 
