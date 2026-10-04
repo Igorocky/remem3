@@ -5,11 +5,16 @@ import lombok.Getter;
 import lombok.With;
 import org.igye.remem3.app.dto.CardType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.igye.remem3.app.dto.CardType.FILL_GAPS;
 import static org.igye.remem3.app.dto.CardType.TRANSLATE;
 
 public sealed interface CardDto permits CardDto.FillGaps, CardDto.Translate {
     CardType getType();
+
+    Map<String, String> getAttrs();
 
     @Builder
     @Getter
@@ -18,6 +23,8 @@ public sealed interface CardDto permits CardDto.FillGaps, CardDto.Translate {
         private final String lang;
         private final String text;
         private final String notes;
+        @Builder.Default
+        private Map<String, String> attrs = new HashMap<>();
 
         @Override
         public CardType getType() {
@@ -38,6 +45,8 @@ public sealed interface CardDto permits CardDto.FillGaps, CardDto.Translate {
         private final boolean exactMatch2;
         private final String example2;
         private final String notes;
+        @Builder.Default
+        private Map<String, String> attrs = new HashMap<>();
 
         @Override
         public CardType getType() {

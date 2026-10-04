@@ -108,6 +108,10 @@ public class CardUtilsImpl implements CardUtils {
     @Override
     public void saveCard(File file, Card card) {
         try {
+            List<String> errors = validateCard(card);
+            if (!errors.isEmpty()) {
+                throw new Exn("The card has errors:\n" + String.join(";\n", errors));
+            }
             File dir = file.getParentFile();
             dir.mkdirs();
             if (card.getOrder() == null) {
@@ -187,6 +191,7 @@ public class CardUtilsImpl implements CardUtils {
                 .text(parseText(dto.getText()))
                 .notes(dto.getNotes())
                 .history(List.of())
+                .attrs(dto.getAttrs())
                 .build();
             case CardDto.Translate dto -> Card.Translate.builder()
                 .createdAt(Optional.of(Instant.now()))
@@ -200,6 +205,7 @@ public class CardUtilsImpl implements CardUtils {
                 .example2(dto.getExample2())
                 .notes(dto.getNotes())
                 .history(List.of())
+                .attrs(dto.getAttrs())
                 .build();
         };
     }
@@ -314,10 +320,10 @@ public class CardUtilsImpl implements CardUtils {
     protected String fillGapsCardToString(Card.FillGaps card) {
         StringBuilder sb = new StringBuilder();
         sb.append(ATTR_LANG).append("\n").append(card.getLang());
-        sb.append("\n\n").append(ATTR_DESCR).append("\n").append(card.getDescr());
+        sb.append("\n\n").append(ATTR_DESCR).append("\n").append(nullToEmptyStr(card.getDescr()));
         sb.append("\n\n").append(ATTR_TEXT).append("\n");
         appendText(sb, card.getText());
-        sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
+        sb.append("\n\n").append(ATTR_NOTES).append("\n").append(nullToEmptyStr(card.getNotes()));
         saveAttrs(sb, card.getAttrs());
         appendOrderPriorityCreatedAtAndHist(
             sb, card.getOrder(), card.getPriority(), card.getCreatedAt(), card.getHistory()
@@ -332,9 +338,9 @@ public class CardUtilsImpl implements CardUtils {
         sb.append("\n\n").append(ATTR_TEXT_2).append(" ").append(card.getLang2()).append(" ").append(card.isExactMatch2() ? "=" : "~");
         sb.append("\n").append(card.getText2());
 
-        sb.append("\n\n").append(ATTR_EXAMPLE_1).append("\n").append(card.getExample1());
-        sb.append("\n\n").append(ATTR_EXAMPLE_2).append("\n").append(card.getExample2());
-        sb.append("\n\n").append(ATTR_NOTES).append("\n").append(card.getNotes());
+        sb.append("\n\n").append(ATTR_EXAMPLE_1).append("\n").append(nullToEmptyStr(card.getExample1()));
+        sb.append("\n\n").append(ATTR_EXAMPLE_2).append("\n").append(nullToEmptyStr(card.getExample2()));
+        sb.append("\n\n").append(ATTR_NOTES).append("\n").append(nullToEmptyStr(card.getNotes()));
         saveAttrs(sb, card.getAttrs());
         appendOrderPriorityCreatedAtAndHist(
             sb, card.getOrder(), card.getPriority(), card.getCreatedAt(), card.getHistory()
@@ -626,5 +632,9 @@ public class CardUtilsImpl implements CardUtils {
 
     protected BigDecimal getNextOrder(BigDecimal prevOrder) {
         return prevOrder.setScale(0, RoundingMode.UP).add(BigDecimal.ONE);
+    }
+
+    private String nullToEmptyStr(Object obj) {
+        return obj == null ? "" : obj.toString();
     }
 }

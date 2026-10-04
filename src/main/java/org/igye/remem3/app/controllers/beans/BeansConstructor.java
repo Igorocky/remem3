@@ -1,6 +1,7 @@
 package org.igye.remem3.app.controllers.beans;
 
 import lombok.RequiredArgsConstructor;
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.impl.ShellImpl;
 import org.igye.remem3.app.state.StateConstructor;
@@ -21,6 +22,7 @@ public class BeansConstructor implements StateConstructor<BeansState> {
     private final Settings settings;
     private final Environment environment;
     private final Utils utils;
+    private final CardUtils cardUtils;
 
     @Override
     public String getName() {
@@ -35,7 +37,7 @@ public class BeansConstructor implements StateConstructor<BeansState> {
     @Override
     public BeansState construct() {
         Path appBaseDir = Path.of(Objects.requireNonNull(environment.getProperty("app.base-dir")));
-        ShellImpl sh = new ShellImpl(appBaseDir, utils);
+        ShellImpl sh = new ShellImpl(appBaseDir, utils, cardUtils);
 
         sh.getWorkingDirectory().setCurrentDirectoryValidator(appBaseDir, newDir -> {
             if (!appBaseDir.toAbsolutePath().normalize().equals(newDir.toAbsolutePath().normalize())) {
