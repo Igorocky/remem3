@@ -257,16 +257,16 @@ public class CardUtilsImpl implements CardUtils {
     }
 
     @Override
-    public void importCards(File baseDir, CardCollectionDto cards) {
+    public List<String> importCards(File baseDir, CardCollectionDto cards) {
         if (cards.getCards() == null) {
-            throw new Exn("The card collection doesn't have the root chapter.");
+            return List.of("The card collection doesn't have the root chapter.");
         }
         List<Pair<File, String>> dirsToCreate = new ArrayList<>();
         List<Card> cardsToSave = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         prepareChapterForImport(baseDir, "", cards.getCards(), dirsToCreate, cardsToSave, errors);
         if (!errors.isEmpty()) {
-            throw new Exn("Cannot import cards:\n" + String.join(";\n", errors));
+            return errors;
         }
         dirsToCreate.forEach(parentDirAndName -> {
             File parentDir = parentDirAndName.getLeft();
@@ -276,6 +276,7 @@ public class CardUtilsImpl implements CardUtils {
             }
         });
         cardsToSave.forEach(this::saveCard);
+        return List.of();
     }
 
     private void prepareChapterForImport(

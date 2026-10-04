@@ -5,7 +5,6 @@ import org.igye.remem3.app.imprt.CardCollectionDto;
 import org.igye.remem3.app.imprt.ChapterDto;
 import org.igye.remem3.app.imprt.QuestionAnswerCardDto;
 import org.igye.remem3.app.imprt.TranslationCardDto;
-import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,7 @@ class CardUtilsImplImportCardsTest {
 
     @Test
     void importCards_creates_directory_per_chapter_and_saves_cards() {
-        cards.importCards(baseDir, CardCollectionDto.builder()
+        List<String> errors = cards.importCards(baseDir, CardCollectionDto.builder()
             .generatedBy("test")
             .cards(ChapterDto.builder()
                 .chapterName("Root: chapter")
@@ -50,6 +49,7 @@ class CardUtilsImplImportCardsTest {
                 .build())
             .build());
 
+        Assertions.assertEquals(List.of(), errors);
         File rootDir = new File(baseDir, "Root chapter");
         Assertions.assertTrue(rootDir.isDirectory());
         Assertions.assertTrue(new File(rootDir, "child 2").isDirectory());
@@ -89,8 +89,8 @@ class CardUtilsImplImportCardsTest {
                 .build())
             .build();
 
-        cards.importCards(baseDir, collection);
-        cards.importCards(baseDir, collection);
+        Assertions.assertEquals(List.of(), cards.importCards(baseDir, collection));
+        Assertions.assertEquals(List.of(), cards.importCards(baseDir, collection));
 
         List<Card.Translate> rootCards = loadCards(new File(baseDir, "root"));
         Assertions.assertEquals(2, rootCards.size());
@@ -116,15 +116,15 @@ class CardUtilsImplImportCardsTest {
                 .build())
             .build();
 
-        Exn ex = Assertions.assertThrows(Exn.class, () -> cards.importCards(baseDir, collection));
+        List<String> errors = cards.importCards(baseDir, collection);
 
         Assertions.assertEquals(
-            """
-                Cannot import cards:
-                Chapter /root, card #2: Text1 is not set.;
-                Chapter /root/child, card #1: Language2 'LANG3' is not registered.;
-                Chapter /root/???: Directory name cannot be blank.""",
-            ex.getMessage()
+            List.of(
+                "Chapter /root, card #2: Text1 is not set.",
+                "Chapter /root/child, card #1: Language2 'LANG3' is not registered.",
+                "Chapter /root/???: Directory name cannot be blank."
+            ),
+            errors
         );
         Assertions.assertEquals(0, baseDir.list().length);
     }
@@ -141,9 +141,10 @@ class CardUtilsImplImportCardsTest {
                 .build())
             .build();
 
-        Exn ex = Assertions.assertThrows(Exn.class, () -> cards.importCards(baseDir, collection));
+        List<String> errors = cards.importCards(baseDir, collection);
 
-        Assertions.assertTrue(ex.getMessage().contains("Chapter /root, card #1: The question language"));
+        Assertions.assertEquals(1, errors.size());
+        Assertions.assertTrue(errors.get(0).startsWith("Chapter /root, card #1: The question language"));
         Assertions.assertEquals(0, baseDir.list().length);
     }
 

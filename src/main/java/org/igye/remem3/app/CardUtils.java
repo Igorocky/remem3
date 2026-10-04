@@ -32,5 +32,5 @@ public interface CardUtils {
 
     List<TextPart> parseText(String str);
 
-    void importCards(File baseDir, CardCollectionDto cards);
+    List<String> importCards(File baseDir, CardCollectionDto cards);
 }
