@@ -1,5 +1,7 @@
 package org.igye.remem3.app.repeatstrategy.impl;
 
+import lombok.Builder;
+import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.repeatstrategy.Task;
@@ -31,7 +33,7 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
         this.randomnessFactor = randomnessFactor;
         this.round = 1;
         this.circle = new RepeatStrategyCircle(
-            utils, getNotPassedTasks(true), startTime, randomnessFactor, Optional.of(1)
+            utils, getNotPassedTasks(), startTime, randomnessFactor, Optional.of(1)
         );
     }
 
@@ -41,35 +43,33 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
             return Optional.empty();
         }
         Optional<List<Task>> nextTasks = circle.getNextTasks();
-        if (nextTasks.isEmpty()) {
-            List<Task> notPassedTasks = getNotPassedTasks(true);
-            if (notPassedTasks.isEmpty()) {
-                return Optional.empty();
-            } else {
-                this.round++;
-                this.circle = new RepeatStrategyCircle(
-                    utils, notPassedTasks, startTime, randomnessFactor, Optional.of(2)
-                );
-                return circle.getNextTasks();
-            }
-        } else {
+        if (nextTasks.isPresent()) {
             return nextTasks;
         }
+        List<Task> notPassedTasks = getNotPassedTasks();
+        if (notPassedTasks.isEmpty()) {
+            return Optional.empty();
+        }
+        this.round++;
+        this.circle = new RepeatStrategyCircle(
+            utils, notPassedTasks, startTime, randomnessFactor, Optional.of(2)
+        );
+        return circle.getNextTasks();
     }
 
     @Override
     public HtmlElem renderLessParams(boolean historyUpdated) {
+        RoundStats roundStats = getRoundStats();
         return frag(
             text(String.format("%s: ", RepeatStrategyType.RETRY_FAILED)),
             text(format("Round: %s", round)),
-            text(format("Passed: %s/%s",
-                getAllTasks().size() - getNotPassedTasks(false).size(), getAllTasks().size()
-            ))
+            text(format("Left: %s Failed: %s", roundStats.getToBeAsked(), roundStats.getFailed()))
         );
     }
 
     @Override
     public HtmlElem renderMoreParams(boolean historyUpdated) {
+        RoundStats roundStats = getRoundStats();
         return frag(
             div(text(format("Repeat strategy: %s", RepeatStrategyType.RETRY_FAILED))),
             div(text(format("Directories: %s", getDirectoriesStr()))),
@@ -77,9 +77,7 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
             div(text(format("Number of tasks: %s", getAllTasks().size()))),
             div(text(format("Randomness: %s", randomnessFactor))),
             div(text(format("Round: %s", round))),
-            div(text(format("Passed: %s/%s",
-                getAllTasks().size() - getNotPassedTasks(false).size(), getAllTasks().size()
-            ))),
+            div(text(format("Left: %s Failed: %s", roundStats.getToBeAsked(), roundStats.getFailed()))),
             div(text(format("Start time: %s", startTime.truncatedTo(ChronoUnit.SECONDS)))),
             div(text(format(
                 "Min. history time: %s",
@@ -98,23 +96,44 @@ public class RepeatStrategyRetryFailed extends BaseRepeatStrategy {
         return Optional.empty();
     }
 
-    private List<Task> getNotPassedTasks(boolean preserveLastHistRec) {
+    private List<Task> getNotPassedTasks() {
         return getAllTasks().stream()
             .filter(task -> task.getHist().getRecords().isEmpty() || !task.getHist().getRecords().getLast().isPassed())
-            .map(task -> truncateHist(task, preserveLastHistRec))
+            .map(this::truncateHist)
             .toList();
     }
 
-    private Task truncateHist(Task task, boolean preserveLastRec) {
+    private Task truncateHist(Task task) {
         TaskImpl taskImpl = (TaskImpl) task;
         return new TaskImpl(
             taskImpl.getBaseTask(),
             //we need to preserve the last history record so the Circle strategy shows tasks in consistent order
-            (task.getHist().getRecords().isEmpty() || !preserveLastRec)
+            task.getHist().getRecords().isEmpty()
                 ? Instant.now()
                 : task.getHist().getRecords().getLast().getTime(),
             task.getSelectedByStrategyType()
         );
     }
 
+    private RoundStats getRoundStats() {
+        List<Task> notPassedTasks = getNotPassedTasks();
+        long toBeAsked = notPassedTasks.stream().filter(t ->
+                t.getHist().getRecords().isEmpty()
+                    || round > 1 && t.getHist().getRecords().size() == 1
+            )
+            .count();
+        return RoundStats.builder()
+            .passed(getAllTasks().size() - notPassedTasks.size())
+            .toBeAsked(toBeAsked)
+            .failed(notPassedTasks.size() - toBeAsked)
+            .build();
+    }
+
+    @Builder
+    @Getter
+    private static class RoundStats {
+        private final long failed;
+        private final long passed;
+        private final long toBeAsked;
+    }
 }
