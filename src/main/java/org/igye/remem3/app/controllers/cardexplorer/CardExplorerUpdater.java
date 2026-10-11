@@ -115,7 +115,9 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
                 }
             }
             Files.delete(cardToDelete.getFile().get().toPath());
-            return st.withDeleteCard(Optional.empty())
+            return st
+                .withCards(st.getCards().stream().filter(c -> c != cardToDelete).toList())
+                .withDeleteCard(Optional.empty())
                 .withScrollToId(Optional.ofNullable(prevCard).flatMap(Card::getFile).map(renderer::getId));
         }
         return st.withDeleteCard(Optional.empty());
