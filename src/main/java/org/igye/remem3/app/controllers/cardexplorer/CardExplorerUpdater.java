@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.Settings;
+import org.igye.remem3.app.controllers.deletecard.State;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.state.StateUpdater;
 import org.igye.remem3.utils.Exn;
@@ -13,14 +14,11 @@ import org.springframework.core.annotation.Order;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_CANCEL_EDIT_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD;
-import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD_CANCELED;
-import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD_CONFIRMED;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_EDIT_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_OPEN_CARD_IN_EDITOR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_REFRESH_CARD;
@@ -44,7 +42,7 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
     private final CardUtils cardUtils;
 
     @Override
-    public CardExplorerState update(CardExplorerState st, RequestParams params) {
+    public Object update(CardExplorerState st, RequestParams params) {
         st = constructor.readStateFromParams(params);
         cache.put(PAR_DIR, st.getDir().getSelectedDirectoryStr());
         if (params.hasKeyValueParam(ACT_OPEN_CARD_IN_EDITOR)) {
@@ -68,12 +66,8 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         if (params.hasParam(ACT_CANCEL_EDIT_PROP)) {
             st = actCancelEditProp(st, params);
         }
-        if (
-            params.hasKeyValueParam(ACT_DELETE_CARD)
-                || params.hasKeyValueParam(ACT_DELETE_CARD_CANCELED)
-                || params.hasKeyValueParam(ACT_DELETE_CARD_CONFIRMED)
-        ) {
-            st = actDeleteCard(st, params);
+        if (params.hasKeyValueParam(ACT_DELETE_CARD)) {
+            return actDeleteCard(st, params);
         }
         return st;
     }
@@ -92,35 +86,30 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         return st.withScrollToId(fileOpt.map(renderer::getId));
     }
 
-    @SneakyThrows
-    private CardExplorerState actDeleteCard(CardExplorerState st, RequestParams params) {
-        if (params.hasKeyValueParam(ACT_DELETE_CARD)) {
-            Optional<Card> cardOpt = findCardByPath(st, params.getKeyValueParam(ACT_DELETE_CARD));
-            return st.withDeleteCard(cardOpt);
+    private Object actDeleteCard(CardExplorerState st, RequestParams params) {
+        Optional<Card> cardOpt = findCardByPath(st, params.getKeyValueParam(ACT_DELETE_CARD));
+        if (cardOpt.isEmpty()) {
+            return st;
         }
-        if (params.hasKeyValueParam(ACT_DELETE_CARD_CANCELED)) {
-            Optional<Card> cardOpt = findCardByPath(st, params.getKeyValueParam(ACT_DELETE_CARD_CANCELED));
-            return st.withDeleteCard(Optional.empty())
-                .withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
-        }
-        if (params.hasKeyValueParam(ACT_DELETE_CARD_CONFIRMED)) {
-            Card cardToDelete = findCardByPath(st, params.getKeyValueParam(ACT_DELETE_CARD_CONFIRMED)).get();
-            Card prevCard = null;
-            for (int i = 0; i < st.getCards().size(); i++) {
-                if (st.getCards().get(i) == cardToDelete) {
-                    if (i != 0) {
-                        prevCard = st.getCards().get(i - 1);
-                    }
-                    break;
-                }
+        Card cardToDelete = cardOpt.get();
+        return State.builder()
+            .card(cardToDelete)
+            .onComplete(() -> removeCard(st, cardToDelete))
+            .onCancel(st.withScrollToId(cardToDelete.getFile().map(renderer::getId)))
+            .build();
+    }
+
+    private CardExplorerState removeCard(CardExplorerState st, Card cardToRemove) {
+        Optional<Card> prevCard = Optional.empty();
+        for (Card card : st.getCards()) {
+            if (card == cardToRemove) {
+                break;
             }
-            Files.delete(cardToDelete.getFile().get().toPath());
-            return st
-                .withCards(st.getCards().stream().filter(c -> c != cardToDelete).toList())
-                .withDeleteCard(Optional.empty())
-                .withScrollToId(Optional.ofNullable(prevCard).flatMap(Card::getFile).map(renderer::getId));
+            prevCard = Optional.of(card);
         }
-        return st.withDeleteCard(Optional.empty());
+        return st
+            .withCards(st.getCards().stream().filter(c -> c != cardToRemove).toList())
+            .withScrollToId(prevCard.flatMap(Card::getFile).map(renderer::getId));
     }
 
     private static Optional<Card> findCardByPath(CardExplorerState st, String filePath) {

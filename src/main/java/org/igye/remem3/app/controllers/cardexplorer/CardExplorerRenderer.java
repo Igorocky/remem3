@@ -42,42 +42,23 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String PAR_EDITED_PROP = "CardExplorer_PAR_EDITED_PROP";
     public static final String PAR_EDITED_TEXT = "CardExplorer_PAR_EDITED_TEXT";
     public static final String ACT_DELETE_CARD = "CardExplorer_ACT_DELETE_CARD";
-    public static final String ACT_DELETE_CARD_CONFIRMED = "CardExplorer_ACT_DELETE_CARD_CONFIRMED";
-    public static final String ACT_DELETE_CARD_CANCELED = "CardExplorer_ACT_DELETE_CARD_CANCELED";
 
     @Override
     public HtmlElem render(CardExplorerState st) {
-        if (st.getDeleteCard().isPresent()) {
-            return rndConfirmCardDelete(st.getDeleteCard().get());
-        } else {
-            return simplePageWithTitle("Card explorer",
-                rndScrollJs(st),
-                h4(text("Card explorer")),
-                form(
-                    rndDirSelector("Directory", st.getDir()),
-                    table(List.of(List.of(
-                        inpSubmit(ACT_REFRESH_PAGE, "Reload"),
-                        text("%s cards".formatted(st.getCards().size())),
-                        rndSortSelector(st),
-                        rndPrioritySelector(st),
-                        rndFilterInput(st),
-                        rndRecursiveCheckbox(st)
-                    ))),
-                    rndCards(st)
-                )
-            );
-        }
-    }
-
-    private HtmlElem rndConfirmCardDelete(Card card) {
-        File file = card.getFile().get();
-        return form(
-            h4(text("Delete this card?")),
-            span("color:lightgrey;", text(file.getAbsolutePath())),
-            rndCard(card, false, Optional.empty()),
-            div(
-                inpSubmit(keyValueParam(ACT_DELETE_CARD_CONFIRMED, file.getAbsolutePath()), "Delete"),
-                inpSubmit(keyValueParam(ACT_DELETE_CARD_CANCELED, file.getAbsolutePath()), "Cancel")
+        return simplePageWithTitle("Card explorer",
+            rndScrollJs(st),
+            h4(text("Card explorer")),
+            form(
+                rndDirSelector("Directory", st.getDir()),
+                table(List.of(List.of(
+                    inpSubmit(ACT_REFRESH_PAGE, "Reload"),
+                    text("%s cards".formatted(st.getCards().size())),
+                    rndSortSelector(st),
+                    rndPrioritySelector(st),
+                    rndFilterInput(st),
+                    rndRecursiveCheckbox(st)
+                ))),
+                rndCards(st)
             )
         );
     }
@@ -206,7 +187,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     }
 
 
-    private HtmlElem rndCard(Card card, boolean editable, Optional<CardPropEdit> propEdit) {
+    public HtmlElem rndCard(Card card, boolean editable, Optional<CardPropEdit> propEdit) {
         return switch (card) {
             case Card.FillGaps c -> rndFillGapsCard(c, editable, propEdit);
             case Card.Translate c -> rndTranslateCard(c, editable, propEdit);

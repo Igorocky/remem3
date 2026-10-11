@@ -26,9 +26,6 @@ public class CardExplorerState implements StateIdAware {
     private List<Card> cards;
     @With
     @Builder.Default
-    private Optional<Card> deleteCard = Optional.empty();
-    @With
-    @Builder.Default
     private Optional<CardPropEdit> propEdit = Optional.empty();
     @With
     @Builder.Default
