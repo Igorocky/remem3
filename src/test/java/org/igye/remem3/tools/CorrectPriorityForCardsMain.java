@@ -23,9 +23,9 @@ public class CorrectPriorityForCardsMain {
         File rootDir = new File(rootDirStr);
 
         cardUtils.loadAllCards(rootDir).stream()
-            .filter(card -> card.getPriority() < 1 || card.getPriority() > 3)
+            .filter(card -> card.getPriority() < 0 || card.getPriority() > 3)
             .forEach(card -> {
-                card.setPriority(Math.clamp(card.getPriority(), 1, 3));
+                card.setPriority(Math.clamp(card.getPriority(), 0, 3));
                 cardUtils.saveCard(card);
             });
     }

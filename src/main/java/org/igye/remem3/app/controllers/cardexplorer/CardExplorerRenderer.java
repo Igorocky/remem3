@@ -151,6 +151,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
 
     private HtmlElem rndPriorities(Card card) {
         return span(
+            rndPriority(0, card),
             rndPriority(1, card),
             rndPriority(2, card),
             rndPriority(3, card)
@@ -161,6 +162,9 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         StringBuilder style = new StringBuilder();
         if (priority == card.getPriority()) {
             style.append("font-weight:bold;");
+            if (priority == 0) {
+                style.append("color:grey;");
+            }
             if (priority == 1) {
                 style.append("color:green;");
             }

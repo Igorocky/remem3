@@ -22,7 +22,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static org.igye.remem3.app.components.impl.PrioritySelectorCmpImpl.NUM_OF_PRIORITIES;
+import static org.igye.remem3.app.components.impl.PrioritySelectorCmpImpl.MAX_PRIORITY;
+import static org.igye.remem3.app.components.impl.PrioritySelectorCmpImpl.MIN_PRIORITY;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.CUSTOM_EXERCISE_NAME;
 
 @AllArgsConstructor
@@ -149,7 +150,7 @@ public final class SelectExerciseState implements ExerciseState {
 
     private String getSelectedPrioritiesStr(Set<Integer> selectedPriorities) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
+        for (int i = MIN_PRIORITY; i <= MAX_PRIORITY; i++) {
             sb.append(selectedPriorities.contains(i) ? 1 : 0);
         }
         return sb.toString();

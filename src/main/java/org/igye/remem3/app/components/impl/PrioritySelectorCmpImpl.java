@@ -11,14 +11,15 @@ import java.util.List;
 import java.util.Set;
 
 public class PrioritySelectorCmpImpl extends HtmlBuilder implements PrioritySelectorCmp {
-    public static int NUM_OF_PRIORITIES = 3;
+    public static final int MIN_PRIORITY = 0;
+    public static final int MAX_PRIORITY = 3;
 
     private final List<String> paramNames;
     private Set<Integer> selectedPriorities;
 
     public PrioritySelectorCmpImpl(String baseParamName) {
         paramNames = new ArrayList<>();
-        for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
+        for (int i = MIN_PRIORITY; i <= MAX_PRIORITY; i++) {
             paramNames.add(baseParamName + "_P" + i);
         }
         this.selectedPriorities = Set.of();
@@ -26,8 +27,8 @@ public class PrioritySelectorCmpImpl extends HtmlBuilder implements PrioritySele
 
     public PrioritySelectorCmpImpl setSelectedPriorities(RequestParams params) {
         selectedPriorities = new HashSet<>();
-        for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
-            if (params.hasParam(paramNames.get(i - 1))) {
+        for (int i = MIN_PRIORITY; i <= MAX_PRIORITY; i++) {
+            if (params.hasParam(paramNames.get(i - MIN_PRIORITY))) {
                 selectedPriorities.add(i);
             }
         }
@@ -42,9 +43,9 @@ public class PrioritySelectorCmpImpl extends HtmlBuilder implements PrioritySele
     @Override
     public HtmlElem render() {
         List<HtmlElem> elems = new ArrayList<>();
-        for (int i = 1; i <= NUM_OF_PRIORITIES; i++) {
+        for (int i = MIN_PRIORITY; i <= MAX_PRIORITY; i++) {
             elems.add(text("P" + i));
-            String name = paramNames.get(i - 1);
+            String name = paramNames.get(i - MIN_PRIORITY);
             elems.add(
                 inpCheckbox(name, name, selectedPriorities.contains(i))
                     .submitOnChange()

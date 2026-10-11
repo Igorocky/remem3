@@ -105,7 +105,7 @@ public sealed interface Card permits Card.BaseCard {
 
         @Override
         public void setPriority(int priority) {
-            this.priority = Math.clamp(priority, 1, 3);
+            this.priority = Math.clamp(priority, 0, 3);
         }
     }
 
