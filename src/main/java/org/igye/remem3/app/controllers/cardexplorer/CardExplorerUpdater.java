@@ -106,8 +106,7 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
             return st.withCardEdit(Optional.of(new CardEdit(filePath, newText, errors)));
         }
         cardUtils.saveCard(newCard);
-        Card savedCard = newCard;
-        return st.withCards(st.getCards().stream().map(card -> card == oldCard ? savedCard : card).toList());
+        return st.withCards(constructor.readStateFromParams(params).getCards());
     }
 
     private Object actDeleteCard(CardExplorerState st, RequestParams params) {
