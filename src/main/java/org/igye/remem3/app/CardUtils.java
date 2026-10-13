@@ -12,6 +12,10 @@ import java.util.List;
 public interface CardUtils {
     Card loadCard(File file);
 
+    Card parseCard(String str, File file);
+
+    String cardToString(Card card);
+
     List<Card> loadAllCards(File dir);
 
     List<Card> loadCardsNonRec(File dir);

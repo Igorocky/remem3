@@ -1,14 +1,17 @@
 package org.igye.remem3.app.impl;
 
+import org.igye.remem3.app.CardUtils;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.dto.HistRec;
 import org.igye.remem3.app.dto.RepeatStrategyType;
 import org.igye.remem3.app.dto.fillgaps.TextPart;
+import org.igye.remem3.utils.Exn;
 import org.igye.remem3.utils.impl.UtilsImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -260,6 +263,29 @@ class CardUtilsImplTest {
             card,
             cards.parseTranslateCard(cards.translateCardToString(card), Optional.empty())
         );
+    }
+
+    @Test
+    void parseCard_selects_card_type_by_file_extension() {
+        CardUtils cardUtils = new CardUtilsImpl(new UtilsImpl(new ObjectMapper()), SettingsImpl.builder().build());
+        File fillGapsFile = new File("card" + CardUtilsImpl.CARD_FILL_GAPS_FILE_EXTENSION);
+        File translateFile = new File("card" + CardUtilsImpl.CARD_TRANSLATE_FILE_EXTENSION);
+        Card fillGapsCard = Card.FillGaps.builder()
+            .file(Optional.of(fillGapsFile))
+            .lang("Lang")
+            .text(cardUtils.parseText("abc [[def]] ghi"))
+            .build();
+        Card translateCard = Card.Translate.builder()
+            .file(Optional.of(translateFile))
+            .lang1("Lang1")
+            .text1("Text1")
+            .lang2("Lang2")
+            .text2("Text2")
+            .build();
+
+        Assertions.assertEquals(fillGapsCard, cardUtils.parseCard(cardUtils.cardToString(fillGapsCard), fillGapsFile));
+        Assertions.assertEquals(translateCard, cardUtils.parseCard(cardUtils.cardToString(translateCard), translateFile));
+        Assertions.assertThrows(Exn.class, () -> cardUtils.parseCard("", new File("card.txt")));
     }
 
     @Test

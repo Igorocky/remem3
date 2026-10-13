@@ -29,7 +29,10 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String PAR_RECURSIVE = "CardExplorer_PAR_RECURSIVE";
     public static final String PAR_FILTER = "CardExplorer_PAR_FILTER";
     public static final String PAR_CARD_PATH = "CardExplorer_PAR_CARD_PATH";
-    public static final String ACT_OPEN_CARD_IN_EDITOR = "CardExplorer_ACT_OPEN_CARD_IN_EDITOR";
+    public static final String ACT_EDIT_CARD = "CardExplorer_ACT_EDIT_CARD";
+    public static final String ACT_SAVE_CARD = "CardExplorer_ACT_SAVE_CARD";
+    public static final String ACT_CANCEL_EDIT_CARD = "CardExplorer_ACT_CANCEL_EDIT_CARD";
+    public static final String PAR_EDITED_CARD_TEXT = "CardExplorer_PAR_EDITED_CARD_TEXT";
     public static final String ACT_REFRESH_CARD = "CardExplorer_ACT_REFRESH_CARD";
     public static final String ACT_REFRESH_PAGE = "CardExplorer_ACT_REFRESH_PAGE";
     public static final String ACT_SET_PRIORITY = "CardExplorer_ACT_SET_PRIORITY";
@@ -124,7 +127,9 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             st.getCards().stream()
                 .map(card -> List.of(frag(
                     rndCardFile(card, st.isRecursive()),
-                    rndCard(card, true, st.getPropEdit())
+                    isBeingEdited(card, st.getCardEdit())
+                        ? rndCardEdit(st.getCardEdit().get())
+                        : rndCard(card, true, st.getPropEdit())
                 )))
                 .toList()
         ).attr("class", "table-single-border list-of-cards");
@@ -138,7 +143,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         String fileAbsPath = file.getAbsolutePath();
         return frag(
             inpSubmit(keyValueParam(ACT_REFRESH_CARD, fileAbsPath), "Reload").id(getId(file)),
-            inpSubmit(keyValueParam(ACT_OPEN_CARD_IN_EDITOR, fileAbsPath), "Edit"),
+            inpSubmit(keyValueParam(ACT_EDIT_CARD, fileAbsPath), "Edit"),
             inpSubmit(keyValueParam(ACT_DELETE_CARD, fileAbsPath), "Delete"),
             rndPriorities(card),
             span("color:lightgrey;", text("%s Created at %s Order %s".formatted(
@@ -146,6 +151,24 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                 card.getCreatedAt().map(Objects::toString).orElse("?"),
                 card.getOrder()
             )))
+        );
+    }
+
+    private boolean isBeingEdited(Card card, Optional<CardEdit> cardEdit) {
+        return cardEdit.isPresent()
+            && card.getFile().map(file -> file.getAbsolutePath().equals(cardEdit.get().getCardPath())).orElse(false);
+    }
+
+    private HtmlElem rndCardEdit(CardEdit edit) {
+        int rows = Math.max(30, (int) edit.getText().lines().count() + 2);
+        return div(
+            rndErrors(edit.getErrors()),
+            inpHidden(PAR_EDITED_CARD_PATH, edit.getCardPath()),
+            div(textarea(PAR_EDITED_CARD_TEXT, edit.getText(), 100, rows).autofocus()),
+            div(
+                inpSubmit(ACT_SAVE_CARD, "Save"),
+                inpSubmit(ACT_CANCEL_EDIT_CARD, "Cancel")
+            )
         );
     }
 
@@ -308,8 +331,8 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             inpHidden(PAR_EDITED_PROP, edit.getProp().name()),
             div(textarea(PAR_EDITED_TEXT, edit.getText(), 100, 5).autofocus()),
             div(
-                inpSubmit(ACT_SAVE_PROP, "save"),
-                inpSubmit(ACT_CANCEL_EDIT_PROP, "cancel")
+                inpSubmit(ACT_SAVE_PROP, "Save"),
+                inpSubmit(ACT_CANCEL_EDIT_PROP, "Cancel")
             )
         );
     }

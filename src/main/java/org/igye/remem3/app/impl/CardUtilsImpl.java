@@ -83,12 +83,7 @@ public class CardUtilsImpl implements CardUtils {
     @Override
     public Card loadCard(File file) {
         try {
-            if (file.getName().endsWith(CARD_FILL_GAPS_FILE_EXTENSION)) {
-                return loadFillGapsCard(file);
-            } else if (file.getName().endsWith(CARD_TRANSLATE_FILE_EXTENSION)) {
-                return loadTranslateCard(file);
-            }
-            throw new Exn("Unsupported type of card " + file.getAbsolutePath());
+            return parseCard(utils.readStringFromFile(file), file);
         } catch (Exception ex) {
             throw new Exn(
                 format(
@@ -99,6 +94,24 @@ public class CardUtilsImpl implements CardUtils {
                 ex
             );
         }
+    }
+
+    @Override
+    public Card parseCard(String str, File file) {
+        if (file.getName().endsWith(CARD_FILL_GAPS_FILE_EXTENSION)) {
+            return parseFillGapsCard(str, Optional.of(file));
+        } else if (file.getName().endsWith(CARD_TRANSLATE_FILE_EXTENSION)) {
+            return parseTranslateCard(str, Optional.of(file));
+        }
+        throw new Exn("Unsupported type of card " + file.getAbsolutePath());
+    }
+
+    @Override
+    public String cardToString(Card card) {
+        return switch (card) {
+            case Card.FillGaps c -> fillGapsCardToString(c);
+            case Card.Translate c -> translateCardToString(c);
+        };
     }
 
     @SneakyThrows
@@ -124,13 +137,7 @@ public class CardUtilsImpl implements CardUtils {
             if (card.getOrder() == null) {
                 card.setOrder(getOrderForNewCard(dir));
             }
-            utils.writeStringToFile(
-                switch (card) {
-                    case Card.FillGaps c -> fillGapsCardToString(c);
-                    case Card.Translate c -> translateCardToString(c);
-                },
-                file
-            );
+            utils.writeStringToFile(cardToString(card), file);
         } catch (Exception ex) {
             throw new Exn(
                 format(
@@ -587,14 +594,6 @@ public class CardUtilsImpl implements CardUtils {
             .append(" ").append(histRec.getMark())
             .append(" ").append(histRec.getNotes().replace("\n", "\\n").replace("\r", "\\r"));
         return sb.toString();
-    }
-
-    private Card loadFillGapsCard(File file) {
-        return parseFillGapsCard(utils.readStringFromFile(file), Optional.of(file));
-    }
-
-    private Card loadTranslateCard(File file) {
-        return parseTranslateCard(utils.readStringFromFile(file), Optional.of(file));
     }
 
     protected Card parseTranslateCard(String str, Optional<File> file) {

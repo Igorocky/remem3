@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.igye.remem3.app.Cache;
 import org.igye.remem3.app.CardUtils;
-import org.igye.remem3.app.Settings;
 import org.igye.remem3.app.controllers.deletecard.State;
 import org.igye.remem3.app.dto.Card;
 import org.igye.remem3.app.state.StateUpdater;
@@ -13,21 +12,23 @@ import org.igye.remem3.web.RequestParams;
 import org.springframework.core.annotation.Order;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_CANCEL_EDIT_CARD;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_CANCEL_EDIT_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_EDIT_CARD;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_EDIT_PROP;
-import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_OPEN_CARD_IN_EDITOR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_REFRESH_CARD;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SAVE_CARD;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SAVE_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SET_EXACT_MATCH;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_SET_PRIORITY;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_CARD_PATH;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_DIR;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EDITED_CARD_PATH;
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EDITED_CARD_TEXT;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EDITED_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EDITED_TEXT;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.PAR_EXACT_MATCH_SIDE;
@@ -37,7 +38,6 @@ import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.
 public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
     private final CardExplorerConstructor constructor;
     private final CardExplorerRenderer renderer;
-    private final Settings settings;
     private final Cache cache;
     private final CardUtils cardUtils;
 
@@ -45,8 +45,11 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
     public Object update(CardExplorerState st, RequestParams params) {
         st = constructor.readStateFromParams(params);
         cache.put(PAR_DIR, st.getDir().getSelectedDirectoryStr());
-        if (params.hasKeyValueParam(ACT_OPEN_CARD_IN_EDITOR)) {
-            st = actOpenCard(st, params);
+        if (params.hasKeyValueParam(ACT_EDIT_CARD)) {
+            st = actEditCard(st, params);
+        }
+        if (params.hasParam(ACT_SAVE_CARD)) {
+            st = actSaveCard(st, params);
         }
         if (params.hasKeyValueParam(ACT_REFRESH_CARD)) {
             st = actRefreshCard(st, params);
@@ -63,8 +66,8 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         if (params.hasParam(ACT_SAVE_PROP)) {
             st = actSaveProp(st, params);
         }
-        if (params.hasParam(ACT_CANCEL_EDIT_PROP)) {
-            st = actCancelEditProp(st, params);
+        if (params.hasParam(ACT_CANCEL_EDIT_PROP) || params.hasParam(ACT_CANCEL_EDIT_CARD)) {
+            st = actCancelEdit(st, params);
         }
         if (params.hasKeyValueParam(ACT_DELETE_CARD)) {
             return actDeleteCard(st, params);
@@ -72,18 +75,39 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         return st;
     }
 
-    @SneakyThrows
-    private CardExplorerState actOpenCard(CardExplorerState st, RequestParams params) {
-        String filePath = params.getKeyValueParam(ACT_OPEN_CARD_IN_EDITOR);
-        Optional<File> fileOpt = findCardByPath(st, filePath).flatMap(Card::getFile);
-        fileOpt.ifPresent(file -> {
-            try {
-                new ProcessBuilder(settings.getCardEditor(), file.getAbsolutePath()).start();
-            } catch (IOException e) {
-                throw new Exn(e);
-            }
-        });
-        return st.withScrollToId(fileOpt.map(renderer::getId));
+    private CardExplorerState actEditCard(CardExplorerState st, RequestParams params) {
+        Optional<Card> cardOpt = findCardByPath(st, params.getKeyValueParam(ACT_EDIT_CARD));
+        return st
+            .withCardEdit(cardOpt.map(card -> new CardEdit(
+                card.getFile().get().getAbsolutePath(), cardUtils.cardToString(card), List.of()
+            )))
+            .withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
+    }
+
+    private CardExplorerState actSaveCard(CardExplorerState st, RequestParams params) {
+        String filePath = params.getParam(PAR_EDITED_CARD_PATH, "");
+        String newText = params.getParam(PAR_EDITED_CARD_TEXT, "");
+        Optional<Card> cardOpt = findCardByPath(st, filePath);
+        if (cardOpt.isEmpty()) {
+            return st;
+        }
+        Card oldCard = cardOpt.get();
+        File file = oldCard.getFile().get();
+        st = st.withScrollToId(Optional.of(renderer.getId(file)));
+        Card newCard = null;
+        List<String> errors;
+        try {
+            newCard = cardUtils.parseCard(newText, file);
+            errors = cardUtils.validateCard(newCard);
+        } catch (Exception ex) {
+            errors = List.of(String.valueOf(ex.getMessage()));
+        }
+        if (!errors.isEmpty()) {
+            return st.withCardEdit(Optional.of(new CardEdit(filePath, newText, errors)));
+        }
+        cardUtils.saveCard(newCard);
+        Card savedCard = newCard;
+        return st.withCards(st.getCards().stream().map(card -> card == oldCard ? savedCard : card).toList());
     }
 
     private Object actDeleteCard(CardExplorerState st, RequestParams params) {
@@ -178,7 +202,7 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         return st;
     }
 
-    private CardExplorerState actCancelEditProp(CardExplorerState st, RequestParams params) {
+    private CardExplorerState actCancelEdit(CardExplorerState st, RequestParams params) {
         Optional<Card> cardOpt = findCardByPath(st, params.getParam(PAR_EDITED_CARD_PATH, ""));
         return st.withScrollToId(cardOpt.flatMap(Card::getFile).map(renderer::getId));
     }

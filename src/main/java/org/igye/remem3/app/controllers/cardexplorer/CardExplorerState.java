@@ -29,5 +29,8 @@ public class CardExplorerState implements StateIdAware {
     private Optional<CardPropEdit> propEdit = Optional.empty();
     @With
     @Builder.Default
+    private Optional<CardEdit> cardEdit = Optional.empty();
+    @With
+    @Builder.Default
     private Optional<String> scrollToId = Optional.empty();
 }
