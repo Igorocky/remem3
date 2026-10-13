@@ -229,7 +229,11 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     card, 1, rndPropName(card, EditableProp.TRANSLATE_TEXT1, card.getLang1(), editable, propEdit),
                     card.isExactMatch1(), editable
                 ),
-                rndPropValue(card, EditableProp.TRANSLATE_TEXT1, pre(text(card.getText1())), editable, propEdit)
+                rndPropValue(
+                    card, EditableProp.TRANSLATE_TEXT1,
+                    div("background:rgb(242, 230, 145);border-radius:5px", pre(text(card.getText1()))),
+                    editable, propEdit
+                )
             )
         );
         if (StringUtils.isNotBlank(card.getExample1())) {
@@ -243,7 +247,11 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                     card, 2, rndPropName(card, EditableProp.TRANSLATE_TEXT2, card.getLang2(), editable, propEdit),
                     card.isExactMatch2(), editable
                 ),
-                rndPropValue(card, EditableProp.TRANSLATE_TEXT2, pre(text(card.getText2())), editable, propEdit)
+                rndPropValue(
+                    card, EditableProp.TRANSLATE_TEXT2,
+                    div("background:rgb(247, 244, 223);border-radius:5px", pre(text(card.getText2()))),
+                    editable, propEdit
+                )
             )
         );
         if (StringUtils.isNotBlank(card.getExample2())) {
@@ -269,7 +277,9 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
             elems.add(rndCardSection("Description", pre(text(card.getDescr()))));
         }
         elems.add(rndEditableCardSection(
-            card, EditableProp.FILL_GAPS_TEXT, card.getLang(), rndText(card.getText()), editable, propEdit
+            card, EditableProp.FILL_GAPS_TEXT, card.getLang(),
+            div("background:rgb(229, 245, 225);border-radius:5px", rndText(card.getText())),
+            editable, propEdit
         ));
         if (StringUtils.isNotBlank(card.getNotes())) {
             elems.add(rndEditableCardSection(
