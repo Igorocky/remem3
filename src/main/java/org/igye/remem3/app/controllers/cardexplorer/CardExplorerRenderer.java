@@ -231,7 +231,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
                 ),
                 rndPropValue(
                     card, EditableProp.TRANSLATE_TEXT1,
-                    div("background:rgb(242, 230, 145);border-radius:5px", pre(text(card.getText1()))),
+                    div("background:rgb(250, 241, 177);border-radius:5px", pre(text(card.getText1()))),
                     editable, propEdit
                 )
             )
