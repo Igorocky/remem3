@@ -80,8 +80,7 @@ Do not put `null` into the `chapters` or `cards` arrays.
 {
   "type": "QUESTION_ANSWER",
   "question": "What are the two systems of thinking described by Kahneman?",
-  "answer": "System 1: fast, automatic, intuitive.\nSystem 2: slow, deliberate, effortful.",
-  "notes": "Ch. 1"
+  "answer": "System 1: fast, automatic, intuitive.\nSystem 2: slow, deliberate, effortful."
 }
 ```
 
@@ -90,9 +89,6 @@ Do not put `null` into the `chapters` or `cards` arrays.
 | `type`     | string | yes      | Always exactly `"QUESTION_ANSWER"`.                      |
 | `question` | string | yes      | The question. Must not be blank.                         |
 | `answer`   | string | yes      | The answer. Must not be blank.                           |
-| `notes`    | string | no       | Where in the source the card comes from, like "Ch. 4, p. 87". |
-
-Use the `notes` field only to record where in the source the card comes from, like "Ch. 4, p. 87".
 
 Leading and trailing whitespace is trimmed from all text fields.
 
@@ -188,8 +184,7 @@ Prefer completeness of important content over brevity, but never pad with trivia
           {
             "type": "QUESTION_ANSWER",
             "question": "Why is re-reading a text an ineffective study strategy, according to 'Make It Stick'?",
-            "answer": "It creates familiarity with the text, which is mistaken for mastery, but it does not build durable memory.",
-            "notes": "Ch. 1"
+            "answer": "It creates familiarity with the text, which is mistaken for mastery, but it does not build durable memory."
           },
           {
             "type": "QUESTION_ANSWER",
