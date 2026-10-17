@@ -12,9 +12,13 @@ import org.igye.remem3.web.RequestParams;
 import org.springframework.core.annotation.Order;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_ADD_CARD_BELOW;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_CANCEL_EDIT_CARD;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_CANCEL_EDIT_PROP;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_DELETE_CARD;
@@ -50,6 +54,9 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         }
         if (params.hasParam(ACT_SAVE_CARD)) {
             st = actSaveCard(st, params);
+        }
+        if (params.hasKeyValueParam(ACT_ADD_CARD_BELOW)) {
+            st = actAddCardBelow(st, params);
         }
         if (params.hasKeyValueParam(ACT_REFRESH_CARD)) {
             st = actRefreshCard(st, params);
@@ -107,6 +114,55 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         }
         cardUtils.saveCard(newCard);
         return st.withCards(constructor.readStateFromParams(params).getCards());
+    }
+
+    private CardExplorerState actAddCardBelow(CardExplorerState st, RequestParams params) {
+        Optional<Card> cardOpt = findCardByPath(st, params.getKeyValueParam(ACT_ADD_CARD_BELOW));
+        if (cardOpt.isEmpty()) {
+            return st;
+        }
+        Card existingCard = cardOpt.get();
+        File dir = existingCard.getFile().get().getParentFile();
+        Card newCard = switch (existingCard) {
+            case Card.Translate c -> Card.Translate.builder()
+                .createdAt(Optional.of(Instant.now()))
+                .lang1(c.getLang1())
+                .text1(c.getLang1())
+                .exactMatch1(c.isExactMatch1())
+                .lang2(c.getLang2())
+                .text2(c.getLang2())
+                .exactMatch2(c.isExactMatch2())
+                .build();
+            case Card.FillGaps c -> Card.FillGaps.builder()
+                .createdAt(Optional.of(Instant.now()))
+                .lang(c.getLang())
+                .text(cardUtils.parseText("[[text]]"))
+                .build();
+        };
+        newCard.setPriority(existingCard.getPriority());
+        newCard.setOrder(getOrderForCardBelow(existingCard, dir));
+        File newFile = new File(dir, cardUtils.makeFileNameForCard(newCard));
+        cardUtils.saveCard(newFile, newCard);
+        return st
+            .withCards(constructor.readStateFromParams(params).getCards())
+//            .withCardEdit(Optional.of(new CardEdit(
+//                newFile.getAbsolutePath(), cardUtils.cardToString(newCard), List.of()
+//            )))
+            .withScrollToId(Optional.of(renderer.getId(existingCard.getFile().get())));
+    }
+
+    private BigDecimal getOrderForCardBelow(Card existingCard, File dir) {
+        BigDecimal existingOrder = existingCard.getOrder();
+        if (existingOrder == null) {
+            //null makes CardUtils.saveCard() put the new card after all the cards in the directory
+            return null;
+        }
+        return cardUtils.loadCardsNonRec(dir).stream()
+            .map(Card::getOrder)
+            .filter(order -> order != null && order.compareTo(existingOrder) > 0)
+            .min(BigDecimal::compareTo)
+            .map(nextOrder -> existingOrder.add(nextOrder).divide(BigDecimal.TWO))
+            .orElseGet(() -> existingOrder.setScale(0, RoundingMode.FLOOR).add(BigDecimal.ONE));
     }
 
     private Object actDeleteCard(CardExplorerState st, RequestParams params) {

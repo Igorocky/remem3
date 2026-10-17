@@ -45,6 +45,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
     public static final String PAR_EDITED_PROP = "CardExplorer_PAR_EDITED_PROP";
     public static final String PAR_EDITED_TEXT = "CardExplorer_PAR_EDITED_TEXT";
     public static final String ACT_DELETE_CARD = "CardExplorer_ACT_DELETE_CARD";
+    public static final String ACT_ADD_CARD_BELOW = "CardExplorer_ACT_ADD_CARD_BELOW";
 
     @Override
     public HtmlElem render(CardExplorerState st) {
@@ -145,6 +146,7 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         return frag(
             inpSubmit(keyValueParam(ACT_REFRESH_CARD, fileAbsPath), "Reload").id(getId(file)),
             inpSubmit(keyValueParam(ACT_EDIT_CARD, fileAbsPath), "Edit"),
+            inpSubmit(keyValueParam(ACT_ADD_CARD_BELOW, fileAbsPath), "Add below"),
             inpSubmit(keyValueParam(ACT_DELETE_CARD, fileAbsPath), "Delete"),
             rndPriorities(card),
             renderFullPath && parentPath != null
