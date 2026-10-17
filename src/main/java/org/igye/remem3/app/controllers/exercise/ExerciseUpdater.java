@@ -48,16 +48,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_CANCEL_EDIT_CARD;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_CANCEL_EXERCISE;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_COPY_CARD_PATH_TO_CLIPBOARD;
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_EDIT_CARD;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_OPEN_CARD;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_REFRESH_EXERCISE;
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_SAVE_CARD;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_SET_CURR_TIME;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_SKIP_TASK;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_START_EXERCISE;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_EXERCISE_PARAMS;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.ACT_TOGGLE_SHOW_LESS_MORE_EXERCISE_PARAMS;
+import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_EDITED_CARD_TEXT;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_DIR;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_EXERCISE;
 import static org.igye.remem3.app.controllers.exercise.ExerciseRenderer.PAR_SELECTED_PRIORITIES;
@@ -240,6 +244,10 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
     }
 
     private ExerciseState updateRunningExerciseState(RunningExerciseState st, RequestParams params) {
+        if (st.getCardEdit().isPresent() && params.hasParam(PAR_EDITED_CARD_TEXT)) {
+            //keep the text being edited when other buttons are clicked
+            st = st.withCardEdit(st.getCardEdit().map(edit -> edit.withText(params.getParam(PAR_EDITED_CARD_TEXT))));
+        }
         if (params.hasParam(ACT_CANCEL_EXERCISE)) {
             return actCancelExercise(st);
         }
@@ -260,6 +268,15 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
         }
         if (params.hasParam(ACT_OPEN_CARD)) {
             return actOpenCard(st);
+        }
+        if (params.hasParam(ACT_EDIT_CARD)) {
+            return actEditCard(st);
+        }
+        if (params.hasParam(ACT_SAVE_CARD)) {
+            return actSaveCard(st, params);
+        }
+        if (params.hasParam(ACT_CANCEL_EDIT_CARD)) {
+            return st.withCardEdit(Optional.empty());
         }
         if (st.getTaskState().isPresent()) {
             return actProcessTaskResults(st, st.getTaskState().get().processUserInput(params));
@@ -352,6 +369,50 @@ public class ExerciseUpdater implements StateUpdater<ExerciseState> {
             settings.getCardEditor(),
             st.getCurrentCardFileExn().getAbsolutePath()
         ).start();
+        return st;
+    }
+
+    private RunningExerciseState actEditCard(RunningExerciseState st) {
+        Optional<Card> cardOpt = st.getCurrentCard();
+        if (cardOpt.isEmpty()) {
+            return st;
+        }
+        String text = cardUtils.cardToString(cardUtils.loadCard(st.getCurrentCardFileExn()));
+        return st
+            .withCardEdit(Optional.of(new ExerciseCardEdit(cardOpt.get(), text, text, List.of())));
+    }
+
+    private RunningExerciseState actSaveCard(RunningExerciseState st, RequestParams params) {
+        if (st.getCardEdit().isEmpty()) {
+            return st;
+        }
+        ExerciseCardEdit edit = st.getCardEdit().get();
+        Card card = edit.getCard();
+        File file = card.getFile().get();
+        String newText = params.getParam(PAR_EDITED_CARD_TEXT, "");
+        Card newCard = null;
+        List<String> errors;
+        try {
+            if (!cardUtils.cardToString(cardUtils.loadCard(file)).equals(edit.getOriginalText())) {
+                //most probably a history record was appended to the card file after the editing had started
+                errors = List.of(
+                    "The card file has changed since the editing started. "
+                        + "Copy your changes, click Cancel and then edit the card again."
+                );
+            } else {
+                newCard = cardUtils.parseCard(newText, file);
+                errors = cardUtils.validateCard(newCard);
+            }
+        } catch (Exception ex) {
+            errors = List.of(String.valueOf(ex.getMessage()));
+        }
+        if (!errors.isEmpty()) {
+            return st
+                .withCardEdit(Optional.of(edit.withText(newText).withErrors(errors)));
+        }
+        cardUtils.saveCard(newCard);
+        card.copyFrom(cardUtils.loadCard(file));
+        st = st.withCardEdit(Optional.empty());
         return st;
     }
 

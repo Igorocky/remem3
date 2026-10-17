@@ -41,6 +41,9 @@ public final class RunningExerciseState implements ExerciseState {
     @Getter
     @With
     private Optional<TaskState> taskState = Optional.empty();
+    @Getter
+    @With
+    private Optional<ExerciseCardEdit> cardEdit = Optional.empty();
 
     public Optional<Card> getCurrentCard() {
         return nextTasks

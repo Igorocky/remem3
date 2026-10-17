@@ -37,6 +37,10 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     public static final String ACT_SKIP_TASK = "Exercise_ACT_SKIP_TASK";
     public static final String ACT_COPY_CARD_PATH_TO_CLIPBOARD = "Exercise_ACT_COPY_CARD_PATH_TO_CLIPBOARD";
     public static final String ACT_OPEN_CARD = "Exercise_ACT_OPEN_CARD";
+    public static final String ACT_EDIT_CARD = "Exercise_ACT_EDIT_CARD";
+    public static final String ACT_SAVE_CARD = "Exercise_ACT_SAVE_CARD";
+    public static final String ACT_CANCEL_EDIT_CARD = "Exercise_ACT_CANCEL_EDIT_CARD";
+    public static final String PAR_EDITED_CARD_TEXT = "Exercise_PAR_EDITED_CARD_TEXT";
     public static final String CUSTOM_EXERCISE_NAME = "CUSTOM";
 
     private final CardExplorerConstructor cardExplorerConstructor;
@@ -217,7 +221,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
                     showMoreParams ? "Show less parameters" : "Show more parameters"
                 )
             ).orElse(null),
-            cardPath.isPresent() ? inpSubmit(ACT_OPEN_CARD, "Edit this card") : null,
+            cardPath.isPresent() ? inpSubmit(ACT_EDIT_CARD, "Edit this card") : null,
             st.getTaskState().isPresent() ? inpSubmit(ACT_SKIP_TASK, "Skip this task") : null,
             st.getRepeatStrategy().hasDailyUniqueCount()
                 ? inpSubmit(ACT_TOGGLE_SHOW_DAILY_UNIQUE_COUNT, st.isShowDailyUniqueCount() ? "Hide DUC" : "Show DUC")
@@ -227,7 +231,22 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
             hr(),
             taskContent,
             hr(),
-            st.isExerciseCompleted() ? null : inpSubmit(ACT_CANCEL_EXERCISE, "Cancel")
+            st.isExerciseCompleted() ? null : inpSubmit(ACT_CANCEL_EXERCISE, "Cancel"),
+            st.getCardEdit().map(this::rndCardEdit).orElse(null)
+        );
+    }
+
+    private HtmlElem rndCardEdit(ExerciseCardEdit edit) {
+        int rows = Math.max(50, (int) edit.getText().lines().count() + 2);
+        return frag(
+            hr(),
+            div(text(edit.getCard().getFile().map(File::getAbsolutePath).orElse(""))),
+            rndErrors(edit.getErrors()),
+            div(textarea(PAR_EDITED_CARD_TEXT, edit.getText(), 120, rows).autofocus()),
+            div(
+                inpSubmit(ACT_SAVE_CARD, "Save"),
+                inpSubmit(ACT_CANCEL_EDIT_CARD, "Cancel")
+            )
         );
     }
 

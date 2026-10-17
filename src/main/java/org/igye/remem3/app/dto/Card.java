@@ -78,8 +78,10 @@ public sealed interface Card permits Card.BaseCard {
         public void copyFrom(Card other) {
             file = other.getFile();
             order = other.getOrder();
+            priority = other.getPriority();
             createdAt = other.getCreatedAt();
             history = new ArrayList<>(other.getHistory());
+            attrs = new HashMap<>(other.getAttrs());
             taskTypes = null;
             tasks = null;
             childCopyFrom(other);
