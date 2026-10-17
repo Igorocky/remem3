@@ -141,13 +141,17 @@ public class CardExplorerRenderer extends HtmlBuilder implements StateRenderer<C
         }
         File file = card.getFile().get();
         String fileAbsPath = file.getAbsolutePath();
+        String parentPath = file.getAbsoluteFile().getParent();
         return frag(
             inpSubmit(keyValueParam(ACT_REFRESH_CARD, fileAbsPath), "Reload").id(getId(file)),
             inpSubmit(keyValueParam(ACT_EDIT_CARD, fileAbsPath), "Edit"),
             inpSubmit(keyValueParam(ACT_DELETE_CARD, fileAbsPath), "Delete"),
             rndPriorities(card),
+            renderFullPath && parentPath != null
+                ? span("color:grey;", text(parentPath + File.separator))
+                : null,
             span("color:lightgrey;", text("%s Created at %s Order %s".formatted(
-                renderFullPath ? fileAbsPath : file.getName(),
+                file.getName(),
                 card.getCreatedAt().map(Objects::toString).orElse("?"),
                 card.getOrder()
             )))
