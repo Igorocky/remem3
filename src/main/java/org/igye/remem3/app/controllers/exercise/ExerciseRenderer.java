@@ -237,7 +237,7 @@ public class ExerciseRenderer extends HtmlBuilder implements StateRenderer<Exerc
     }
 
     private HtmlElem rndCardEdit(ExerciseCardEdit edit) {
-        int rows = Math.max(50, (int) edit.getText().lines().count() + 2);
+        int rows = Math.max(30, (int) edit.getText().lines().count() + 2);
         return frag(
             hr(),
             div(text(edit.getCard().getFile().map(File::getAbsolutePath).orElse(""))),
