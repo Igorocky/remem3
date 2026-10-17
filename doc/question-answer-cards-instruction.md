@@ -99,7 +99,7 @@ Leading and trailing whitespace is trimmed from all text fields.
 Text is shown as plain preformatted text.
 Markdown, HTML and LaTeX are not rendered, so do not use them.
 Line breaks (`\n`) are preserved, so use them to split longer answers into short lines or simple lists.
-Long lines are not wrapped automatically, so keep each line reasonably short (about 120 characters or less).
+Long lines are not wrapped automatically, so keep each line reasonably short (about 120 characters or fewer).
 
 ## How the cards are reviewed
 
@@ -158,12 +158,6 @@ Good: the same content split into focused cards.
    "question": "Name two mechanisms that explain why spaced repetition works.",
    "answer": "1. Greater retrieval effort on each repetition.\n2. Memory consolidation between sessions, e.g. during sleep."}
 ]
-```
-
-Bad: the question depends on context the user won't have.
-
-```json
-{"type": "QUESTION_ANSWER", "question": "What did the author say about the second experiment?", "answer": "It failed."}
 ```
 
 ## Structuring chapters
@@ -225,8 +219,8 @@ Before returning the result, verify that:
 
 - The output is valid JSON (no trailing commas, no comments, all strings properly escaped, line breaks written as `\n`).
 - The top-level object has `cards` with one root chapter, and `generatedBy`.
-- Every chapter except the root has a `chapterName` 
-  that contains at least one English letter or digit and prefixed with an order number.
+- Every chapter has a `chapterName` that contains at least one English letter or digit.
+- Every chapter except the root has a `chapterName` prefixed with an order number.
 - Every card has `"type": "QUESTION_ANSWER"` and non-blank `question` and `answer`.
 - No field other than those described in this document is used.
 - The important content of the source is covered.
