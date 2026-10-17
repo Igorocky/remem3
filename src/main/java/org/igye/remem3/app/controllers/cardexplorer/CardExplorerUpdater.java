@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_ADD_CARD_ABOVE;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_ADD_CARD_BELOW;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_CANCEL_EDIT_CARD;
 import static org.igye.remem3.app.controllers.cardexplorer.CardExplorerRenderer.ACT_CANCEL_EDIT_PROP;
@@ -55,8 +56,11 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         if (params.hasParam(ACT_SAVE_CARD)) {
             st = actSaveCard(st, params);
         }
+        if (params.hasKeyValueParam(ACT_ADD_CARD_ABOVE)) {
+            st = actAddCard(st, params, params.getKeyValueParam(ACT_ADD_CARD_ABOVE), false);
+        }
         if (params.hasKeyValueParam(ACT_ADD_CARD_BELOW)) {
-            st = actAddCardBelow(st, params);
+            st = actAddCard(st, params, params.getKeyValueParam(ACT_ADD_CARD_BELOW), true);
         }
         if (params.hasKeyValueParam(ACT_REFRESH_CARD)) {
             st = actRefreshCard(st, params);
@@ -116,8 +120,8 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
         return st.withCards(constructor.readStateFromParams(params).getCards());
     }
 
-    private CardExplorerState actAddCardBelow(CardExplorerState st, RequestParams params) {
-        Optional<Card> cardOpt = findCardByPath(st, params.getKeyValueParam(ACT_ADD_CARD_BELOW));
+    private CardExplorerState actAddCard(CardExplorerState st, RequestParams params, String filePath, boolean below) {
+        Optional<Card> cardOpt = findCardByPath(st, filePath);
         if (cardOpt.isEmpty()) {
             return st;
         }
@@ -140,7 +144,7 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
                 .build();
         };
         newCard.setPriority(existingCard.getPriority());
-        newCard.setOrder(getOrderForCardBelow(existingCard, dir));
+        newCard.setOrder(below ? getOrderForCardBelow(existingCard, dir) : getOrderForCardAbove(existingCard, dir));
         File newFile = new File(dir, cardUtils.makeFileNameForCard(newCard));
         cardUtils.saveCard(newFile, newCard);
         return st
@@ -148,7 +152,7 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
 //            .withCardEdit(Optional.of(new CardEdit(
 //                newFile.getAbsolutePath(), cardUtils.cardToString(newCard), List.of()
 //            )))
-            .withScrollToId(Optional.of(renderer.getId(existingCard.getFile().get())));
+            .withScrollToId(Optional.of(renderer.getId(below ? existingCard.getFile().get() : newFile)));
     }
 
     private BigDecimal getOrderForCardBelow(Card existingCard, File dir) {
@@ -163,6 +167,20 @@ public class CardExplorerUpdater implements StateUpdater<CardExplorerState> {
             .min(BigDecimal::compareTo)
             .map(nextOrder -> existingOrder.add(nextOrder).divide(BigDecimal.TWO))
             .orElseGet(() -> existingOrder.setScale(0, RoundingMode.FLOOR).add(BigDecimal.ONE));
+    }
+
+    private BigDecimal getOrderForCardAbove(Card existingCard, File dir) {
+        BigDecimal existingOrder = existingCard.getOrder();
+        if (existingOrder == null) {
+            //null makes CardUtils.saveCard() put the new card after all the cards in the directory
+            return null;
+        }
+        return cardUtils.loadCardsNonRec(dir).stream()
+            .map(Card::getOrder)
+            .filter(order -> order != null && order.compareTo(existingOrder) < 0)
+            .max(BigDecimal::compareTo)
+            .map(prevOrder -> existingOrder.add(prevOrder).divide(BigDecimal.TWO))
+            .orElseGet(() -> existingOrder.setScale(0, RoundingMode.CEILING).subtract(BigDecimal.ONE));
     }
 
     private Object actDeleteCard(CardExplorerState st, RequestParams params) {
