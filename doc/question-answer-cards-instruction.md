@@ -62,10 +62,14 @@ Rules for `chapterName`:
 - After that removal the name must not be blank, `.` or `..`, otherwise the import fails.
   So a name written entirely in non-Latin script (for example Cyrillic) is invalid.
 - Sibling chapters should have different names, otherwise their cards end up in the same directory.
-- Keep names short, for example `01 Introduction`, `02 Working memory`.
-  A numeric prefix keeps the chapters in the original order when sorted.
+- Prefix every chapter name except the root with an order number,
+  even if chapters or sections are not numbered in the source,
+  for example `01 Introduction`, `02 Working memory`.
+  The app sorts chapters by name, so the number prefixes keep them in the source's order.
+- Keep names short.
 
 The root chapter's name should identify the source, for example `Kahneman - Thinking Fast and Slow - Part 1`.
+The root chapter doesn't need a number prefix.
 The user can rename the root chapter in the import dialog, so this is only a suggestion.
 
 Do not put `null` into the `chapters` or `cards` arrays.
@@ -77,7 +81,7 @@ Do not put `null` into the `chapters` or `cards` arrays.
   "type": "QUESTION_ANSWER",
   "question": "What are the two systems of thinking described by Kahneman?",
   "answer": "System 1: fast, automatic, intuitive.\nSystem 2: slow, deliberate, effortful.",
-  "notes": "Introduced in chapter 1."
+  "notes": "Ch. 1"
 }
 ```
 
@@ -86,9 +90,9 @@ Do not put `null` into the `chapters` or `cards` arrays.
 | `type`     | string | yes      | Always exactly `"QUESTION_ANSWER"`.                      |
 | `question` | string | yes      | The question. Must not be blank.                         |
 | `answer`   | string | yes      | The answer. Must not be blank.                           |
-| `notes`    | string | no       | Optional extra context, such as a source reference, an example, or a clarification. |
+| `notes`    | string | no       | Where in the source the card comes from, like "Ch. 4, p. 87". |
 
-Use `notes` attribute to include the source of the card only, like "Ch. 4, p. 87".
+Use the `notes` field only to record where in the source the card comes from, like "Ch. 4, p. 87".
 
 Leading and trailing whitespace is trimmed from all text fields.
 
@@ -103,7 +107,7 @@ Knowing this helps you write good cards.
 
 - Every card is reviewed in one direction:
   the user sees the question and must recall the answer.
-  Write cards so that the question points back to one specific answer.
+  Write each question so that it has exactly one correct answer.
 - The user types or thinks of a response and then compares it with the stored text themselves.
   Matching is not exact, so the wording doesn't have to be reproducible letter by letter,
   but the content of the answer must be unambiguous.
@@ -124,15 +128,12 @@ Knowing this helps you write good cards.
   and the main arguments and conclusions of the source.
 - **Stay faithful to the source.**
   Do not add facts that are not in the source.
-  If you add a clarification of your own, put it into `notes` and mark it as such.
+  Do not add clarifications of your own.
 - **No duplicates.**
   Do not create several cards that ask the same thing in different words.
 - **Language.**
   Write the cards in the language of the source unless the user asks for another one.
   Chapter names must still follow the character rules above.
-- **Number chapters.**
-  Prefix each chapter with a number even if chapters or sections are not numbered in the source.
-  The spaced-repetition app will display cards in the order of chapter numbers.
 
 ### Examples
 
@@ -194,7 +195,7 @@ Prefer completeness of important content over brevity, but never pad with trivia
             "type": "QUESTION_ANSWER",
             "question": "Why is re-reading a text an ineffective study strategy, according to 'Make It Stick'?",
             "answer": "It creates familiarity with the text, which is mistaken for mastery, but it does not build durable memory.",
-            "notes": "The authors call this an 'illusion of knowing'."
+            "notes": "Ch. 1"
           },
           {
             "type": "QUESTION_ANSWER",
@@ -224,8 +225,8 @@ Before returning the result, verify that:
 
 - The output is valid JSON (no trailing commas, no comments, all strings properly escaped, line breaks written as `\n`).
 - The top-level object has `cards` with one root chapter, and `generatedBy`.
-- Every chapter has a `chapterName` that contains at least one English letter or digit 
-  and prefixed with an order number.
+- Every chapter except the root has a `chapterName` 
+  that contains at least one English letter or digit and prefixed with an order number.
 - Every card has `"type": "QUESTION_ANSWER"` and non-blank `question` and `answer`.
 - No field other than those described in this document is used.
 - The important content of the source is covered.
